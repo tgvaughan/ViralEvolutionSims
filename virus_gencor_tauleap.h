@@ -20,11 +20,21 @@ class GenPopulation : public Population {
 		std::map<vector<double>, double> pop;
 		int seqLen;
 
+		// Constructors:
 		GenPopulation(int p_seqLen) {
 			isGen = true;
 			seqLen = p_seqLen;
 		}
+		GenPopulation() {
+			isGen = true;
+		}
+		GenPopulation(GenPopulation & p) {
+			isGen = true;
+			seqLen = p.seqLen;
+			pop = p.pop;
+		}
 
+		// Element indexing operator:
 		double operator[] (std::vector<double> p) {
 			std::map<vector<double>, double>::iterator it = pop.find(p);
 			if (it == pop.end())
@@ -33,22 +43,128 @@ class GenPopulation : public Population {
 			return it->second;
 		}
 
+		// Assignment operator:
 		GenPopulation operator= (GenPopulation p) {
 			seqLen = p.seqLen;
 			pop = p.pop;
+
+			return *this;
 		}
 
-		double operator+ (GenPopulation p) {
+		//Arithmetic operators:
+		GenPopulation operator+ (GenPopulation p) {
+
+			GenPopulation res = *this;
+
 			std::map<vector<double>, double>::iterator it;
 
+			for (it = p.pop.begin(); it != p.pop.end(); it++) {
+				res.pop[it->first] += it->second;
+
+				if (res[it->first] == 0)
+					res.pop.erase(it->first);
+			}
+
+			return res;
+		}
+
+		GenPopulation operator- (GenPopulation p) {
+
+			GenPopulation res = *this;
+
+			std::map<vector<double>, double>::iterator it;
+
+			for (it = p.pop.begin(); it != p.pop.end(); it++) {
+				res.pop[it->first] -= it->second;
+
+				if (res.pop[it->first] == 0)
+					res.pop.erase(it->first);
+			}
+
+			return res;
+		}
+
+		// Multiplication by scalar:
+		GenPopulation operator* (double p) {
+
+			GenPopulation res;
+
+			if (p > 0) {
+				std::map<vector<double>. double>::iterator it;
+
+				for (it = res.pop.begin(); it != res.pop.end(); it++)
+					it->second *= p;
+			}
+
+			return res;
+		}
+
+		// Negativity check:
+		bool isnegative () {
+
+			std::map<vector<double>, double>::iterator it;
+
+			for (it = pop.begin(); it != pop.end(); it++)
+				if (it->second < 0)
+					return true;
+
+			return false;
 		}
 };
 
 // Class for genetically homogeneous populations
 class NongenPopulation : public Population {
 	public:
-		NongenPopulation() {
+
+		double n;
+
+		// Constructors:
+		NongenPopulation () {
 			isGen = false;
+		}
+
+		NongenPopulation (NongenPopulation & p) {
+			isGen = false;
+			n = p.n;
+		}
+
+		// Assignment operator:
+		NongenPopulation operator= (NongenPopulation p) {
+			n = p.n;
+
+			return *this;
+		}
+
+		// Arithmetic operators:
+		NongenPopulation operator+ (NongenPopulation p) {
+			NongenPopulation res = *this;
+
+			res.n += p.n;
+
+			return res;
+		}
+
+		NongenPopulation operator- (NongenPopulation p) {
+			NongenPopulation res = *this;
+
+			res.n -= p.n;
+
+			return res;
+		}
+
+		// Multiplication by scalar:
+		NongenPopulation operator* (double p) {
+
+			NongenPopulation res = *this;
+
+			res.n *= p;
+
+			return res;
+		}
+
+		// Negativity check:
+		bool isnegative () {
+			return n<0;
 		}
 };
 
@@ -64,43 +180,39 @@ class StateVec : public std::vector<Population> {
 		StateVec() {};
 
 		// State vector algebra:
-		StateVec operator+ (StateVec p)
-		{
+		StateVec operator+ (StateVec p) {
 
 			StateVec res = p;
 			for (int i=0; i<size(); i++)
-				res[i] += operator[](i);
+				res[i] = res[i] + operator[](i);
 
 			return res;
 		}
 
-		StateVec operator- (StateVec p)
-		{
+		StateVec operator- (StateVec p) {
 
 			StateVec res = *this;
 			for (int i=0; i<size(); i++)
-				res[i] -= p[i];
+				res[i] = res[i] - p[i];
 
 			return res;
 		}
 
 		// Multiplication by scalar:
-		StateVec operator* (double p)
-		{
+		StateVec operator* (double p) {
 
 			StateVec res = *this;
 			for (int i=0; i<size(); i++)
-				res[i] *= p;
+				res[i] = res[i] * p;
 
 			return res;
 		}
 
 		// Check for negative populations:
-		bool isnegative()
-		{
+		bool isnegative() {
 
 			for (int i=0; i<size(); i++)
-				if (operator[](i) < 0)
+				if (operator[](i).isnegative())
 					return true;
 
 			return false;
