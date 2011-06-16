@@ -1,3 +1,4 @@
+// Definition of various classes used by virus_gencor_tauleap.cc.
 
 // Class for system state vectors
 class StateVec : public std::vector<double> {

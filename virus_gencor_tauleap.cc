@@ -1,3 +1,10 @@
+// virus_gencor_tauleap
+//
+// Uses the hybrid tau-leaping algorithm of Cao et al. to
+// simulate the dynamics of a genetically diverse viral
+// infection.
+//
+
 #include <iostream>
 #include <fstream>
 
