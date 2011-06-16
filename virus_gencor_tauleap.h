@@ -1,7 +1,59 @@
 // Definition of various classes used by virus_gencor_tauleap.cc.
 
+// Abstract base class for populations
+class Population {
+	public:
+		bool isGen;
+
+		virtual bool isnegative() =0;
+		virtual int operator[] (std::vector<double>) =0;
+
+		virtual Population operator= (Population p) =0;
+		virtual Population operator+ (Population p) =0;
+		virtual Population operator- (Population p) =0;
+		virtual Population operator* (double p) =0;
+};
+
+// Class for genetically diverse populations
+class GenPopulation : public Population {
+	public:
+		std::map<vector<double>, double> pop;
+		int seqLen;
+
+		GenPopulation(int p_seqLen) {
+			isGen = true;
+			seqLen = p_seqLen;
+		}
+
+		double operator[] (std::vector<double> p) {
+			std::map<vector<double>, double>::iterator it = pop.find(p);
+			if (it == pop.end())
+				return 0;
+
+			return it->second;
+		}
+
+		GenPopulation operator= (GenPopulation p) {
+			seqLen = p.seqLen;
+			pop = p.pop;
+		}
+
+		double operator+ (GenPopulation p) {
+			std::map<vector<double>, double>::iterator it;
+
+		}
+};
+
+// Class for genetically homogeneous populations
+class NongenPopulation : public Population {
+	public:
+		NongenPopulation() {
+			isGen = false;
+		}
+};
+
 // Class for system state vectors
-class StateVec : public std::vector<double> {
+class StateVec : public std::vector<Population> {
 	public:
 
 		// Constructors:
