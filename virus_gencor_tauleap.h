@@ -110,6 +110,19 @@ class GenPopulation : public Population {
 
 			return false;
 		}
+
+		// Get total size:
+		double size() {
+
+			std::map<vector<double>, double>::iterator it;
+
+			double size = 0.0;
+
+			for (it = pop.begin(); it != pop.end(); it++)
+				size += it->second;
+
+			return size;
+		}
 };
 
 // Class for genetically homogeneous populations
@@ -165,6 +178,11 @@ class NongenPopulation : public Population {
 		// Negativity check:
 		bool isnegative () {
 			return n<0;
+		}
+
+		// Get total population size:
+		double size() {
+			return n;
 		}
 };
 
@@ -225,15 +243,18 @@ class StateVec : public std::vector<Population> {
 class Reaction {
 	public:
 		double rate;
-		StateVec in, out, delta;
+		std::vector<int> in, out;
+		std::vector<bool> mutate;
 
 		// Constructors:
-		Reaction(StateVec p_in, StateVec p_out, double p_rate)
+		Reaction(std::vector<int> p_in, std::vector<int> p_out,
+				std::vector<bool> p_mutate,
+				double p_rate)
 		{
 			rate = p_rate;
 			in = p_in;
 			out = p_out;
-			delta = out - in;
+			mutate = p_mutate;
 		}
 		Reaction() {};
 
@@ -244,7 +265,7 @@ class Reaction {
 
 			for (int i=0; i<x.size(); i++) {
 				for (int m=0; m<in[i]; m++)
-					a *= x[i]-(double)m;
+					a *= x[i].size()-(double)m;
 			}
 
 			if (a<0)
@@ -256,7 +277,7 @@ class Reaction {
 		// Implement reaction on given state:
 		StateVec implement(StateVec x)
 		{
-			return x + delta;
+			// TODO
 		}
 
 		// Check whether state is within Nc reactions of bottoming out:
