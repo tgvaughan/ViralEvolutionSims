@@ -17,7 +17,7 @@ class Population {
 // Class for genetically diverse populations
 class GenPopulation : public Population {
 	public:
-		std::map<vector<double>, double> pop;
+		std::map<vector<int>, double> pop;
 		int seqLen;
 
 		// Constructors:
@@ -36,7 +36,7 @@ class GenPopulation : public Population {
 
 		// Element indexing operator:
 		double operator[] (std::vector<double> p) {
-			std::map<vector<double>, double>::iterator it = pop.find(p);
+			std::map<vector<int>, double>::iterator it = pop.find(p);
 			if (it == pop.end())
 				return 0;
 
@@ -44,10 +44,10 @@ class GenPopulation : public Population {
 		}
 
 		// Return iterators:
-		map<vector<double>, double>::iterator begin() {
+		map<vector<int>, double>::iterator begin() {
 			return pop.begin();
 		}
-		map<vector<double>, double>::iterator end() {
+		map<vector<int>, double>::iterator end() {
 			return pop.end();
 		}
 
@@ -64,7 +64,7 @@ class GenPopulation : public Population {
 
 			GenPopulation res = *this;
 
-			std::map<vector<double>, double>::iterator it;
+			std::map<vector<int>, double>::iterator it;
 
 			for (it = p.pop.begin(); it != p.pop.end(); it++) {
 				res.pop[it->first] += it->second;
@@ -80,7 +80,7 @@ class GenPopulation : public Population {
 
 			GenPopulation res = *this;
 
-			std::map<vector<double>, double>::iterator it;
+			std::map<vector<int>, double>::iterator it;
 
 			for (it = p.pop.begin(); it != p.pop.end(); it++) {
 				res.pop[it->first] -= it->second;
@@ -98,7 +98,7 @@ class GenPopulation : public Population {
 			GenPopulation res;
 
 			if (p > 0) {
-				std::map<vector<double>. double>::iterator it;
+				std::map<int<double>. double>::iterator it;
 
 				for (it = res.pop.begin(); it != res.pop.end(); it++)
 					it->second *= p;
@@ -110,7 +110,7 @@ class GenPopulation : public Population {
 		// Negativity check:
 		bool isnegative () {
 
-			std::map<vector<double>, double>::iterator it;
+			std::map<int<double>, double>::iterator it;
 
 			for (it = pop.begin(); it != pop.end(); it++)
 				if (it->second < 0)
@@ -122,7 +122,7 @@ class GenPopulation : public Population {
 		// Get total size:
 		double size() {
 
-			std::map<vector<double>, double>::iterator it;
+			std::map<int<double>, double>::iterator it;
 
 			double size = 0.0;
 
@@ -140,6 +140,10 @@ class NongenPopulation : public Population {
 		double n;
 
 		// Constructors:
+		NongenPopulation (int p_n) {
+			n = p_n;
+			isGen = false;
+		}
 		NongenPopulation () {
 			isGen = false;
 		}
@@ -254,6 +258,9 @@ class Reaction {
 		std::vector<int> in, out;
 		std::vector<bool> mutate;
 
+		std::set<std::vector<int> > critSet;
+		std::map<std::vector<int>, double> propensities;
+
 		// Constructors:
 		Reaction(std::vector<int> p_in, std::vector<int> p_out,
 				std::vector<bool> p_mutate,
@@ -266,30 +273,21 @@ class Reaction {
 		}
 		Reaction() {};
 
-		// Calculate reaction propensity for given state:
-		double propensity(StateVec x)
+		// Calculate reaction propensities for given state:
+		void calcPropensity(StateVec x)
 		{
-			double a = rate;
 
-			for (int i = 0; i<in.size(); i++) {
-				if (!x[i].isgen) {
-					for (int m=0; m<in[i]; m++)
-						a *= x[i].size() - m;
-				} else {
+			// Determine whether reaction involves genetically
+			// diverse populations:
+			bool isGen = false;
+			for (int i=0; i<x.size(); i++)
+				if ((in[i]>0 || out[i]>0) && x[i].isGen)
+					isGen = true;
 
-					std::map<std::vector<double>, double>::iterator it;
-					for (it = x[i].begin(); it != x[i].end(); it++) {
-
-					}
-
-				}
-			}
-
-			return a;
 		}
 
 		// Implement reaction on given state:
-		StateVec implement(StateVec x, unsigned short *buf)
+		StateVec implement(StateVec x, std::vector<double> )
 		{
 			// TODO
 		}
