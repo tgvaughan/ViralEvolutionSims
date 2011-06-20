@@ -43,6 +43,14 @@ class GenPopulation : public Population {
 			return it->second;
 		}
 
+		// Return iterators:
+		map<vector<double>, double>::iterator begin() {
+			return pop.begin();
+		}
+		map<vector<double>, double>::iterator end() {
+			return pop.end();
+		}
+
 		// Assignment operator:
 		GenPopulation operator= (GenPopulation p) {
 			seqLen = p.seqLen;
@@ -263,19 +271,25 @@ class Reaction {
 		{
 			double a = rate;
 
-			for (int i=0; i<x.size(); i++) {
-				for (int m=0; m<in[i]; m++)
-					a *= x[i].size()-(double)m;
-			}
+			for (int i = 0; i<in.size(); i++) {
+				if (!x[i].isgen) {
+					for (int m=0; m<in[i]; m++)
+						a *= x[i].size() - m;
+				} else {
 
-			if (a<0)
-				return 0;
+					std::map<std::vector<double>, double>::iterator it;
+					for (it = x[i].begin(); it != x[i].end(); it++) {
+
+					}
+
+				}
+			}
 
 			return a;
 		}
 
 		// Implement reaction on given state:
-		StateVec implement(StateVec x)
+		StateVec implement(StateVec x, unsigned short *buf)
 		{
 			// TODO
 		}
@@ -283,7 +297,7 @@ class Reaction {
 		// Check whether state is within Nc reactions of bottoming out:
 		bool iscritical (StateVec x, int Nc)
 		{
-			return (x + delta*(double)Nc).isnegative();
+			// TODO
 		}
 
 };
