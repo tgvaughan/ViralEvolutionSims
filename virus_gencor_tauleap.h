@@ -258,42 +258,146 @@ class Reaction {
 		std::vector<int> in, out;
 		std::vector<bool> mutate;
 
-		std::set<std::vector<int> > critSet;
+		bool isGen;
+
+		// Genetic reaction propensities:
 		std::map<std::vector<int>, double> propensities;
+		std::vector<int> criticalSeq;
+
+		// Nongenetic reaction propensity:
+		double propensity;
+
+		// Time of next critical reaction:
+		double criticalDelta;
 
 		// Constructors:
 		Reaction(std::vector<int> p_in, std::vector<int> p_out,
 				std::vector<bool> p_mutate,
-				double p_rate)
+				double p_rate, bool p_isGen)
 		{
 			rate = p_rate;
 			in = p_in;
 			out = p_out;
 			mutate = p_mutate;
+
+			isGen = p_isGen;
+			criticalDelta = -1;
 		}
 		Reaction() {};
 
-		// Calculate reaction propensities for given state:
-		void calcPropensity(StateVec x)
+		// Calculate reaction propensities for given state,
+		// determine critical reactions and time and sequence
+		// corresponding to next critical reaction:
+		void calcPropensity(StateVec x, unsigned short *buf)
 		{
 
-			// Determine whether reaction involves genetically
-			// diverse populations:
-			bool isGen = false;
-			for (int i=0; i<x.size(); i++)
-				if ((in[i]>0 || out[i]>0) && x[i].isGen)
-					isGen = true;
+			if (isGen) {
 
+				// Determine reactant population with smallest diversity:
+				int mindiversity = 0;
+				int imin = 0;
+				for (int i=0; i<x.size(); i++) {
+					if (in[i]>0 && x[i].isGen) {
+						if (imin>=0 || x[i].pop.size()<mindiversity) {
+							mindiversity = x[i].pop.size();
+							imin = i;
+						}
+					}
+				}
+
+				// Determine all reaction propensities:
+				std::map<std::vector<int>, double>::iterator it;
+				for (it = x[imin].pop.begin(); it != x[imin].pop.end(); it++) {
+
+					double a = 1.0;
+					bool crit = false;
+					for (int i=0; i<x.size(); i++) {
+						if (x[i].isGen) {
+
+							// Check for criticality
+							if (!mutate[i]) {
+							   	if (x[i][it->first] < Nc*(in[i]-out[i]))
+									crit = true;
+							} else {
+							   	if (x[i][it->first] < Nc*in[i])
+									crit = true;
+							}
+
+							// Calculate propensity contribution
+							for (int m=0; m<in[i]; m++)
+								a *= x[i][it->first] - m;
+
+						} else {
+
+							// Check for criticality
+							if (x[i] < Nc*(in[i] - out[i]))
+									crit = true;
+
+							// Calculate propensity contribution
+							for (int m=0; m<in[i]; m++)
+								a *= x[i] - m;
+						}
+					}
+
+					if (a>0) {
+						if (crit) {
+
+							// Critical reaction: choose reaction time
+							double delta = -log(erand48(buf))/a;
+							if (criticalDelta < 0 || delta < criticalDelta) {
+								criticalDelta = delta;
+								criticalSeq = it->first;
+							}
+
+						} else {
+
+							// Non-critical reaction: record propensity
+							propensities[it->first] = a;
+						}
+					}
+				}
+
+			} else {
+
+				double a = 1.0;
+				bool crit = false;
+				for (int i=0; i<x.size(); i++) {
+
+					// Check for criticality
+					if (x[i] < Nc*(in[i] - out[i]))
+						crit = true;
+
+					// Calculate propensity contribution
+					for (int m=0; m<in[i]; m++) {
+						a *= x[i] - m;
+					}
+				}
+
+				propensity = 0.0;
+
+				if (a>0) {
+					if (crit) {
+
+						// Critical reaction: choose reaction time
+						criticalDelta = -log(erand48(buf))/a;
+
+					} else {
+
+						// Non-critical reaction: record propensity
+						propensity = a;
+					}
+				}
+			}
 		}
 
-		// Implement reaction on given state:
-		StateVec implement(StateVec x, std::vector<double> )
+		// Implement critical reaction on given state:
+		StateVec implementCritical(StateVec x, std::vector<double> )
 		{
 			// TODO
 		}
 
 		// Check whether state is within Nc reactions of bottoming out:
-		bool iscritical (StateVec x, int Nc)
+		bool isCritical (StateVec x, int Nc)
 		{
 			// TODO
 		}

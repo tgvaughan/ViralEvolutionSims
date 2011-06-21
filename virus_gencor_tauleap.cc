@@ -216,56 +216,36 @@ int main (int argc, char **argv)
 				// Hybrid integration step:
 				double t = 0.0;
 				while (true) {
-					
-					// Assemble set of critical reactions and calculate propensities: 
-					set<int> critReactions;
-					set<int>::iterator it;
 
-					vector<double> propensities(Nreactions);
+					int critReaction = -1;
+					double delta = dt - t;
+
+					// Calculate propensities and determine critical reactions:
 					for (int r=0; r<Nreactions; r++) {
 
-						if (reactions[r].iscritical(x, Nc))
-							critReactions.insert(r);
+						reactions[r].calcPropensity(x, buf);
 
-						propensities[r] = reactions[r].propensity(x);
+						if (reactions[r].isCritical() && reactions.criticalDelta() < delta) {
+							critReaction = r;
+							delta = reactions.criticalDelta();
+						}
+
 					}
-
-					// Determine time of next critical reaction:
-					double a0crit = 0;
-					for (it=critReactions.begin(); it != critReactions.end(); it++)
-						a0crit += propensities[*it];
-
-					double deltat = -log(erand48(buf))/a0crit;
 
 					// Perform tau-leap:
-					double tl_dt = fmin(deltat, dt[phase]-t);
-					for (int r=0; r<Nreactions; r++) {
+					for (int r=0; r<Nreactions; r++)
+						x = reactions[r].tauLeap(x, delta, buf);
 
-						if (critReactions.count(r)>0)
-							continue;
+					// Will a critical reaction occur before end of current interval?
+					if (critReaction<0)
+						break;
 
-						x = x + reactions[r].delta *
-							poissonian(tl_dt*propensities[r], buf);
-					}
+					// Implement chosen critical reaction:
+					x = reactions[critReaction].implementCritical(x);
 
-					// Will a critical reaction occur before end of current tau-leap interval?
-					if (t+deltat > dt[phase])
-						break; // No
+					// Increment within-interval time:
+					t += delta;
 
-					// Determine which reaction to fire:
-					double u = erand48(buf)*a0crit;
-					double a = 0;
-					for (it=critReactions.begin(); it != critReactions.end(); it++) {
-						a += propensities[*it];
-						if (u<a)
-							break;
-					}
-
-					// Implement reaction:
-					x = reactions[*it].implement(x);
-
-					// Update time within interval:
-					t += deltat;
 				}
 
 				// Check for negative values:
