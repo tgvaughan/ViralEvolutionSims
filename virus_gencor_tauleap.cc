@@ -102,41 +102,41 @@ int main (int argc, char **argv)
 	in[0] = 0; in[1] = 0; in[2] = 0;
 	out[0] = 1; out[1] = 0; out[2] = 0;
 	mutate[0] = false; mutate[1] = false; mutate[2] = false;
-	reactions[0] = Reaction(in, out, mutate, false, lambda);
+	reactions[0] = Reaction(in, out, mutate, Nc, false, lambda);
 
 	// T cell infection
 	in[0] = 1; in[1] = 0; in[2] = 1;
 	out[0] = 0; out[1] = 1; out[2] = 0;
 	mutate[0] = false; mutate[1] = false; mutate[2] = false;
-	reactions[1] = Reaction(in, out, mutate, true, beta);
+	reactions[1] = Reaction(in, out, mutate, Nc, true, beta);
 
 	// Virus production
 	in[0] = 0; in[1] = 1; in[2] = 0;
 	out[0] = 0; out[1] = 1; out[2] = 1;
 	mutate[0] = false; mutate[1] = false; mutate[2] = false;
-	reactions[2] = Reaction(in, out, mutate, true, k);
+	reactions[2] = Reaction(in, out, mutate, Nc, true, k);
 
 	// T cell death
 	in[0] = 1; in[1] = 0; in[2] = 0;
 	out[0] = 0; out[1] = 0; out[2] = 0;
 	mutate[0] = false; mutate[1] = false; mutate[2] = false;
-	reactions[3] = Reaction(in, out, mutate, true, d);
+	reactions[3] = Reaction(in, out, mutate, Nc, true, d);
 
 	// Infected T cell death
 	in[0] = 0; in[1] = 1; in[2] = 0;
 	out[0] = 0; out[1] = 0; out[2] = 0;
 	mutate[0] = false; mutate[1] = false; mutate[2] = false;
-	reactions[4] = Reaction(in, out, mutate, true, a);
+	reactions[4] = Reaction(in, out, mutate, Nc, true, a);
 
 	// Virion clearance
 	in[0] = 0; in[1] = 0; in[2] = 1;
 	out[0] = 0; out[1] = 0; out[2] = 0;
 	mutate[0] = false; mutate[1] = false; mutate[2] = false;
-	reactions[5] = Reaction(in, out, mutate, true, u);
+	reactions[5] = Reaction(in, out, mutate, Nc, true, u);
 
 	// Initial state:
 	StateVec x0(3);
-	x0[0] = new NongenPopulation(lambda/d); // Uninfected
+	x0[0] = new NongenPopulation(lambda/d); 		// Uninfected
 	x0[1] = new GenPopulation(sequenceL);			// Infected
 	x0[2] = new GenPopulation(sequenceL);			// Virus
 	x0[2].pop[seq0] = Nv0;

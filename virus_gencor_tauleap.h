@@ -12,26 +12,35 @@ class Sequence : public std::vector<int> {
 			resize(length, 0);  // Initial sequence filled with zeros.
 		}
 		Sequence () {};
-		Sequence (Sequence & s) {
+		Sequence (const Sequence & s) {
 			nChar = s.nChar;
 			for (int i=0; i<s.size(); i++)
 				operator[](i) = s[i];
 		}
 
-		// Return set of neighbouring sequences:
-		std::set<Sequence> getNeighbours() {
+		// Return vector containing neighbouring sequences:
+		std::vector<Sequence> getNeighbours() {
 
-			std::set<Sequence> neighbours;
+			std::vector<Sequence> neighbours(size()*(nChar-1));
 
+			int idx=0;
 			for (int i=0; i<size(); i++) {
 				for (int j=0; j<nChar-1; j++) {
 					Sequence a = *this;
 					a[i] = (a[i]+j) % nChar;
-					neighbours.insert(a);
+					neighbours[idx++] = a;
 				}
 			}
 
 			return neighbours;
+		}
+
+		// Select and return a random neighbouring sequence:
+		Sequence chooseNeighbour (unsigned short *buf) {
+
+			std::vector<Sequence> neighbours = getNeighbours();
+
+			return neighbours[nrand48(buf)%neighbours.size()];
 		}
 };
 
@@ -42,13 +51,23 @@ class Population {
 
 		bool isGen;
 
-		virtual bool isnegative() =0;
-		virtual int operator[] (Sequence s) =0;
+		std::map<Sequence, double> pop;
+		double n;
+		int seqLen;
 
-		virtual Population operator= (Population p) =0;
-		virtual Population operator+ (Population p) =0;
-		virtual Population operator- (Population p) =0;
-		virtual Population operator* (double p) =0;
+		std::map<Sequence, double>::iterator begin() {
+			return pop.begin();
+		}
+		std::map<Sequence, double>::iterator end() {
+			return pop.end();
+		}
+
+		virtual double operator[] (Sequence s) {
+			return 0.0;
+		}
+		virtual bool isnegative() =0;
+		virtual double popSize() =0;
+
 };
 
 
@@ -56,8 +75,8 @@ class Population {
 class GenPopulation : public Population {
 	public:
 
-		std::map<Sequence, double> pop;
-		int seqLen;
+		//std::map<Sequence, double> pop;
+		//int seqLen;
 
 		// Constructors:
 		GenPopulation(int p_seqLen) {
@@ -80,70 +99,6 @@ class GenPopulation : public Population {
 				return 0;
 
 			return it->second;
-		}
-
-		// Return iterators:
-		map<Sequence, double>::iterator begin() {
-			return pop.begin();
-		}
-		map<Sequence, double>::iterator end() {
-			return pop.end();
-		}
-
-		// Assignment operator:
-		GenPopulation operator= (GenPopulation p) {
-			seqLen = p.seqLen;
-			pop = p.pop;
-
-			return *this;
-		}
-
-		//Arithmetic operators:
-		GenPopulation operator+ (GenPopulation p) {
-
-			GenPopulation res = *this;
-
-			std::map<Sequence, double>::iterator it;
-
-			for (it = p.pop.begin(); it != p.pop.end(); it++) {
-				res.pop[it->first] += it->second;
-
-				if (res[it->first] == 0)
-					res.pop.erase(it->first);
-			}
-
-			return res;
-		}
-
-		GenPopulation operator- (GenPopulation p) {
-
-			GenPopulation res = *this;
-
-			std::map<Sequence, double>::iterator it;
-
-			for (it = p.pop.begin(); it != p.pop.end(); it++) {
-				res.pop[it->first] -= it->second;
-
-				if (res.pop[it->first] == 0)
-					res.pop.erase(it->first);
-			}
-
-			return res;
-		}
-
-		// Multiplication by scalar:
-		GenPopulation operator* (double p) {
-
-			GenPopulation res;
-
-			if (p > 0) {
-				std::map<Sequence, double>::iterator it;
-
-				for (it = res.pop.begin(); it != res.pop.end(); it++)
-					it->second *= p;
-			}
-
-			return res;
 		}
 
 		// Negativity check:
@@ -177,8 +132,6 @@ class GenPopulation : public Population {
 class NongenPopulation : public Population {
 	public:
 
-		double n;
-
 		// Constructors:
 		NongenPopulation (int p_n) {
 			n = p_n;
@@ -190,40 +143,6 @@ class NongenPopulation : public Population {
 		NongenPopulation (NongenPopulation & p) {
 			isGen = false;
 			n = p.n;
-		}
-
-		// Assignment operator:
-		NongenPopulation operator= (NongenPopulation p) {
-			n = p.n;
-
-			return *this;
-		}
-
-		// Arithmetic operators:
-		NongenPopulation operator+ (NongenPopulation p) {
-			NongenPopulation res = *this;
-
-			res.n += p.n;
-
-			return res;
-		}
-
-		NongenPopulation operator- (NongenPopulation p) {
-			NongenPopulation res = *this;
-
-			res.n -= p.n;
-
-			return res;
-		}
-
-		// Multiplication by scalar:
-		NongenPopulation operator* (double p) {
-
-			NongenPopulation res = *this;
-
-			res.n *= p;
-
-			return res;
 		}
 
 		// Negativity check:
@@ -248,35 +167,6 @@ class StateVec : public std::vector<Population> {
 			resize(nSpecies);
 		}
 		StateVec() {};
-
-		// State vector algebra:
-		StateVec operator+ (StateVec p) {
-
-			StateVec res = p;
-			for (int i=0; i<size(); i++)
-				res[i] = res[i] + operator[](i);
-
-			return res;
-		}
-
-		StateVec operator- (StateVec p) {
-
-			StateVec res = *this;
-			for (int i=0; i<size(); i++)
-				res[i] = res[i] - p[i];
-
-			return res;
-		}
-
-		// Multiplication by scalar:
-		StateVec operator* (double p) {
-
-			StateVec res = *this;
-			for (int i=0; i<size(); i++)
-				res[i] = res[i] * p;
-
-			return res;
-		}
 
 		// Check for negative populations:
 		bool isnegative() {
@@ -319,7 +209,7 @@ class Reaction {
 		// Constructors:
 		Reaction(std::vector<int> p_in, std::vector<int> p_out,
 				std::vector<bool> p_mutate,
-				double p_rate, bool p_isGen, int p_Nc)
+				int p_Nc, bool p_isGen, double p_rate)
 		{
 			rate = p_rate;
 			in = p_in;
@@ -387,12 +277,12 @@ class Reaction {
 						} else {
 
 							// Check for criticality
-							if (x[i] < Nc*(in[i] - out[i]))
+							if (x[i].n < Nc*(in[i] - out[i]))
 									crit = true;
 
 							// Calculate propensity contribution
 							for (int m=0; m<in[i]; m++)
-								a *= x[i].popSize() - m;
+								a *= x[i].n - m;
 						}
 					}
 
@@ -439,7 +329,7 @@ class Reaction {
 						continue;
 
 					// Check for criticality
-					if (x[i] < Nc*(in[i] - out[i]))
+					if (x[i].n < Nc*(in[i] - out[i]))
 						crit = true;
 
 					// Calculate propensity contribution
@@ -483,11 +373,11 @@ class Reaction {
 					double thisProp = it->second;
 
 					if (isMutation) {
-						std::set<Sequence> mutSequences = thisSeq.getNeighbours();
+						std::vector<Sequence> mutSequences = thisSeq.getNeighbours();
 
-						std::set<Sequence>::iterator itm;
+						std::vector<Sequence>::iterator itm;
 						for (itm = mutSequences.begin(); itm != mutSequences.end(); itm++) {
-							Sequence mutant = itm->first;
+							Sequence mutantSeq = *itm;
 
 							double nreacts = poissonian(thisProp*dt, buf);
 
@@ -538,16 +428,14 @@ class Reaction {
 		}
 
 		// Implement critical reaction on given state:
-		StateVec implementCritical(StateVec x, std::vector<double> )
+		StateVec implementCritical(StateVec x, unsigned short *buf)
 		{
 
 			if (isGen) {
 
 				if (isMutation) {
 
-					std::set<Sequence> mutSequences = criticalSeq.getNeighbours();
-					int nNeighbours = criticalSeq.size()*(criticalSeq.nChar-1);
-					Sequence mutantSeq = criticalSeq.getNaighbours()[drand48(buf)%nNeighbours];
+					Sequence mutantSeq = criticalSeq.chooseNeighbour(buf);
 
 					for (int i=0; i<x.size(); i++) {
 						if (x[i].isGen) {
