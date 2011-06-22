@@ -225,9 +225,9 @@ int main (int argc, char **argv)
 
 						reactions[r].calcPropensity(x, buf);
 
-						if (reactions[r].isCritical() && reactions.criticalDelta() < delta) {
+						if (reactions[r].isCritical() && reactions.criticalDelta < delta) {
 							critReaction = r;
-							delta = reactions.criticalDelta();
+							delta = reactions.criticalDelta;
 						}
 
 					}
