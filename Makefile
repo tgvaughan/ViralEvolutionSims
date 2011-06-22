@@ -1,4 +1,4 @@
-all: virus_gencor
+all: virus_gencor virus_gencor_tauleap
 
 virus_gencor: virus_gencor.o
 	mpic++ -o virus_gencor virus_gencor.o

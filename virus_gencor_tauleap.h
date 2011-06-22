@@ -7,13 +7,9 @@ class Sequence : public std::vector<int> {
 		int nChar;
 
 		// Constructors:
-		Sequence (std::vector<int> v, int p_nChar) {
-
+		Sequence (int length, int p_nChar) {
 			nChar = p_nChar;
-
-			resize(v.size());
-			for (int i=0; i<v.size(); i++)
-				operator[](i) = v[i];
+			resize(length, 0);  // Initial sequence filled with zeros.
 		}
 		Sequence () {};
 		Sequence (Sequence & s) {
@@ -31,7 +27,7 @@ class Sequence : public std::vector<int> {
 				for (int j=0; j<nChar-1; j++) {
 					Sequence a = *this;
 					a[i] = (a[i]+j) % nChar;
-					neighbours.add(a);
+					neighbours.insert(a);
 				}
 			}
 

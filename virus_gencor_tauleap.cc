@@ -22,25 +22,25 @@
 
 // Moment calculation functions:
 double samplefunc_x(StateVec x) {
-	return x[0];
+	return x[0].popSize();
 }
 double samplefunc_y(StateVec x) {
-	return x[1];
+	return x[1].popSize();
 }
 double samplefunc_v(StateVec x) {
-	return x[2];
+	return x[2].popSize();
 }
 double samplefunc_xy(StateVec x) {
-	return x[0]*x[1];
+	return x[0].popSize()*x[1].popSize();
 }
 double samplefunc_xv(StateVec x) {
-	return x[0]*x[2];
+	return x[0].popSize()*x[2].popSize();
 }
 double samplefunc_yv(StateVec x) {
-	return x[1]*x[2];
+	return x[1].popSize()*x[2].popSize();
 }
 double samplefunc_clear(StateVec x) {
-	return (double)(x[1]<0.5 && x[2]<0.5);
+	return (double)(x[1].popSize()<0.5 && x[2].popSize()<0.5);
 }
 
 int main (int argc, char **argv)
@@ -69,6 +69,10 @@ int main (int argc, char **argv)
 	int Nc = 100;			// Critical reaction number
 	int Nsamples = 10001;	// Number of samples to record
 
+	// Genetic parameters:
+	int sequenceL = 10;		// Sequence length
+	int nChar = 4;			// Number of distinct characters
+
 	// Calculation conditional on no extinction?
 	bool conditional = false;
 
@@ -85,46 +89,57 @@ int main (int argc, char **argv)
 	double dt[2] = {T/(Nt[0]-1), T/(Nt[1]-1)};
 	int steps_per_sample[2] = {(Nt[0]-1)/(Nsamples-1), (Nt[1]-1)/(Nsamples-1)};
 
+	// Initial sequence:
+	Sequence seq0(sequenceL, nChar);
+
 	// Set up reactions:
 	int Nreactions = 6;
 	Reaction reactions[6];
-	StateVec in(3), out(3);
+	vector<int> in(3), out(3);
+	vector<bool> mutate;
 
 	// T cell production
 	in[0] = 0; in[1] = 0; in[2] = 0;
 	out[0] = 1; out[1] = 0; out[2] = 0;
-	reactions[0] = Reaction(in, out, lambda);
+	mutate[0] = false; mutate[1] = false; mutate[2] = false;
+	reactions[0] = Reaction(in, out, mutate, false, lambda);
 
 	// T cell infection
 	in[0] = 1; in[1] = 0; in[2] = 1;
 	out[0] = 0; out[1] = 1; out[2] = 0;
-	reactions[1] = Reaction(in, out, beta);
+	mutate[0] = false; mutate[1] = false; mutate[2] = false;
+	reactions[1] = Reaction(in, out, mutate, true, beta);
 
 	// Virus production
 	in[0] = 0; in[1] = 1; in[2] = 0;
 	out[0] = 0; out[1] = 1; out[2] = 1;
-	reactions[2] = Reaction(in, out, k);
+	mutate[0] = false; mutate[1] = false; mutate[2] = false;
+	reactions[2] = Reaction(in, out, mutate, true, k);
 
 	// T cell death
 	in[0] = 1; in[1] = 0; in[2] = 0;
 	out[0] = 0; out[1] = 0; out[2] = 0;
-	reactions[3] = Reaction(in, out, d);
+	mutate[0] = false; mutate[1] = false; mutate[2] = false;
+	reactions[3] = Reaction(in, out, mutate, true, d);
 
 	// Infected T cell death
 	in[0] = 0; in[1] = 1; in[2] = 0;
 	out[0] = 0; out[1] = 0; out[2] = 0;
-	reactions[4] = Reaction(in, out, a);
+	mutate[0] = false; mutate[1] = false; mutate[2] = false;
+	reactions[4] = Reaction(in, out, mutate, true, a);
 
 	// Virion clearance
 	in[0] = 0; in[1] = 0; in[2] = 1;
 	out[0] = 0; out[1] = 0; out[2] = 0;
-	reactions[5] = Reaction(in, out, u);
+	mutate[0] = false; mutate[1] = false; mutate[2] = false;
+	reactions[5] = Reaction(in, out, mutate, true, u);
 
 	// Initial state:
 	StateVec x0(3);
-	x0[0] = 2.5e11; // Uninfected
-	x0[1] = 0; 		// Infected
-	x0[2] = Nv0;	// Virus
+	x0[0] = new NongenPopulation(lambda/d); // Uninfected
+	x0[1] = new GenPopulation(sequenceL);			// Infected
+	x0[2] = new GenPopulation(sequenceL);			// Virus
+	x0[2].pop[seq0] = Nv0;
 
 	// Allocate memory for recording moments:
 	int Nmoments = 7;
@@ -177,11 +192,7 @@ int main (int argc, char **argv)
 			}
 
 			// Initialise system state:
-			StateVec x(3);
-			x[0] = poissonian(x0[0], buf);
-			x[1] = poissonian(x0[1], buf);
-			//x[2] = poissonian(x0[2], buf);
-			x[2] = x0[2];
+			StateVec x(3) = x0;
 
 			// Initialise sampling index:
 			int sidx = 0;
@@ -344,6 +355,10 @@ int main (int argc, char **argv)
 		ofile << "# lambda = " << lambda << endl;
 		ofile << "# k = " << k << endl;
 		ofile << "# beta = " << beta << endl;
+		ofile << "# " << endl;
+		ofile << "# Genetic Paramters" << endl;
+		ofile << "# sequenceL = " << sequenceL << endl;
+		ofile << "# nChar = " << nChar << endl;
 		ofile << "# " << endl;
 		ofile << "# Simulation took " << sim_time << " seconds to complete." << endl << endl;
 
