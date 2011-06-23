@@ -45,51 +45,31 @@ class Sequence : public std::vector<int> {
 };
 
 
-// Abstract base class for populations
-class Population {
+// Class for genetically diverse populations
+class GenPopulation {
 	public:
 
-		bool isGen;
-
 		std::map<Sequence, double> pop;
-		double n;
-		int seqLen;
 
+		// Constructors:
+		GenPopulation() {};
+		GenPopulation(const GenPopulation & p) {
+			pop = p.pop;
+		}
+
+		// Assignment:
+		GenPopulation operator= (GenPopulation arg) {
+			pop = arg.pop;
+
+			return *this;
+		}
+
+		// Return iterators for pop:
 		std::map<Sequence, double>::iterator begin() {
 			return pop.begin();
 		}
 		std::map<Sequence, double>::iterator end() {
 			return pop.end();
-		}
-
-		virtual double operator[] (Sequence s) {
-			return 0.0;
-		}
-		virtual bool isnegative() =0;
-		virtual double popSize() =0;
-
-};
-
-
-// Class for genetically diverse populations
-class GenPopulation : public Population {
-	public:
-
-		//std::map<Sequence, double> pop;
-		//int seqLen;
-
-		// Constructors:
-		GenPopulation(int p_seqLen) {
-			isGen = true;
-			seqLen = p_seqLen;
-		}
-		GenPopulation() {
-			isGen = true;
-		}
-		GenPopulation(GenPopulation & p) {
-			isGen = true;
-			seqLen = p.seqLen;
-			pop = p.pop;
 		}
 
 		// Element indexing operator:
@@ -129,20 +109,26 @@ class GenPopulation : public Population {
 
 
 // Class for genetically homogeneous populations
-class NongenPopulation : public Population {
+class NonGenPopulation {
 	public:
 
+		double n;
+
 		// Constructors:
-		NongenPopulation (int p_n) {
+		NonGenPopulation (double p_n) {
 			n = p_n;
-			isGen = false;
 		}
-		NongenPopulation () {
-			isGen = false;
+		NonGenPopulation () {
 		}
-		NongenPopulation (NongenPopulation & p) {
-			isGen = false;
+		NonGenPopulation (const NonGenPopulation & p) {
 			n = p.n;
+		}
+
+		// Assignment:
+		NonGenPopulation operator= (const NonGenPopulation & arg) {
+			n = arg.n;
+
+			return *this;
 		}
 
 		// Negativity check:
@@ -158,21 +144,33 @@ class NongenPopulation : public Population {
 
 
 // Class for system state vectors
-class StateVec : public std::vector<Population> {
+class StateVec {
 	public:
 
+		std::vector<NonGenPopulation> nonGenetic;
+		std::vector<GenPopulation> genetic;
+
 		// Constructors:
-		StateVec(int nSpecies)
+		StateVec(int nNonGeneticSpecies, int nGeneticSpecies)
 		{
-			resize(nSpecies);
+			nonGenetic.resize(nNonGeneticSpecies);
+			genetic.resize(nGeneticSpecies);
 		}
 		StateVec() {};
+		StateVec(const StateVec & arg) {
+			nonGenetic = arg.nonGenetic;
+			genetic = arg.genetic;
+		}
 
 		// Check for negative populations:
 		bool isnegative() {
 
-			for (int i=0; i<size(); i++)
-				if (operator[](i).isnegative())
+			for (int i=0; i<nonGenetic.size(); i++)
+				if (nonGenetic[i].isnegative())
+					return true;
+
+			for (int i=0; i<genetic.size(); i++)
+				if (genetic[i].isnegative())
 					return true;
 
 			return false;
@@ -186,7 +184,8 @@ class Reaction {
 	public:
 
 		double rate;
-		std::vector<int> in, out;
+		std::vector<int> inNonGen, inGen;
+		std::vector<int> outNonGen, outGen;
 		std::vector<bool> mutate;
 
 		// Critical reaction number:
@@ -207,16 +206,26 @@ class Reaction {
 		double criticalDelta;
 
 		// Constructors:
-		Reaction(std::vector<int> p_in, std::vector<int> p_out,
+		Reaction(std::vector<int> p_inNonGen,
+				std::vector<int> p_inGen,
+				std::vector<int> p_outNonGen,
+				std::vector<int> p_outGen,
 				std::vector<bool> p_mutate,
-				int p_Nc, bool p_isGen, double p_rate)
+				int p_Nc, double p_rate)
 		{
-			rate = p_rate;
-			in = p_in;
-			out = p_out;
+			inNonGen = p_inNonGen;
+			inGen = p_inGen;
+			outNonGen = p_outNonGen;
+			outGen = p_outGen;
 			mutate = p_mutate;
+			rate = p_rate;
 
-			isGen = p_isGen;
+			isGen = false;
+			for (int i=0; i<inGen.size(); i++) {
+				if (inGen[i]>0 || outGen[i]>0)
+					isGen = true;
+			}
+
 			isMutation = false;
 			for (int i=0; i<mutate.size(); i++)
 				if (mutate[i])
@@ -241,12 +250,16 @@ class Reaction {
 				criticalSeq.clear();
 
 				// Determine reactant population with smallest diversity:
+				// (Rationale: the subpopulation of each genotype must be
+				// non-zero for each of the reactant species, so it makes sense
+				// to consider only those genotypes extant in the reactant
+				// population with the smallest diversity.)
 				int mindiversity = 0;
-				int imin = 0;
-				for (int i=0; i<x.size(); i++) {
-					if (in[i]>0 && x[i].isGen) {
-						if (imin>=0 || x[i].pop.size()<mindiversity) {
-							mindiversity = x[i].pop.size();
+				int imin = -1;
+				for (int i=0; i<x.genetic.size(); i++) {
+					if (inGen[i]>0) {
+						if (imin<0 || x.genetic[i].pop.size()<mindiversity) {
+							mindiversity = x.genetic[i].pop.size();
 							imin = i;
 						}
 					}
@@ -254,36 +267,37 @@ class Reaction {
 
 				// Determine all reaction propensities:
 				std::map<Sequence, double>::iterator it;
-				for (it = x[imin].begin(); it != x[imin].end(); it++) {
+				for (it = x.genetic[imin].begin(); it != x.genetic[imin].end(); it++) {
+
+					Sequence thisSeq = it->first;
 
 					double a = 1.0;
 					bool crit = false;
-					for (int i=0; i<x.size(); i++) {
-						if (x[i].isGen) {
+					for (int i=0; i<x.genetic.size(); i++) {
 
-							// Check for criticality
-							if (!mutate[i]) {
-							   	if (x[i][it->first] < Nc*(in[i]-out[i]))
-									crit = true;
-							} else {
-							   	if (x[i][it->first] < Nc*in[i])
-									crit = true;
-							}
-
-							// Calculate propensity contribution
-							for (int m=0; m<in[i]; m++)
-								a *= x[i][it->first] - m;
-
+						// Check for criticality
+						if (!mutate[i]) {
+						   	if (x.genetic[i][thisSeq] < Nc*(inGen[i]-outGen[i]))
+								crit = true;
 						} else {
-
-							// Check for criticality
-							if (x[i].n < Nc*(in[i] - out[i]))
-									crit = true;
-
-							// Calculate propensity contribution
-							for (int m=0; m<in[i]; m++)
-								a *= x[i].n - m;
+						   	if (x.genetic[i][thisSeq] < Nc*inGen[i])
+								crit = true;
 						}
+
+						// Calculate propensity contribution
+						for (int m=0; m<inGen[i]; m++)
+							a *= x.genetic[i][thisSeq] - m;
+					}
+
+					for (int i=0; i<x.nonGenetic.size(); i++) {
+
+						// Check for criticality
+						if (x.nonGenetic[i].n < Nc*(inNonGen[i] - outNonGen[i]))
+								crit = true;
+
+						// Calculate propensity contribution
+						for (int m=0; m<inNonGen[i]; m++)
+							a *= x.nonGenetic[i].n - m;
 					}
 
 					if (a>0) {
@@ -293,12 +307,12 @@ class Reaction {
 
 							if (isMutation) {
 
-								for (int i=0; i<it->first.size()*(it->first.nChar-1); i++) {
+								for (int i=0; i<thisSeq.size()*(thisSeq.nChar-1); i++) {
 									
 									double delta = -log(erand48(buf))/a;
 									if (criticalDelta < 0 || delta < criticalDelta) {
 										criticalDelta = delta;
-										criticalSeq = it->first;
+										criticalSeq = thisSeq;
 									}
 								}
 
@@ -307,7 +321,7 @@ class Reaction {
 								double delta = -log(erand48(buf))/a;
 								if (criticalDelta < 0 || delta < criticalDelta) {
 									criticalDelta = delta;
-									criticalSeq = it->first;
+									criticalSeq = thisSeq;
 								}
 							}
 
@@ -323,18 +337,18 @@ class Reaction {
 
 				double a = 1.0;
 				bool crit = false;
-				for (int i=0; i<x.size(); i++) {
+				for (int i=0; i<x.nonGenetic.size(); i++) {
 
-					if (in[i] == 0)
+					if (inNonGen[i] == 0)
 						continue;
 
 					// Check for criticality
-					if (x[i].n < Nc*(in[i] - out[i]))
+					if (x.nonGenetic[i].n < Nc*(inNonGen[i] - outNonGen[i]))
 						crit = true;
 
 					// Calculate propensity contribution
-					for (int m=0; m<in[i]; m++) {
-						a *= x[i].popSize() - m;
+					for (int m=0; m<inNonGen[i]; m++) {
+						a *= x.nonGenetic[i].n - m;
 					}
 				}
 
@@ -381,19 +395,18 @@ class Reaction {
 
 							double nreacts = poissonian(thisProp*dt, buf);
 
-							for (int i=0; i<x.size(); i++) {
-								if (x[i].isGen) {
-									if (!mutate[i]) {
-										if (out[i]-in[i] != 0)
-											x[i].pop[thisSeq] += nreacts*(out[i]-in[i]);
-									} else {
-										x[i].pop[thisSeq] -= nreacts*in[i];
-										x[i].pop[mutantSeq] += nreacts*out[i];
-									}
+							for (int i=0; i<x.genetic.size(); i++) {
+								if (!mutate[i]) {
+									if (outGen[i]-inGen[i] != 0)
+										x.genetic[i].pop[thisSeq] += nreacts*(outGen[i]-inGen[i]);
 								} else {
-									if (out[i]-in[i] != 0)
-										x[i].n += nreacts*(out[i]-in[i]);
+									x.genetic[i].pop[thisSeq] -= nreacts*inGen[i];
+									x.genetic[i].pop[mutantSeq] += nreacts*outGen[i];
 								}
+							}
+							for (int i=0; i<x.nonGenetic.size(); i++) {
+								if (outNonGen[i]-inNonGen[i] != 0)
+									x.nonGenetic[i].n += nreacts*(outNonGen[i]-inNonGen[i]);
 							}
 						}
 
@@ -401,13 +414,13 @@ class Reaction {
 
 						double nreacts = poissonian(thisProp*dt, buf);
 
-						for (int i=0; i<x.size(); i++) {
-							if (out[i] - in[i] != 0) {
-								if (x[i].isGen)
-									x[i].pop[thisSeq] += nreacts*(out[i]-in[i]);
-								else
-									x[i].n += nreacts*(out[i]-in[i]);
-							}
+						for (int i=0; i<x.genetic.size(); i++) {
+							if ((outGen[i] - inGen[i]) != 0)
+								x.genetic[i].pop[thisSeq] += nreacts*(outGen[i]-inGen[i]);
+						}
+						for (int i=0; i<x.nonGenetic.size(); i++) {
+							if ((outNonGen[i] - inNonGen[i]) != 0)
+								x.nonGenetic[i].n += nreacts*(outNonGen[i]-inNonGen[i]);
 						}
 
 					}
@@ -418,9 +431,9 @@ class Reaction {
 
 				double nreacts = poissonian(propensity*dt, buf);
 
-				for (int i=0; i<x.size(); i++) {
-					if (in[i]-out[i] != 0) {
-						x[i].n += nreacts*(out[i]-in[i]);
+				for (int i=0; i<x.nonGenetic.size(); i++) {
+					if (outNonGen[i]-inNonGen[i] != 0) {
+						x.nonGenetic[i].n += nreacts*(outNonGen[i]-inNonGen[i]);
 					}
 				}
 
@@ -437,39 +450,34 @@ class Reaction {
 
 					Sequence mutantSeq = criticalSeq.chooseNeighbour(buf);
 
-					for (int i=0; i<x.size(); i++) {
-						if (x[i].isGen) {
-							if (mutate[i]) {
-								if (in[i] > 0)
-									x[i].pop[criticalSeq] -= in[i];
-								if (out[i] > 0)
-									x[i].pop[mutantSeq] += out[i];
-							} else {
-								if (out[i]-in[i] != 0)
-									x[i].pop[criticalSeq] += out[i]-in[i];
-							}
+					for (int i=0; i<x.genetic.size(); i++) {
+						if (mutate[i]) {
+							if (inGen[i] > 0)
+								x.genetic[i].pop[criticalSeq] -= inGen[i];
+							if (outGen[i] > 0)
+								x.genetic[i].pop[mutantSeq] += outGen[i];
 						} else {
-							x[i].n += out[i]-in[i];
+							if (outGen[i]-inGen[i] != 0)
+								x.genetic[i].pop[criticalSeq] += outGen[i]-inGen[i];
 						}
 					}
+					for (int i=0; i<x.nonGenetic.size(); i++)
+						x.nonGenetic[i].n += outNonGen[i]-inNonGen[i];
 
 				} else {
 
-					for (int i=0; i<x.size(); i++) {
-						if (x[i].isGen) {
-							if (out[i]-in[i] != 0)
-								x[i].pop[criticalSeq] += out[i]-in[i];
-						} else
-							x[i].n += out[i]-in[i];
+					for (int i=0; i<x.genetic.size(); i++) {
+						if (outGen[i]-inGen[i] != 0)
+							x.genetic[i].pop[criticalSeq] += outGen[i]-inGen[i];
 					}
-
+					for (int i=0; i<x.nonGenetic.size(); i++)
+						x.nonGenetic[i].n += outNonGen[i]-inNonGen[i];
 				}
 
 			} else {
 
-				for (int i=0; i<x.size(); i++)
-					x[i].n += out[i]-in[i];
-
+				for (int i=0; i<x.nonGenetic.size(); i++)
+					x.nonGenetic[i].n += outNonGen[i]-inNonGen[i];
 			}
 
 			return x;

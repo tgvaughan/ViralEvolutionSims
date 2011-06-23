@@ -22,25 +22,25 @@
 
 // Moment calculation functions:
 double samplefunc_x(StateVec x) {
-	return x[0].popSize();
+	return x.nonGenetic[0].popSize();
 }
 double samplefunc_y(StateVec x) {
-	return x[1].popSize();
+	return x.genetic[0].popSize();
 }
 double samplefunc_v(StateVec x) {
-	return x[2].popSize();
+	return x.genetic[1].popSize();
 }
 double samplefunc_xy(StateVec x) {
-	return x[0].popSize()*x[1].popSize();
+	return x.nonGenetic[0].popSize()*x.genetic[0].popSize();
 }
 double samplefunc_xv(StateVec x) {
-	return x[0].popSize()*x[2].popSize();
+	return x.nonGenetic[0].popSize()*x.genetic[1].popSize();
 }
 double samplefunc_yv(StateVec x) {
-	return x[1].popSize()*x[2].popSize();
+	return x.genetic[0].popSize()*x.genetic[1].popSize();
 }
 double samplefunc_clear(StateVec x) {
-	return (double)(x[1].popSize()<0.5 && x[2].popSize()<0.5);
+	return (double)(x.genetic[0].popSize()<0.5 && x.genetic[1].popSize()<0.5);
 }
 
 int main (int argc, char **argv)
@@ -95,51 +95,55 @@ int main (int argc, char **argv)
 	// Set up reactions:
 	int Nreactions = 6;
 	Reaction reactions[6];
-	vector<int> in(3), out(3);
-	vector<bool> mutate;
+	vector<int> inNonGen(1), inGen(2), outNonGen(1), outGen(2);
+	vector<bool> mutate(2);
 
 	// T cell production
-	in[0] = 0; in[1] = 0; in[2] = 0;
-	out[0] = 1; out[1] = 0; out[2] = 0;
-	mutate[0] = false; mutate[1] = false; mutate[2] = false;
-	reactions[0] = Reaction(in, out, mutate, Nc, false, lambda);
+	inNonGen[0] = 0; inGen[0] = 0; inGen[1] = 0;
+	outNonGen[0] = 1; outGen[0] = 0; outGen[1] = 0;
+	mutate[0] = false; mutate[1] = false;
+	reactions[0] = Reaction(inNonGen, inGen, outNonGen, outGen, mutate, Nc, lambda);
 
 	// T cell infection
-	in[0] = 1; in[1] = 0; in[2] = 1;
-	out[0] = 0; out[1] = 1; out[2] = 0;
-	mutate[0] = false; mutate[1] = false; mutate[2] = false;
-	reactions[1] = Reaction(in, out, mutate, Nc, true, beta);
+	inNonGen[0] = 1; inGen[0] = 0; inGen[1] = 1;
+	outNonGen[0] = 0; outGen[0] = 1; outGen[1] = 0;
+	mutate[0] = false; mutate[1] = false;
+	reactions[1] = Reaction(inNonGen, inGen, outNonGen, outGen, mutate, Nc, beta);
 
 	// Virus production
-	in[0] = 0; in[1] = 1; in[2] = 0;
-	out[0] = 0; out[1] = 1; out[2] = 1;
-	mutate[0] = false; mutate[1] = false; mutate[2] = false;
-	reactions[2] = Reaction(in, out, mutate, Nc, true, k);
+	inNonGen[0] = 0; inGen[0] = 1; inGen[1] = 0;
+	outNonGen[0] = 0; outGen[0] = 1; outGen[1] = 1;
+	mutate[0] = false; mutate[1] = false;
+	reactions[2] = Reaction(inNonGen, inGen, outNonGen, outGen, mutate, Nc, k);
 
 	// T cell death
-	in[0] = 1; in[1] = 0; in[2] = 0;
-	out[0] = 0; out[1] = 0; out[2] = 0;
-	mutate[0] = false; mutate[1] = false; mutate[2] = false;
-	reactions[3] = Reaction(in, out, mutate, Nc, true, d);
+	inNonGen[0] = 1; inGen[0] = 0; inGen[1] = 0;
+	outNonGen[0] = 0; outGen[0] = 0; outGen[1] = 0;
+	mutate[0] = false; mutate[1] = false;
+	reactions[3] = Reaction(inNonGen, inGen, outNonGen, outGen, mutate, Nc, d);
 
 	// Infected T cell death
-	in[0] = 0; in[1] = 1; in[2] = 0;
-	out[0] = 0; out[1] = 0; out[2] = 0;
-	mutate[0] = false; mutate[1] = false; mutate[2] = false;
-	reactions[4] = Reaction(in, out, mutate, Nc, true, a);
+	inNonGen[0] = 0; inGen[0] = 1; inGen[1] = 0;
+	outNonGen[0] = 0; outGen[0] = 0; outGen[1] = 0;
+	mutate[0] = false; mutate[1] = false;
+	reactions[4] = Reaction(inNonGen, inGen, outNonGen, outGen, mutate, Nc, a);
 
 	// Virion clearance
-	in[0] = 0; in[1] = 0; in[2] = 1;
-	out[0] = 0; out[1] = 0; out[2] = 0;
-	mutate[0] = false; mutate[1] = false; mutate[2] = false;
-	reactions[5] = Reaction(in, out, mutate, Nc, true, u);
+	inNonGen[0] = 0; inGen[0] = 0; inGen[1] = 1;
+	outNonGen[0] = 0; outGen[0] = 0; outGen[1] = 0;
+	mutate[0] = false; mutate[1] = false;
+	reactions[5] = Reaction(inNonGen, inGen, outNonGen, outGen, mutate, Nc, u);
 
 	// Initial state:
-	StateVec x0(3);
-	x0[0] = new NongenPopulation(lambda/d); 		// Uninfected
-	x0[1] = new GenPopulation(sequenceL);			// Infected
-	x0[2] = new GenPopulation(sequenceL);			// Virus
-	x0[2].pop[seq0] = Nv0;
+	StateVec x0(1,2);
+	NonGenPopulation X(lambda/d);
+	GenPopulation Y;
+	GenPopulation V;
+	V.pop[seq0] = Nv0;
+
+	x0.nonGenetic[0] = X; 	// Uninfected
+	x0.genetic[0] = Y;		// Infected
+	x0.genetic[1] = V;		// Virus
 
 	// Allocate memory for recording moments:
 	int Nmoments = 7;
@@ -192,7 +196,7 @@ int main (int argc, char **argv)
 			}
 
 			// Initialise system state:
-			StateVec x(3) = x0;
+			StateVec x = x0;
 
 			// Initialise sampling index:
 			int sidx = 0;
@@ -205,7 +209,7 @@ int main (int argc, char **argv)
 			for (int tidx=0; tidx<Nt[phase]; tidx++) {
 
 				// Check for extinction in conditional calculation:
-				if (conditional && x[1]<0.5 && x[2]<0.5)
+				if (conditional && x.genetic[0].popSize()<0.5 && x.genetic[1].popSize()<0.5)
 					break;
 
 				// Sample if necessary:
@@ -229,16 +233,16 @@ int main (int argc, char **argv)
 				while (true) {
 
 					int critReaction = -1;
-					double delta = dt - t;
+					double delta = dt[phase] - t;
 
 					// Calculate propensities and determine critical reactions:
 					for (int r=0; r<Nreactions; r++) {
 
 						reactions[r].calcPropensity(x, buf);
 
-						if (reactions[r].isCritical() && reactions.criticalDelta < delta) {
+						if (reactions[r].isCritical() && reactions[r].criticalDelta < delta) {
 							critReaction = r;
-							delta = reactions.criticalDelta;
+							delta = reactions[r].criticalDelta;
 						}
 
 					}
@@ -252,7 +256,7 @@ int main (int argc, char **argv)
 						break;
 
 					// Implement chosen critical reaction:
-					x = reactions[critReaction].implementCritical(x);
+					x = reactions[critReaction].implementCritical(x, buf);
 
 					// Increment within-interval time:
 					t += delta;
@@ -268,7 +272,7 @@ int main (int argc, char **argv)
 			}
 
 			// Check for extinction event:
-			if (conditional && x[1]<0.5 && x[2]<0.5) {
+			if (conditional && x.genetic[0].popSize()<0.5 && x.genetic[1].popSize()<0.5) {
 				cout << "Rank " << mpi_rank << " extinction." << endl;
 				phase--;
 				continue;
