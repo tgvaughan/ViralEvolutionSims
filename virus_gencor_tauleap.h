@@ -377,7 +377,7 @@ class Reaction {
 		}
 
 		// Perform tau-leaping integration step:
-		void tauLeap(StateVec x, double dt, unsigned short *buf)
+		void tauLeap(StateVec & x, double dt, unsigned short *buf)
 		{
 
 			if (isGen) {
@@ -443,7 +443,7 @@ class Reaction {
 		}
 
 		// Implement critical reaction on given state:
-		void implementCritical(StateVec x, unsigned short *buf)
+		void implementCritical(StateVec & x, unsigned short *buf)
 		{
 
 			if (isGen) {
