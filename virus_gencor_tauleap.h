@@ -14,6 +14,7 @@ class Sequence : public std::vector<int> {
 		Sequence () {};
 		Sequence (const Sequence & s) {
 			nChar = s.nChar;
+			resize(s.size());
 			for (int i=0; i<s.size(); i++)
 				operator[](i) = s[i];
 		}
@@ -372,12 +373,13 @@ class Reaction {
 		// Check whether state is within Nc reactions of bottoming out:
 		bool isCritical ()
 		{
-			return criticalDelta < 0.0;
+			return criticalDelta > 0.0;
 		}
 
 		// Perform tau-leaping integration step:
-		StateVec tauLeap(StateVec x, double dt, unsigned short *buf)
+		void tauLeap(StateVec x, double dt, unsigned short *buf)
 		{
+
 			if (isGen) {
 
 				std::map<Sequence, double>::iterator it;
@@ -441,7 +443,7 @@ class Reaction {
 		}
 
 		// Implement critical reaction on given state:
-		StateVec implementCritical(StateVec x, unsigned short *buf)
+		void implementCritical(StateVec x, unsigned short *buf)
 		{
 
 			if (isGen) {
@@ -480,7 +482,6 @@ class Reaction {
 					x.nonGenetic[i].n += outNonGen[i]-inNonGen[i];
 			}
 
-			return x;
 		}
 };
 

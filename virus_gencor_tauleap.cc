@@ -49,13 +49,13 @@ int main (int argc, char **argv)
 
 	// Parse command line parameters:
 	
-	if (argc<4) {
-		cout << "Usage: " << argv[0] << " Nv0 seed outfile" << endl;
+	if (argc<2) {
+		cout << "Usage: " << argv[0] << " outfile" << endl;
 		exit(0);
 	}
-	double Nv0 = (int)strtod(argv[1], NULL);
-	unsigned short seed = (unsigned short)strtol(argv[2], NULL, 10);
-	char *ofname = argv[3];
+	//double Nv0 = (int)strtod(argv[1], NULL);
+	//unsigned short seed = (unsigned short)strtol(argv[2], NULL, 10);
+	char *ofname = argv[1];
 
 	// MPI Initialisation:
 	MPI::Init(argc, argv);
@@ -64,7 +64,7 @@ int main (int argc, char **argv)
 
 	// Simulation parameters:
 	double T = 200.0;		// Total simulation time
-	int Ntraj = 2048;		// Number of trajectories to generate
+	int Ntraj = 1;		// Number of trajectories to generate
 	int Nt_full = 20001;	// Number of full-sized tau-leaps
 	int Nc = 100;			// Critical reaction number
 	int Nsamples = 10001;	// Number of samples to record
@@ -139,7 +139,7 @@ int main (int argc, char **argv)
 	NonGenPopulation X(lambda/d);
 	GenPopulation Y;
 	GenPopulation V;
-	V.pop[seq0] = Nv0;
+	V.pop[seq0] = 1000;
 
 	x0.nonGenetic[0] = X; 	// Uninfected
 	x0.genetic[0] = Y;		// Infected
@@ -160,7 +160,7 @@ int main (int argc, char **argv)
 	// Initialise PRNG:
 	unsigned short buf[3];
 	buf[0] = 42;
-	buf[1] = seed;
+	buf[1] = 53;
 	buf[2] = (unsigned short)mpi_rank;
 
 	// Divvy out trajectories:
@@ -249,14 +249,14 @@ int main (int argc, char **argv)
 
 					// Perform tau-leap:
 					for (int r=0; r<Nreactions; r++)
-						x = reactions[r].tauLeap(x, delta, buf);
+						reactions[r].tauLeap(x, delta, buf);
 
 					// Will a critical reaction occur before end of current interval?
 					if (critReaction<0)
 						break;
 
 					// Implement chosen critical reaction:
-					x = reactions[critReaction].implementCritical(x, buf);
+					reactions[critReaction].implementCritical(x, buf);
 
 					// Increment within-interval time:
 					t += delta;

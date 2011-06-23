@@ -7,13 +7,13 @@ virus_gencor.o: virus_gencor.cc virus_gencor.h
 	mpic++ -c virus_gencor.cc
 
 virus_gencor_tauleap: virus_gencor_tauleap.o poissonian.o
-	mpic++ -o virus_gencor_tauleap virus_gencor_tauleap.o poissonian.o
+	mpic++ -g -o virus_gencor_tauleap virus_gencor_tauleap.o poissonian.o
 
-virus_gencor_tauleap.o: virus_gencor_tauleap.cc poissonian.h
-	mpic++ -c virus_gencor_tauleap.cc
+virus_gencor_tauleap.o: virus_gencor_tauleap.cc virus_gencor_tauleap.h poissonian.h
+	mpic++ -g -c virus_gencor_tauleap.cc
 
 poissonian.o: poissonian.cc poissonian.h
-	mpic++ -c poissonian.cc
+	mpic++ -g -c poissonian.cc
 
 clean:
 	rm -f virus_gencor \
