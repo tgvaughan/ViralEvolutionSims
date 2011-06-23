@@ -272,8 +272,9 @@ class Reaction {
 
 					Sequence thisSeq = it->first;
 
-					double a = 1.0;
+					double a = rate;
 					bool crit = false;
+
 					for (int i=0; i<x.genetic.size(); i++) {
 
 						// Check for criticality
@@ -336,7 +337,7 @@ class Reaction {
 
 			} else {
 
-				double a = 1.0;
+				double a = rate;
 				bool crit = false;
 				for (int i=0; i<x.nonGenetic.size(); i++) {
 
