@@ -45,6 +45,24 @@ class Sequence : public std::vector<int> {
 		}
 };
 
+// Function to handle stream output of sequence objects:
+std::ostream & operator<< (std::ostream & output, const Sequence & seq)
+{
+	output << "[";
+
+	for (int i=0; i<seq.size(); i++) {
+
+		if (i>0)
+			output << ",";
+
+		output << seq[i];
+	}
+
+	output << "]";
+
+	return output;
+}
+
 
 // Class for genetically diverse populations
 class GenPopulation {

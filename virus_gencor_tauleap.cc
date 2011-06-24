@@ -42,6 +42,9 @@ double samplefunc_yv(StateVec x) {
 double samplefunc_clear(StateVec x) {
 	return (double)(x.genetic[0].popSize()<0.5 && x.genetic[1].popSize()<0.5);
 }
+double samplefunc_vdiv(StateVec x) {
+	return (double)(x.genetic[0].pop.size());
+}
 
 int main (int argc, char **argv)
 {
@@ -74,7 +77,7 @@ int main (int argc, char **argv)
 	int nChar = 4;			// Number of distinct characters
 
 	// Calculation conditional on no extinction?
-	bool conditional = false;
+	bool conditional = true;
 
 	// Model parameters:
 	double d = 1e-3;
@@ -83,6 +86,7 @@ int main (int argc, char **argv)
 	double lambda = 2.5e8;
 	double beta = 5e-13;
 	double k = 1e3;
+	double mu = 0.1;
 
 	// Derived simulation parameters:
 	int Nt[2] = {Nt_full, (Nt_full-1)*2 + 1};
@@ -93,8 +97,8 @@ int main (int argc, char **argv)
 	Sequence seq0(sequenceL, nChar);
 
 	// Set up reactions:
-	int Nreactions = 6;
-	Reaction reactions[6];
+	int Nreactions = 7;
+	Reaction reactions[7];
 	vector<int> inNonGen(1), inGen(2), outNonGen(1), outGen(2);
 	vector<bool> mutate(2);
 
@@ -108,7 +112,13 @@ int main (int argc, char **argv)
 	inNonGen[0] = 1; inGen[0] = 0; inGen[1] = 1;
 	outNonGen[0] = 0; outGen[0] = 1; outGen[1] = 0;
 	mutate[0] = false; mutate[1] = false;
-	reactions[1] = Reaction(inNonGen, inGen, outNonGen, outGen, mutate, Nc, beta);
+	reactions[1] = Reaction(inNonGen, inGen, outNonGen, outGen, mutate, Nc, beta*(1-mu));
+
+	// T cell infection with mutation
+	inNonGen[0] = 1; inGen[0] = 0; inGen[1] = 1;
+	outNonGen[0] = 0; outGen[0] = 1; outGen[1] = 0;
+	mutate[0] = true; mutate[1] = false;
+	reactions[1] = Reaction(inNonGen, inGen, outNonGen, outGen, mutate, Nc, beta*mu);
 
 	// Virus production
 	inNonGen[0] = 0; inGen[0] = 1; inGen[1] = 0;
@@ -139,22 +149,23 @@ int main (int argc, char **argv)
 	NonGenPopulation X(lambda/d);
 	GenPopulation Y;
 	GenPopulation V;
-	V.pop[seq0] = 1000;
+	V.pop[seq0] = 10;
 
 	x0.nonGenetic[0] = X; 	// Uninfected
 	x0.genetic[0] = Y;		// Infected
 	x0.genetic[1] = V;		// Virus
 
 	// Allocate memory for recording moments:
-	int Nmoments = 7;
-	Moment moments[7] = {
+	int Nmoments = 8;
+	Moment moments[8] = {
 		Moment(Nsamples, &samplefunc_x, "x"),
 		Moment(Nsamples, &samplefunc_y, "y"),
 		Moment(Nsamples, &samplefunc_v, "v"),
 		Moment(Nsamples, &samplefunc_xy, "xy"),
 		Moment(Nsamples, &samplefunc_xv, "xv"),
 		Moment(Nsamples, &samplefunc_yv, "yv"),
-		Moment(Nsamples, &samplefunc_clear, "clear")
+		Moment(Nsamples, &samplefunc_clear, "clear"),
+		Moment(Nsamples, &samplefunc_vdiv, "vdiv")
 	};
 
 	// Initialise PRNG:
@@ -243,6 +254,9 @@ int main (int argc, char **argv)
 						if (reactions[r].isCritical() && reactions[r].criticalDelta < delta) {
 							critReaction = r;
 							delta = reactions[r].criticalDelta;
+
+							cout << "Rank " << mpi_rank << ": Reaction " << r << " critical at time "
+								<< dt[phase]*tidx+t <<"." << endl;
 						}
 
 					}
