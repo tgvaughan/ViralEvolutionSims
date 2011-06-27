@@ -66,14 +66,14 @@ int main (int argc, char **argv)
 	int mpi_size = MPI::COMM_WORLD.Get_size();
 
 	// Simulation parameters:
-	double T = 200.0;		// Total simulation time
+	double T = 30.0;		// Total simulation time
 	int Ntraj = 1;		// Number of trajectories to generate
 	int Nt_full = 20001;	// Number of full-sized tau-leaps
-	int Nc = 100;			// Critical reaction number
+	int Nc = 5;			// Critical reaction number
 	int Nsamples = 10001;	// Number of samples to record
 
 	// Genetic parameters:
-	int sequenceL = 10;		// Sequence length
+	int sequenceL = 35;		// Sequence length
 	int nChar = 4;			// Number of distinct characters
 
 	// Calculation conditional on no extinction?
@@ -86,7 +86,7 @@ int main (int argc, char **argv)
 	double lambda = 2.5e8;
 	double beta = 5e-13;
 	double k = 1e3;
-	double mu = 0.1;
+	double mu = 2e-5*sequenceL;
 
 	// Derived simulation parameters:
 	int Nt[2] = {Nt_full, (Nt_full-1)*2 + 1};
@@ -118,31 +118,31 @@ int main (int argc, char **argv)
 	inNonGen[0] = 1; inGen[0] = 0; inGen[1] = 1;
 	outNonGen[0] = 0; outGen[0] = 1; outGen[1] = 0;
 	mutate[0] = true; mutate[1] = false;
-	reactions[1] = Reaction(inNonGen, inGen, outNonGen, outGen, mutate, Nc, beta*mu);
+	reactions[2] = Reaction(inNonGen, inGen, outNonGen, outGen, mutate, Nc, beta*mu);
 
 	// Virus production
 	inNonGen[0] = 0; inGen[0] = 1; inGen[1] = 0;
 	outNonGen[0] = 0; outGen[0] = 1; outGen[1] = 1;
 	mutate[0] = false; mutate[1] = false;
-	reactions[2] = Reaction(inNonGen, inGen, outNonGen, outGen, mutate, Nc, k);
+	reactions[3] = Reaction(inNonGen, inGen, outNonGen, outGen, mutate, Nc, k);
 
 	// T cell death
 	inNonGen[0] = 1; inGen[0] = 0; inGen[1] = 0;
 	outNonGen[0] = 0; outGen[0] = 0; outGen[1] = 0;
 	mutate[0] = false; mutate[1] = false;
-	reactions[3] = Reaction(inNonGen, inGen, outNonGen, outGen, mutate, Nc, d);
+	reactions[4] = Reaction(inNonGen, inGen, outNonGen, outGen, mutate, Nc, d);
 
 	// Infected T cell death
 	inNonGen[0] = 0; inGen[0] = 1; inGen[1] = 0;
 	outNonGen[0] = 0; outGen[0] = 0; outGen[1] = 0;
 	mutate[0] = false; mutate[1] = false;
-	reactions[4] = Reaction(inNonGen, inGen, outNonGen, outGen, mutate, Nc, a);
+	reactions[5] = Reaction(inNonGen, inGen, outNonGen, outGen, mutate, Nc, a);
 
 	// Virion clearance
 	inNonGen[0] = 0; inGen[0] = 0; inGen[1] = 1;
 	outNonGen[0] = 0; outGen[0] = 0; outGen[1] = 0;
 	mutate[0] = false; mutate[1] = false;
-	reactions[5] = Reaction(inNonGen, inGen, outNonGen, outGen, mutate, Nc, u);
+	reactions[6] = Reaction(inNonGen, inGen, outNonGen, outGen, mutate, Nc, u);
 
 	// Initial state:
 	StateVec x0(1,2);
@@ -255,10 +255,15 @@ int main (int argc, char **argv)
 							critReaction = r;
 							delta = reactions[r].criticalDelta;
 
-							cout << "Rank " << mpi_rank << ": Reaction " << r << " critical at time "
-								<< dt[phase]*tidx+t <<"." << endl;
 						}
 
+					}
+
+					if (critReaction>=0) {
+						cout << "Rank " << mpi_rank << ": Reaction " << critReaction
+							<< " critical at time "
+							<< dt[phase]*tidx+t
+							<< " with delta " << delta << "." << endl;
 					}
 
 					// Perform tau-leap:
