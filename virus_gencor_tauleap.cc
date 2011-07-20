@@ -69,7 +69,7 @@ int main (int argc, char **argv)
 	double T = 30.0;		// Total simulation time
 	int Ntraj = 1;			// Number of trajectories to generate
 	int Nt_full = 20001;	// Number of full-sized tau-leaps
-	int Nc = 5;				// Critical reaction number
+	double alpha = 5.0;		// Magic number which influences criticality criterion
 	int Nsamples = 10001;	// Number of samples to record
 
 	// Genetic parameters:
@@ -106,43 +106,43 @@ int main (int argc, char **argv)
 	inNonGen[0] = 0; inGen[0] = 0; inGen[1] = 0;
 	outNonGen[0] = 1; outGen[0] = 0; outGen[1] = 0;
 	mutate[0] = false; mutate[1] = false;
-	reactions[0] = Reaction(inNonGen, inGen, outNonGen, outGen, mutate, Nc, lambda);
+	reactions[0] = Reaction(inNonGen, inGen, outNonGen, outGen, mutate, alpha, lambda);
 
 	// T cell infection
 	inNonGen[0] = 1; inGen[0] = 0; inGen[1] = 1;
 	outNonGen[0] = 0; outGen[0] = 1; outGen[1] = 0;
 	mutate[0] = false; mutate[1] = false;
-	reactions[1] = Reaction(inNonGen, inGen, outNonGen, outGen, mutate, Nc, beta*(1-mu));
+	reactions[1] = Reaction(inNonGen, inGen, outNonGen, outGen, mutate, alpha, beta*(1-mu));
 
 	// T cell infection with mutation
 	inNonGen[0] = 1; inGen[0] = 0; inGen[1] = 1;
 	outNonGen[0] = 0; outGen[0] = 1; outGen[1] = 0;
 	mutate[0] = true; mutate[1] = false;
-	reactions[2] = Reaction(inNonGen, inGen, outNonGen, outGen, mutate, Nc, beta*mu);
+	reactions[2] = Reaction(inNonGen, inGen, outNonGen, outGen, mutate, alpha, beta*mu);
 
 	// Virus production
 	inNonGen[0] = 0; inGen[0] = 1; inGen[1] = 0;
 	outNonGen[0] = 0; outGen[0] = 1; outGen[1] = 1;
 	mutate[0] = false; mutate[1] = false;
-	reactions[3] = Reaction(inNonGen, inGen, outNonGen, outGen, mutate, Nc, k);
+	reactions[3] = Reaction(inNonGen, inGen, outNonGen, outGen, mutate, alpha, k);
 
 	// T cell death
 	inNonGen[0] = 1; inGen[0] = 0; inGen[1] = 0;
 	outNonGen[0] = 0; outGen[0] = 0; outGen[1] = 0;
 	mutate[0] = false; mutate[1] = false;
-	reactions[4] = Reaction(inNonGen, inGen, outNonGen, outGen, mutate, Nc, d);
+	reactions[4] = Reaction(inNonGen, inGen, outNonGen, outGen, mutate, alpha, d);
 
 	// Infected T cell death
 	inNonGen[0] = 0; inGen[0] = 1; inGen[1] = 0;
 	outNonGen[0] = 0; outGen[0] = 0; outGen[1] = 0;
 	mutate[0] = false; mutate[1] = false;
-	reactions[5] = Reaction(inNonGen, inGen, outNonGen, outGen, mutate, Nc, a);
+	reactions[5] = Reaction(inNonGen, inGen, outNonGen, outGen, mutate, alpha, a);
 
 	// Virion clearance
 	inNonGen[0] = 0; inGen[0] = 0; inGen[1] = 1;
 	outNonGen[0] = 0; outGen[0] = 0; outGen[1] = 0;
 	mutate[0] = false; mutate[1] = false;
-	reactions[6] = Reaction(inNonGen, inGen, outNonGen, outGen, mutate, Nc, u);
+	reactions[6] = Reaction(inNonGen, inGen, outNonGen, outGen, mutate, alpha, u);
 
 	// Initial state:
 	StateVec x0(1,2);

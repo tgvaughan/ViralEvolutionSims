@@ -207,8 +207,8 @@ class Reaction {
 		std::vector<int> outNonGen, outGen;
 		std::vector<bool> mutate;
 
-		// Critical reaction number:
-		int Nc;
+		// Critical reaction parameter:
+		double alpha;
 
 		// Does reaction involve genetically diverse populations?
 		bool isGen;
@@ -230,7 +230,7 @@ class Reaction {
 				std::vector<int> p_outNonGen,
 				std::vector<int> p_outGen,
 				std::vector<bool> p_mutate,
-				int p_Nc, double p_rate)
+				double p_alpha, double p_rate)
 		{
 			inNonGen = p_inNonGen;
 			inGen = p_inGen;
@@ -250,7 +250,7 @@ class Reaction {
 				if (mutate[i])
 					isMutation = true;
 
-			Nc = p_Nc;
+			alpha = p_alpha;
 		}
 		Reaction() {};
 
