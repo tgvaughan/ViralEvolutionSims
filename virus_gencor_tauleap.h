@@ -295,6 +295,10 @@ class Reaction {
 
 					for (int i=0; i<x.genetic.size(); i++) {
 
+						// Calculate propensity contribution
+						for (int m=0; m<inGen[i]; m++)
+							a *= x.genetic[i][thisSeq] - m;
+
 						// Check for criticality
 						if (!mutate[i]) {
 						   	if (x.genetic[i][thisSeq] < Nc*(inGen[i]-outGen[i]))
@@ -303,21 +307,18 @@ class Reaction {
 						   	if (x.genetic[i][thisSeq] < Nc*inGen[i])
 								crit = true;
 						}
-
-						// Calculate propensity contribution
-						for (int m=0; m<inGen[i]; m++)
-							a *= x.genetic[i][thisSeq] - m;
 					}
 
 					for (int i=0; i<x.nonGenetic.size(); i++) {
+
+						// Calculate propensity contribution
+						for (int m=0; m<inNonGen[i]; m++)
+							a *= x.nonGenetic[i].n - m;
 
 						// Check for criticality
 						if (x.nonGenetic[i].n < Nc*(inNonGen[i] - outNonGen[i]))
 								crit = true;
 
-						// Calculate propensity contribution
-						for (int m=0; m<inNonGen[i]; m++)
-							a *= x.nonGenetic[i].n - m;
 					}
 
 					if (a>0) {
