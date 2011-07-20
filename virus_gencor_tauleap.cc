@@ -67,9 +67,9 @@ int main (int argc, char **argv)
 
 	// Simulation parameters:
 	double T = 30.0;		// Total simulation time
-	int Ntraj = 1;		// Number of trajectories to generate
+	int Ntraj = 1;			// Number of trajectories to generate
 	int Nt_full = 20001;	// Number of full-sized tau-leaps
-	int Nc = 5;			// Critical reaction number
+	int Nc = 5;				// Critical reaction number
 	int Nsamples = 10001;	// Number of samples to record
 
 	// Genetic parameters:

@@ -1,0 +1,9 @@
+# Ignore executables:
+virus_gencor
+virus_gencor_tauleap
+
+# Ignore object files:
+*.o
+
+# Ignore tags file:
+tags
