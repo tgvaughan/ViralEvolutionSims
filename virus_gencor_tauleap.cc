@@ -83,7 +83,7 @@ int main (int argc, char **argv)
 	// Simulation parameters:
 	double T = 30.0;		// Total simulation time
 	int Ntraj = 1;			// Number of trajectories to generate
-	int Nt_full = 2001;		// Number of full-sized tau-leaps
+	int Nt_full = 20001;		// Number of full-sized tau-leaps
 	double alpha = 15.0;	// Magic number which influences criticality criterion
 	int Nsamples = 1001;	// Number of samples to record
 
@@ -253,9 +253,7 @@ int main (int argc, char **argv)
 					sidx++;
 
 					// DEBUG: Dump current state to stdout:
-					//dumpState(x, tidx*dt[phase]);
-					//int blah;
-					//cin >> blah;
+					dumpState(x, tidx*dt[phase]);
 				}
 
 				// Hybrid integration step:

@@ -10,15 +10,19 @@ class Sequence : public std::vector<int> {
 		// Vector of neighbouring sequences:
 		std::vector<Sequence> neighbours;
 
-		// Constructors:
-		Sequence (int length, int p_nChar) {
-			nChar = p_nChar;
-			resize(length, 0);  // Initial sequence filled with zeros.
+		// Flag to mark whether neighbours has been populated:
+		bool neighboursPopulated;
 
-			genNeighbours();
+		// Constructors:
+		Sequence (int length, int p_nChar) : std::vector<int> (length, 0) {
+			nChar = p_nChar;
+			neighboursPopulated = false;
 		}
-		Sequence () {};
+		Sequence () {
+			neighboursPopulated = false;
+		};
 		Sequence (const Sequence & s) : std::vector<int> (s) {
+
 			/*
 			nChar = s.nChar;
 			resize(s.size());
@@ -26,7 +30,7 @@ class Sequence : public std::vector<int> {
 				operator[](i) = s[i];
 			*/
 
-			neighbours = s.neighbours;
+			neighboursPopulated = false;
 		}
 
 		// Populate vector of neighbouring sequences:
@@ -46,6 +50,9 @@ class Sequence : public std::vector<int> {
 
 		// Return vector containing neighbouring sequences:
 		std::vector<Sequence> getNeighbours() {
+			if (neighboursPopulated)
+				genNeighbours();
+
 			return neighbours;
 		}
 
@@ -272,7 +279,7 @@ class Reaction {
 		// Calculate reaction propensities for given state,
 		// determine critical reactions and time and sequence
 		// corresponding to next critical reaction:
-		void calcPropensity(StateVec x, double delta, unsigned short *buf)
+		void calcPropensity(StateVec & x, double delta, unsigned short *buf)
 		{
 			// Reset critical state:
 			criticalDelta = -1.0;
