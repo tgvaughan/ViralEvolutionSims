@@ -20,6 +20,21 @@
 #include "poissonian.h"
 #include "virus_gencor_tauleap.h"
 
+// Dump state to stdout:
+void dumpState(StateVec state, double t) {
+	std::cout << "Nx = " << state.nonGenetic[0].popSize() << std::endl;
+
+	std::map<Sequence,double>::iterator it;
+
+	for (it = state.genetic[0].pop.begin(); it != state.genetic[0].pop.end(); it++)
+		std::cout << "Ny " << it->first << " = " << it->second << std::endl;
+
+	for (it = state.genetic[1].pop.begin(); it != state.genetic[1].pop.end(); it++)
+		std::cout << "Nv " << it->first << " = " << it->second << std::endl;
+
+	std::cout << "--- t = " << t << " days" << std::endl;
+}
+
 // Moment calculation functions:
 double samplefunc_x(StateVec x) {
 	return x.nonGenetic[0].popSize();
@@ -43,7 +58,7 @@ double samplefunc_clear(StateVec x) {
 	return (double)(x.genetic[0].popSize()<0.5 && x.genetic[1].popSize()<0.5);
 }
 double samplefunc_vdiv(StateVec x) {
-	return (double)(x.genetic[0].pop.size());
+	return (double)(x.genetic[1].pop.size());
 }
 
 int main (int argc, char **argv)
@@ -68,16 +83,16 @@ int main (int argc, char **argv)
 	// Simulation parameters:
 	double T = 30.0;		// Total simulation time
 	int Ntraj = 1;			// Number of trajectories to generate
-	int Nt_full = 20001;	// Number of full-sized tau-leaps
-	double alpha = 5.0;		// Magic number which influences criticality criterion
-	int Nsamples = 10001;	// Number of samples to record
+	int Nt_full = 1001;		// Number of full-sized tau-leaps
+	double alpha = 10.0;	// Magic number which influences criticality criterion
+	int Nsamples = 1001;	// Number of samples to record
 
 	// Genetic parameters:
 	int sequenceL = 35;		// Sequence length
 	int nChar = 4;			// Number of distinct characters
 
 	// Calculation conditional on no extinction?
-	bool conditional = true;
+	bool conditional = false;
 
 	// Model parameters:
 	double d = 1e-3;
@@ -170,7 +185,7 @@ int main (int argc, char **argv)
 
 	// Initialise PRNG:
 	unsigned short buf[3];
-	buf[0] = 42;
+	buf[0] = (unsigned short)time(NULL);
 	buf[1] = 53;
 	buf[2] = (unsigned short)mpi_rank;
 
@@ -237,6 +252,10 @@ int main (int argc, char **argv)
 					// Increment sampling index:
 					sidx++;
 
+					// DEBUG: Dump current state to stdout:
+					dumpState(x, tidx*dt[phase]);
+					//int blah;
+					//cin >> blah;
 				}
 
 				// Hybrid integration step:

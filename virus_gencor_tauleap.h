@@ -26,7 +26,7 @@ class Sequence : public std::vector<int> {
 
 			int idx=0;
 			for (int i=0; i<size(); i++) {
-				for (int j=0; j<nChar-1; j++) {
+				for (int j=1; j<nChar; j++) {
 					Sequence a = *this;
 					a[i] = (a[i]+j) % nChar;
 					neighbours[idx++] = a;
@@ -52,10 +52,13 @@ std::ostream & operator<< (std::ostream & output, const Sequence & seq)
 
 	for (int i=0; i<seq.size(); i++) {
 
-		if (i>0)
-			output << ",";
+//		if (i>0)
+//			output << ",";
 
-		output << seq[i];
+		if (seq[i]>0)
+			output << seq[i];
+		else
+			output << '.';
 	}
 
 	output << "]";
@@ -421,18 +424,20 @@ class Reaction {
 
 							double nreacts = poissonian(thisProp*dt, buf);
 
-							for (int i=0; i<x.genetic.size(); i++) {
-								if (!mutate[i]) {
-									if (outGen[i]-inGen[i] != 0)
-										x.genetic[i].pop[thisSeq] += nreacts*(outGen[i]-inGen[i]);
-								} else {
-									x.genetic[i].pop[thisSeq] -= nreacts*inGen[i];
-									x.genetic[i].pop[mutantSeq] += nreacts*outGen[i];
+							if (nreacts>0) {
+								for (int i=0; i<x.genetic.size(); i++) {
+									if (!mutate[i]) {
+										if (outGen[i]-inGen[i] != 0)
+											x.genetic[i].pop[thisSeq] += nreacts*(outGen[i]-inGen[i]);
+									} else {
+										x.genetic[i].pop[thisSeq] -= nreacts*inGen[i];
+										x.genetic[i].pop[mutantSeq] += nreacts*outGen[i];
+									}
 								}
-							}
-							for (int i=0; i<x.nonGenetic.size(); i++) {
-								if (outNonGen[i]-inNonGen[i] != 0)
-									x.nonGenetic[i].n += nreacts*(outNonGen[i]-inNonGen[i]);
+								for (int i=0; i<x.nonGenetic.size(); i++) {
+									if (outNonGen[i]-inNonGen[i] != 0)
+										x.nonGenetic[i].n += nreacts*(outNonGen[i]-inNonGen[i]);
+								}
 							}
 						}
 
@@ -440,13 +445,15 @@ class Reaction {
 
 						double nreacts = poissonian(thisProp*dt, buf);
 
-						for (int i=0; i<x.genetic.size(); i++) {
-							if ((outGen[i] - inGen[i]) != 0)
-								x.genetic[i].pop[thisSeq] += nreacts*(outGen[i]-inGen[i]);
-						}
-						for (int i=0; i<x.nonGenetic.size(); i++) {
-							if ((outNonGen[i] - inNonGen[i]) != 0)
-								x.nonGenetic[i].n += nreacts*(outNonGen[i]-inNonGen[i]);
+						if (nreacts>0) {
+							for (int i=0; i<x.genetic.size(); i++) {
+								if ((outGen[i] - inGen[i]) != 0)
+									x.genetic[i].pop[thisSeq] += nreacts*(outGen[i]-inGen[i]);
+							}
+							for (int i=0; i<x.nonGenetic.size(); i++) {
+								if ((outNonGen[i] - inNonGen[i]) != 0)
+									x.nonGenetic[i].n += nreacts*(outNonGen[i]-inNonGen[i]);
+							}
 						}
 
 					}

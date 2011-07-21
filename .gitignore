@@ -7,3 +7,6 @@ virus_gencor_tauleap
 
 # Ignore tags file:
 tags
+
+# Ignore data files:
+*.txt
