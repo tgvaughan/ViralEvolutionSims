@@ -257,7 +257,7 @@ class Reaction {
 		// Calculate reaction propensities for given state,
 		// determine critical reactions and time and sequence
 		// corresponding to next critical reaction:
-		void calcPropensity(StateVec x, unsigned short *buf)
+		void calcPropensity(StateVec x, double delta, unsigned short *buf)
 		{
 			// Reset critical state:
 			criticalDelta = -1.0;

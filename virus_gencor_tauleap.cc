@@ -249,7 +249,7 @@ int main (int argc, char **argv)
 					// Calculate propensities and determine critical reactions:
 					for (int r=0; r<Nreactions; r++) {
 
-						reactions[r].calcPropensity(x, buf);
+						reactions[r].calcPropensity(x, delta, buf);
 
 						if (reactions[r].isCritical() && reactions[r].criticalDelta < delta) {
 							critReaction = r;
