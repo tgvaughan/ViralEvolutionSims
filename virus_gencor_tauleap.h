@@ -284,44 +284,45 @@ class Reaction {
 					}
 				}
 
-				// Determine all reaction propensities:
+				// Consider each extant genotype separately:
 				std::map<Sequence, double>::iterator it;
 				for (it = x.genetic[imin].begin(); it != x.genetic[imin].end(); it++) {
 
 					Sequence thisSeq = it->first;
 
-					double a = rate;
 					bool crit = false;
 
+					// Determine reaction propensity:
+					double a = rate;
 					for (int i=0; i<x.genetic.size(); i++) {
-
-						// Calculate propensity contribution
 						for (int m=0; m<inGen[i]; m++)
 							a *= x.genetic[i][thisSeq] - m;
-
-						// Check for criticality
-						if (!mutate[i]) {
-						   	if (x.genetic[i][thisSeq] < Nc*(inGen[i]-outGen[i]))
-								crit = true;
-						} else {
-						   	if (x.genetic[i][thisSeq] < Nc*inGen[i])
-								crit = true;
-						}
 					}
-
 					for (int i=0; i<x.nonGenetic.size(); i++) {
-
-						// Calculate propensity contribution
 						for (int m=0; m<inNonGen[i]; m++)
 							a *= x.nonGenetic[i].n - m;
-
-						// Check for criticality
-						if (x.nonGenetic[i].n < Nc*(inNonGen[i] - outNonGen[i]))
-								crit = true;
-
 					}
 
 					if (a>0) {
+
+						// Determine critical reaction number:
+						double Nc = delta*a + alpha*sqrt(delta*a);
+
+						// Check for criticality:
+						for (int i=0; i<x.genetic.size(); i++) {
+							if (!mutate[i]) {
+								if (x.genetic[i][thisSeq] < Nc*(inGen[i]-outGen[i]))
+									crit = true;
+							} else {
+								if (x.genetic[i][thisSeq] < Nc*inGen[i])
+									crit = true;
+							}
+						}
+						for (int i=0; i<x.nonGenetic.size(); i++) {
+							if (x.nonGenetic[i].n < Nc*(inNonGen[i] - outNonGen[i]))
+									crit = true;
+						}
+
 						if (crit) {
 
 							// Critical reaction: choose reaction time
@@ -356,18 +357,11 @@ class Reaction {
 
 			} else {
 
-				double a = rate;
 				bool crit = false;
+
+				// Determine reaction propensity:
+				double a = rate;
 				for (int i=0; i<x.nonGenetic.size(); i++) {
-
-					if (inNonGen[i] == 0)
-						continue;
-
-					// Check for criticality
-					if (x.nonGenetic[i].n < Nc*(inNonGen[i] - outNonGen[i]))
-						crit = true;
-
-					// Calculate propensity contribution
 					for (int m=0; m<inNonGen[i]; m++) {
 						a *= x.nonGenetic[i].n - m;
 					}
@@ -376,6 +370,16 @@ class Reaction {
 				propensity = 0.0;
 
 				if (a>0) {
+
+					// Determine critical reaction number:
+					double Nc = a*delta + alpha*sqrt(a*delta);
+
+					// Check for criticality
+					for (int i=0; i<x.nonGenetic.size(); i++) {
+						if (x.nonGenetic[i].n < Nc*(inNonGen[i] - outNonGen[i]))
+							crit = true;
+					}
+
 					if (crit) {
 
 						// Critical reaction: choose reaction time
