@@ -4,25 +4,35 @@
 class Sequence : public std::vector<int> {
 	public:
 
+		// Number of characters in sequence:
 		int nChar;
+
+		// Vector of neighbouring sequences:
+		std::vector<Sequence> neighbours;
 
 		// Constructors:
 		Sequence (int length, int p_nChar) {
 			nChar = p_nChar;
 			resize(length, 0);  // Initial sequence filled with zeros.
+
+			genNeighbours();
 		}
 		Sequence () {};
-		Sequence (const Sequence & s) {
+		Sequence (const Sequence & s) : std::vector<int> (s) {
+			/*
 			nChar = s.nChar;
 			resize(s.size());
 			for (int i=0; i<s.size(); i++)
 				operator[](i) = s[i];
+			*/
+
+			neighbours = s.neighbours;
 		}
 
-		// Return vector containing neighbouring sequences:
-		std::vector<Sequence> getNeighbours() {
+		// Populate vector of neighbouring sequences:
+		void genNeighbours() {
 
-			std::vector<Sequence> neighbours(size()*(nChar-1));
+			neighbours.resize(size()*(nChar-1));
 
 			int idx=0;
 			for (int i=0; i<size(); i++) {
@@ -32,7 +42,10 @@ class Sequence : public std::vector<int> {
 					neighbours[idx++] = a;
 				}
 			}
+		}
 
+		// Return vector containing neighbouring sequences:
+		std::vector<Sequence> getNeighbours() {
 			return neighbours;
 		}
 
@@ -40,7 +53,6 @@ class Sequence : public std::vector<int> {
 		Sequence chooseNeighbour (unsigned short *buf) {
 
 			std::vector<Sequence> neighbours = getNeighbours();
-
 			return neighbours[nrand48(buf)%neighbours.size()];
 		}
 };
