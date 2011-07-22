@@ -88,7 +88,7 @@ int main (int argc, char **argv)
 	int Nsamples = 1001;	// Number of samples to record
 
 	// Genetic parameters:
-	int sequenceL = 35;		// Sequence length
+	int sequenceL = 35*3;	// Sequence length
 	int nChar = 4;			// Number of distinct characters
 
 	// Calculation conditional on no extinction?
