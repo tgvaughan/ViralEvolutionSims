@@ -271,7 +271,6 @@ int main (int argc, char **argv)
 						if (reactions[r].isCritical() && reactions[r].criticalDelta < delta) {
 							critReaction = r;
 							delta = reactions[r].criticalDelta;
-
 						}
 
 					}

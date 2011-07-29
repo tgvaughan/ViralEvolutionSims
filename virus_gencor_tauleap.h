@@ -50,6 +50,7 @@ class Sequence : public std::vector<int> {
 
 		// Return vector containing neighbouring sequences:
 		std::vector<Sequence> getNeighbours() {
+
 			if (neighboursPopulated)
 				genNeighbours();
 
@@ -316,6 +317,9 @@ class Reaction {
 
 					// Determine reaction propensity:
 					double a = rate;
+					if (isMutation)
+						a *= thisSeq.size()*3;
+
 					for (int i=0; i<x.genetic.size(); i++) {
 						for (int m=0; m<inGen[i]; m++)
 							a *= x.genetic[i][thisSeq] - m;
@@ -324,6 +328,9 @@ class Reaction {
 						for (int m=0; m<inNonGen[i]; m++)
 							a *= x.nonGenetic[i].n - m;
 					}
+
+					if (isMutation)
+						std::cout << "Mutation process rate = " << a << std::endl;
 
 					if (a>0) {
 
@@ -435,6 +442,7 @@ class Reaction {
 					double thisProp = it->second;
 
 					if (isMutation) {
+
 						std::vector<Sequence> mutSequences = thisSeq.getNeighbours();
 
 						std::vector<Sequence>::iterator itm;
