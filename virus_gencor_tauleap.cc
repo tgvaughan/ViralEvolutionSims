@@ -83,8 +83,8 @@ int main (int argc, char **argv)
 	// Simulation parameters:
 	double T = 30.0;		// Total simulation time
 	int Ntraj = 1;			// Number of trajectories to generate
-	int Nt_full = 20001;		// Number of full-sized tau-leaps
-	double alpha = 15.0;	// Magic number which influences criticality criterion
+	int Nt_full = 20001;	// Number of full-sized tau-leaps
+	double alpha = 10.0;	// Magic number which influences criticality criterion
 	int Nsamples = 1001;	// Number of samples to record
 
 	// Genetic parameters:

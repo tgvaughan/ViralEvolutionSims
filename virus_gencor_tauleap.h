@@ -57,11 +57,32 @@ class Sequence : public std::vector<int> {
 			return neighbours;
 		}
 
+		// Return the number of neighbouring sequences:
+		int getNumNeighbours () {
+			return size()*(nChar - 1);
+		}
+
+		// Return a particular neighbouring sequence:
+		Sequence getNeighbour (int n) {
+
+			// Copy current sequence:
+			Sequence a = *this;
+
+			// Extract locus and character shift (offset) from n:
+			int locus = n/(nChar - 1);
+			int offset = n%(nChar - 1) + 1;
+
+			// Modify character at locus:
+			a[locus] = (a[locus]+offset) % nChar;
+
+			// Return neighbour sequence:
+			return a;
+		}
+
 		// Select and return a random neighbouring sequence:
 		Sequence chooseNeighbour (unsigned short *buf) {
 
-			std::vector<Sequence> neighbours = getNeighbours();
-			return neighbours[nrand48(buf)%neighbours.size()];
+			return getNeighbour(nrand48(buf)%getNumNeighbours());
 		}
 };
 
@@ -445,15 +466,14 @@ class Reaction {
 
 					if (isMutation) {
 
-						std::vector<Sequence> mutSequences = thisSeq.getNeighbours();
-
-						std::vector<Sequence>::iterator itm;
-						for (itm = mutSequences.begin(); itm != mutSequences.end(); itm++) {
-							Sequence mutantSeq = *itm;
+						for (int neighbourNum = 0; neighbourNum < thisSeq.getNumNeighbours(); neighbourNum++) {
 
 							double nreacts = poissonian(thisProp*dt, buf);
 
 							if (nreacts>0) {
+
+								Sequence mutantSeq = thisSeq.getNeighbour(neighbourNum);
+
 								for (int i=0; i<x.genetic.size(); i++) {
 									if (!mutate[i]) {
 										if (outGen[i]-inGen[i] != 0)
