@@ -23,8 +23,8 @@ class Sequence : public std::vector<int> {
 		};
 		Sequence (const Sequence & s) : std::vector<int> (s) {
 
-			/*
 			nChar = s.nChar;
+			/*
 			resize(s.size());
 			for (int i=0; i<s.size(); i++)
 				operator[](i) = s[i];
@@ -51,7 +51,7 @@ class Sequence : public std::vector<int> {
 		// Return vector containing neighbouring sequences:
 		std::vector<Sequence> getNeighbours() {
 
-			if (neighboursPopulated)
+			if (!neighboursPopulated)
 				genNeighbours();
 
 			return neighbours;
@@ -317,8 +317,10 @@ class Reaction {
 
 					// Determine reaction propensity:
 					double a = rate;
+					/*
 					if (isMutation)
 						a *= thisSeq.size()*3;
+					*/
 
 					for (int i=0; i<x.genetic.size(); i++) {
 						for (int m=0; m<inGen[i]; m++)
@@ -329,8 +331,8 @@ class Reaction {
 							a *= x.nonGenetic[i].n - m;
 					}
 
-					if (isMutation)
-						std::cout << "Mutation process rate = " << a << std::endl;
+					//if (isMutation)
+					//	std::cout << "Mutation process rate = " << a << std::endl;
 
 					if (a>0) {
 
