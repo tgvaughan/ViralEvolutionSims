@@ -9,6 +9,7 @@
 #include <fstream>
 
 #include <vector>
+#include <map>
 #include <set>
 
 #include <cstdlib>
@@ -284,7 +285,8 @@ int main (int argc, char **argv)
 
 					// Perform tau-leap:
 					for (int r=0; r<Nreactions; r++)
-						reactions[r].tauLeap(x, delta, buf);
+						if (!reactions[r].isCritical())
+							reactions[r].tauLeap(x, delta, buf);
 
 					// Will a critical reaction occur before end of current interval?
 					if (critReaction<0)

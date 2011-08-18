@@ -306,6 +306,7 @@ class Reaction {
 					isMutation = true;
 
 			alpha = p_alpha;
+
 		}
 		Reaction() {};
 
