@@ -168,6 +168,17 @@ class GenPopulation {
 
 			return size;
 		}
+
+		// Add particles to population with zero-removal:
+		double popAdd (double n, Sequence s) {
+			double newval = pop[s] + n;
+			if (newval != 0)
+				pop[s] = newval;
+			else
+				pop.erase(s);
+
+			return newval;
+		}
 };
 
 
@@ -383,18 +394,18 @@ class Reaction {
 
 								for (int i=0; i<thisSeq.size()*(thisSeq.nChar-1); i++) {
 									
-									double delta = -log(erand48(buf))/a;
-									if (criticalDelta < 0 || delta < criticalDelta) {
-										criticalDelta = delta;
+									double thisCriticalDelta = -log(erand48(buf))/a;
+									if (criticalDelta < 0 || thisCriticalDelta < criticalDelta) {
+										criticalDelta = thisCriticalDelta;
 										criticalSeq = thisSeq;
 									}
 								}
 
 							} else {
 
-								double delta = -log(erand48(buf))/a;
-								if (criticalDelta < 0 || delta < criticalDelta) {
-									criticalDelta = delta;
+								double thisCriticalDelta = -log(erand48(buf))/a;
+								if (criticalDelta < 0 || thisCriticalDelta < criticalDelta) {
+									criticalDelta = thisCriticalDelta;
 									criticalSeq = thisSeq;
 								}
 							}
@@ -477,10 +488,10 @@ class Reaction {
 								for (int i=0; i<x.genetic.size(); i++) {
 									if (!mutate[i]) {
 										if (outGen[i]-inGen[i] != 0)
-											x.genetic[i].pop[thisSeq] += nreacts*(outGen[i]-inGen[i]);
+											x.genetic[i].popAdd(nreacts*(outGen[i]-inGen[i]), thisSeq);
 									} else {
-										x.genetic[i].pop[thisSeq] -= nreacts*inGen[i];
-										x.genetic[i].pop[mutantSeq] += nreacts*outGen[i];
+										x.genetic[i].popAdd(-nreacts*inGen[i], thisSeq);
+										x.genetic[i].popAdd(nreacts*outGen[i], mutantSeq);
 									}
 								}
 								for (int i=0; i<x.nonGenetic.size(); i++) {
@@ -497,7 +508,7 @@ class Reaction {
 						if (nreacts>0) {
 							for (int i=0; i<x.genetic.size(); i++) {
 								if ((outGen[i] - inGen[i]) != 0)
-									x.genetic[i].pop[thisSeq] += nreacts*(outGen[i]-inGen[i]);
+									x.genetic[i].popAdd(nreacts*(outGen[i]-inGen[i]), thisSeq);
 							}
 							for (int i=0; i<x.nonGenetic.size(); i++) {
 								if ((outNonGen[i] - inNonGen[i]) != 0)
