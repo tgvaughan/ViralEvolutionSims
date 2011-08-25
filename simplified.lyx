@@ -195,8 +195,7 @@ by which we mean the total number of cells containing provirus differing
 \end_layout
 
 \begin_layout Standard
-Consider firstly that the probability can be marginalised in the following
- way:
+The probability can then be marginalised in the following way:
 \begin_inset Formula 
 \begin{eqnarray}
 P(N_{X},\vec{n}_{Y},\vec{n}_{V},t) & = & \sum_{|\vec{N}_{Y}|_{0}=n_{Y}^{(0)}}\sum_{|\vec{N}_{V}|_{0}=n_{V}^{(0)}}\ldots\sum_{|\vec{N}_{Y}|_{h}=n_{Y}^{(h)}}\sum_{|\vec{N}_{V}|_{h}=n_{V}^{(h)}}\nonumber \\
