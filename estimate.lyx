@@ -131,6 +131,95 @@ That is,
 \end_layout
 
 \begin_layout Standard
+Taking into account the fact that the symmetry of the problem requires 
+\begin_inset Formula $v(s)=v(s')\forall s'\in S_{h}$
+\end_inset
+
+ (where 
+\begin_inset Formula $S_{h}$
+\end_inset
+
+ is the set 
+\begin_inset Formula $\{s:H_{s,0}=h\}$
+\end_inset
+
+), we can simplify this to
+\begin_inset Formula 
+\begin{eqnarray}
+\ddot{V}(h)+\beta\bar{x}\dot{V}(h) & = & k\beta\bar{x}\Big[(1-\mu)V(h)+\frac{\mu}{3^{L}}g(h)\Big(g(h-1|h)V(h-1)\nonumber \\
+ &  & +g(h|h)V(h)+g(h+1|h)V(h+1)\Big)\Big].
+\end{eqnarray}
+
+\end_inset
+
+Here 
+\begin_inset Formula $g(h'|h)$
+\end_inset
+
+ identifies the number of distinct sequences which are in both 
+\begin_inset Formula $S_{h'}$
+\end_inset
+
+ .and are one mutation away from a sequence which is in 
+\begin_inset Formula $S_{h}$
+\end_inset
+
+, while 
+\begin_inset Formula $g(h)$
+\end_inset
+
+ is simply the number of sequences which are in 
+\begin_inset Formula $S_{h}$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+In order to solve this numerically, we revert to a linear system by defining
+ 
+\begin_inset Formula $W(h)=\dot{V}(h)$
+\end_inset
+
+ and writing
+\begin_inset Formula 
+\begin{eqnarray}
+\dot{W}(h) & = & k\beta\bar{x}\Big[((1-\mu)+\frac{\mu}{3^{L}}g(h)g(h|h))V(h)\\
+ &  & +\frac{\mu}{3^{L}}g(h)\Big(g(h-1|h)V(h-1)+g(h+1|h)V(h+1)\Big)\Big]\nonumber \\
+ &  & -\beta\bar{x}W(h).\nonumber 
+\end{eqnarray}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The function 
+\begin_inset Formula $g(h'|h)$
+\end_inset
+
+ is actually fairly trivial to determine.
+ Firstly, note that 
+\begin_inset Formula $g(h'|h)=0$
+\end_inset
+
+ whenever 
+\begin_inset Formula $|h'-h|>1$
+\end_inset
+
+.
+ This then leaves only three cases to evaluate.
+ It is quite easy to find that
+\begin_inset Formula 
+\begin{eqnarray}
+g(h-1|h) & = & h,\\
+g(h|h) & = & 2h\,\,\text{ and}\\
+g(h+1|h) & = & 3(L-h).
+\end{eqnarray}
+
+\end_inset
+
 
 \end_layout
 

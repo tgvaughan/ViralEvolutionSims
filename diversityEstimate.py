@@ -6,6 +6,21 @@ from scipy import *
 def g(h, L):
 	return float((3.**h)*comb(L, h))
 
+# Number of sequences distance hp from 0 and 1 from a sequence at h:
+def gcond(hp,h,L):
+
+	if hp == h-1:
+		return h
+
+	if hp == h:
+		return 2*h
+
+	if hp == h+1:
+		return 3*(L-h)
+
+	return 0
+	
+
 # Derivative of n:
 def dndt (n, L, gam, mu):
 

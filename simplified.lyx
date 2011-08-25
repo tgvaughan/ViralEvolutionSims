@@ -158,13 +158,40 @@ Due to the stated initial condition and the neutrality of the evolution
 \begin_layout Standard
 We proceed by firstly introducing the notation
 \begin_inset Formula 
-\[
-|\vec{N}_{Y}|_{h}\equiv\sum_{s}\delta_{H_{s,0},h}N_{Y}^{(s)}
-\]
+\begin{equation}
+|\vec{N}_{Y}|_{h}\equiv\sum_{s}\delta_{H_{s,0},h}N_{Y}^{(s)},
+\end{equation}
 
 \end_inset
 
+by which we mean the total number of cells containing provirus differing
+ from the inoculation sequence 
+\begin_inset Formula $0$
+\end_inset
 
+ at exactly 
+\begin_inset Formula $h$
+\end_inset
+
+ loci.
+ Furthermore, we define the set 
+\begin_inset Formula $R(\vec{N}_{Y},h)=\{N_{Y}^{(s)}:H_{s,0}=h\}$
+\end_inset
+
+ composed of those elements of 
+\begin_inset Formula $\vec{N}_{Y}$
+\end_inset
+
+ corresponding to haplotype populations possessing 
+\begin_inset Formula $h$
+\end_inset
+
+ mutations.
+ Note that 
+\begin_inset Formula $R(\vec{N}_{Y},h)\cap R(\vec{N}_{Y},h')=\emptyset$
+\end_inset
+
+.
 \end_layout
 
 \begin_layout Standard
@@ -172,7 +199,7 @@ Consider firstly that the probability can be marginalised in the following
  way:
 \begin_inset Formula 
 \begin{eqnarray}
-P(N_{X},\vec{n}_{Y},\vec{n}_{V},t) & = & \sum_{|\vec{N}_{Y}|_{0}=n_{Y}^{(0)}}\sum_{|\vec{N}_{V}|=n_{V}^{(0)}}\ldots\sum_{|\vec{N}_{Y}|_{h}=n_{Y}^{(h)}}\sum_{|\vec{N}_{V}|_{h}=n_{V}^{(h)}}\nonumber \\
+P(N_{X},\vec{n}_{Y},\vec{n}_{V},t) & = & \sum_{|\vec{N}_{Y}|_{0}=n_{Y}^{(0)}}\sum_{|\vec{N}_{V}|_{0}=n_{V}^{(0)}}\ldots\sum_{|\vec{N}_{Y}|_{h}=n_{Y}^{(h)}}\sum_{|\vec{N}_{V}|_{h}=n_{V}^{(h)}}\nonumber \\
  &  & \ldots\sum_{|\vec{N}_{Y}|_{h}=n_{Y}^{(L)}}\sum_{|\vec{N}_{V}|_{h}=n_{V}^{(L)}}P(N_{X},\vec{N}_{Y},\vec{N}_{V},t)
 \end{eqnarray}
 
