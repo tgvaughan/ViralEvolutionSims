@@ -87,43 +87,14 @@ tic model of diversification during infection, using the RT mutation mechanism:
 \begin_layout Standard
 \begin_inset Formula 
 \begin{eqnarray}
-\dot{x} & = & \lambda-\beta xv(s)-dx\\
+\dot{x} & = & \lambda-dx-\sum_{s}\beta xv(s)\\
 \dot{y}(s) & = & (1-\mu)\beta xv(s)+\frac{\mu}{3L}\beta x\sum_{s'\in N_{s}}v(s')-ay(s)\\
 \dot{v}(s) & = & ky(s)-\beta xv(s)-uv(s).
 \end{eqnarray}
 
 \end_inset
 
-Our first simplification is to regard the uninfected cell population as
- a constant 
-\begin_inset Formula $\bar{x}$
-\end_inset
 
-.
- This makes sence for the first few days of the infection before peak viremia
- is reached, at which point 
-\begin_inset Formula $x$
-\end_inset
-
- decays rapidly.
- The equations of motion then become
-\begin_inset Formula 
-\begin{eqnarray}
-\dot{y}(s) & = & (1-\mu)\beta\bar{x}v(s)+\frac{\mu}{3L}\beta\bar{x}\sum_{s'\in N_{s}}v(s')\\
-\dot{v}(s) & = & ky(s)-\beta\bar{x}v(s),
-\end{eqnarray}
-
-\end_inset
-
-where we have additionally neglected the decay terms proportional to 
-\begin_inset Formula $a$
-\end_inset
-
- and 
-\begin_inset Formula $u$
-\end_inset
-
-.
 \end_layout
 
 \begin_layout Standard
@@ -142,9 +113,11 @@ Taking into account the fact that the symmetry of the problem requires
 ), we can simplify this to
 \begin_inset Formula 
 \begin{eqnarray}
-\dot{Y}(h) & = & (1-\mu)\beta\bar{x}V(h)+\frac{\mu}{3L}\beta\bar{x}\big(g(h-1|h)V(h-1)\nonumber \\
+\dot{x} & = & \lambda-dx-\beta x\sum_{h=0}^{L}V(h)\nonumber \\
+\dot{Y}(h) & = & (1-\mu)\beta xV(h)+\frac{\mu}{3L}\beta x\big(g(h-1|h)V(h-1)\\
  &  & +g(h|h)V(h)+g(h+1|h)V(h+1)\big)\\
-\dot{V}(h) & = & kY(h)-\beta\bar{x}V(h).
+ &  & -aY(h)\\
+\dot{V}(h) & = & kY(h)-\beta xV(h)-uV(h).
 \end{eqnarray}
 
 \end_inset
