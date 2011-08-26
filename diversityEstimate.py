@@ -2,10 +2,6 @@
 
 from scipy import *
 
-# Number of sequences distance h from 0:
-def g(h, L):
-	return float((3.**h)*comb(L, h))
-
 # Number of sequences distance hp from 0 and 1 from a sequence at h:
 def gcond(hp,h,L):
 
@@ -21,39 +17,55 @@ def gcond(hp,h,L):
 	return 0
 	
 
-# Derivative of n:
-def dndt (n, L, gam, mu):
+# Derivatives:
+def ddt (Y,V, L, p):
 
-	res = gam*n
+	# Rate of mutation to neighbouring sequences:
+	mup = p['mu']/(3*L)
 
-	for h in range(1,len(n)):
-		res[h] += mu*g(h, L)/g(h-1, L)*n[h-1]
+	dYdt = (1.-p['mu'])*p['beta']*p['xbar']*V
 
-	return res
+	for h in range(len(Y)):
+
+		dYdt[h] += mup*p['beta']*p['xbar']*gcond(h,h,L)*V[h]
+
+		if h>0:
+			dYdt[h] += mup*p['beta']*p['xbar']*gcond(h-1,h,L)*V[h-1]
+
+		if h<L:
+			dYdt[h] += mup*p['beta']*p['xbar']*gcond(h+1,h,L)*V[h+1]
+	
+	dVdt = p['k']*Y - p['beta']*p['xbar']*V
+
+	return (dYdt,dVdt)
 
 # Semi-implicit integration step:
-def step(n, dt, L, gam, mu):
+def step(Y, V, dt, L, p):
 
-	np = n.copy()
+	Yp = Y.copy()
+	Vp = V.copy()
 
 	for i in range(3):
-		np = n + 0.5*dt*dndt(n, L, gam, mu)
+		dYdt,dVdt = ddt(Y, V, L, p)
+		Yp = Y + 0.5*dt*dYdt
+		Vp = V + 0.5*dt*dVdt
 	
-	n = 2.*np - n
+	Y = 2.*Yp - Y
+	V = 2.*Vp - V
 
-	return n
+	return (Y, V)
 
 # Send sample to stdout:
-def sample(n, t):
+def sample(V, t):
 	print t,
-	for i in range(len(n)):
-		print n[i],
+	for i in range(len(V)):
+		print V[i],
 	print
 
 # Produce header for sample file:
-def header(n):
+def header(V):
 	print 't',
-	for i in range(len(n)):
+	for i in range(len(V)):
 		print 'n'+str(i),
 	print
 
@@ -62,13 +74,12 @@ def header(n):
 if __name__ == '__main__':
 
 	# Model parameters:
+	p = {}
 	L = 105
-	beta = 5e-13
-	k = 1e3
-	x = 2.5e11
-	gam = sqrt(beta*k*x)
-	mu = 2e-5*L
-	n0 = 1.
+	p['beta'] = 5e-13
+	p['k'] = 1e3
+	p['xbar'] = 2.5e11
+	p['mu'] = 2e-5*L
 
 	# Simulation parameters:
 	T = 2.
@@ -79,22 +90,24 @@ if __name__ == '__main__':
 	dt = T/(Nt-1)
 	steps_per_sample = (Nt-1)/(Nsamples-1)
 
-	# Initialise state vector:
-	n = zeros(L+1)
-	n[0] = n0
+	# Initial condition:
+
+	Y = zeros(L+1)
+	V = zeros(L+1)
+	V[0] = 1
 
 	# Generate header:
-	header(n)
+	header(V)
 
 	# Perform first sample:
-	sample(n, 0)
+	sample(V, 0)
 
 	# Integration loop:
 	for tidx in range(Nt):
 
 		# Perform semi-implicit integration step:
-		n = step(n, dt, L, gam, mu)
+		Y,V = step(Y, V, dt, L, p)
 
 		# Sample if necessary:
 		if tidx % steps_per_sample == 0:
-			sample(n, tidx*dt)
+			sample(V, tidx*dt)

@@ -87,22 +87,35 @@ tic model of diversification during infection, using the RT mutation mechanism:
 \begin_layout Standard
 \begin_inset Formula 
 \begin{eqnarray}
-\dot{y}(s) & = & (1-\mu)\beta\bar{x}v(s)+\frac{\mu}{3^{L}}\beta\bar{x}\sum_{s'\in N_{s}}v(s')-ay(s)\\
-\dot{v}(s) & = & ky(s)-\beta\bar{x}v(s)-uv(s).
+\dot{x} & = & \lambda-\beta xv(s)-dx\\
+\dot{y}(s) & = & (1-\mu)\beta xv(s)+\frac{\mu}{3L}\beta x\sum_{s'\in N_{s}}v(s')-ay(s)\\
+\dot{v}(s) & = & ky(s)-\beta xv(s)-uv(s).
 \end{eqnarray}
 
 \end_inset
 
-We are assuming here that the uninfected cell population is unchanged over
- the initial phase of the infection and is held constant at 
-\begin_inset Formula $\bar{x}=\lambda/d$
+Our first simplification is to regard the uninfected cell population as
+ a constant 
+\begin_inset Formula $\bar{x}$
 \end_inset
 
 .
-\end_layout
+ This makes sence for the first few days of the infection before peak viremia
+ is reached, at which point 
+\begin_inset Formula $x$
+\end_inset
 
-\begin_layout Standard
-Neglecting the decay terms proportional to 
+ decays rapidly.
+ The equations of motion then become
+\begin_inset Formula 
+\begin{eqnarray}
+\dot{y}(s) & = & (1-\mu)\beta\bar{x}v(s)+\frac{\mu}{3L}\beta\bar{x}\sum_{s'\in N_{s}}v(s')\\
+\dot{v}(s) & = & ky(s)-\beta\bar{x}v(s),
+\end{eqnarray}
+
+\end_inset
+
+where we have additionally neglected the decay terms proportional to 
 \begin_inset Formula $a$
 \end_inset
 
@@ -110,24 +123,7 @@ Neglecting the decay terms proportional to
 \begin_inset Formula $u$
 \end_inset
 
-, we find
-\begin_inset Formula 
-\begin{eqnarray}
-\ddot{v}(s) & = & k\dot{y}(s)-\beta\bar{x}\dot{v}(s)\nonumber \\
- & = & (1-\mu)k\beta\bar{x}v(s)+\frac{\mu}{3^{L}}k\beta\bar{x}\sum_{s'\in N_{s}}v(s')-\beta\bar{x}\dot{v}(s).
-\end{eqnarray}
-
-\end_inset
-
-That is,
-\begin_inset Formula 
-\begin{equation}
-\ddot{v}(s)+\beta\bar{x}\dot{v}(s)=k\beta\bar{x}\left[(1-\mu)v(s)+\frac{\mu}{3^{L}}\sum_{s'\in N_{s}}v(s')\right].
-\end{equation}
-
-\end_inset
-
-
+.
 \end_layout
 
 \begin_layout Standard
@@ -146,8 +142,9 @@ Taking into account the fact that the symmetry of the problem requires
 ), we can simplify this to
 \begin_inset Formula 
 \begin{eqnarray}
-\ddot{V}(h)+\beta\bar{x}\dot{V}(h) & = & k\beta\bar{x}\Big[(1-\mu)V(h)+\frac{\mu}{3^{L}}g(h)\Big(g(h-1|h)V(h-1)\nonumber \\
- &  & +g(h|h)V(h)+g(h+1|h)V(h+1)\Big)\Big].
+\dot{Y}(h) & = & (1-\mu)\beta\bar{x}V(h)+\frac{\mu}{3L}\beta\bar{x}\big(g(h-1|h)V(h-1)\nonumber \\
+ &  & +g(h|h)V(h)+g(h+1|h)V(h+1)\big)\\
+\dot{V}(h) & = & kY(h)-\beta\bar{x}V(h).
 \end{eqnarray}
 
 \end_inset
@@ -160,46 +157,12 @@ Here
 \begin_inset Formula $S_{h'}$
 \end_inset
 
- .and are one mutation away from a sequence which is in 
-\begin_inset Formula $S_{h}$
-\end_inset
-
-, while 
-\begin_inset Formula $g(h)$
-\end_inset
-
- is simply the number of sequences which are in 
+ and are one mutation away from a sequence which is in 
 \begin_inset Formula $S_{h}$
 \end_inset
 
 .
-\end_layout
-
-\begin_layout Standard
-In order to solve this numerically, we revert to a linear system by defining
- 
-\begin_inset Formula $W(h)=\dot{V}(h)$
-\end_inset
-
- and writing
-\begin_inset Formula 
-\begin{eqnarray}
-\dot{W}(h) & = & k\beta\bar{x}\Big[((1-\mu)+\frac{\mu}{3^{L}}g(h)g(h|h))V(h)\\
- &  & +\frac{\mu}{3^{L}}g(h)\Big(g(h-1|h)V(h-1)+g(h+1|h)V(h+1)\Big)\Big]\nonumber \\
- &  & -\beta\bar{x}W(h).\nonumber 
-\end{eqnarray}
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-The function 
-\begin_inset Formula $g(h'|h)$
-\end_inset
-
- is actually fairly trivial to determine.
+ It is actually fairly trivial to determine.
  Firstly, note that 
 \begin_inset Formula $g(h'|h)=0$
 \end_inset
