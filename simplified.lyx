@@ -86,7 +86,7 @@ We consider a model of virus infection involving the following distinct
 \begin{eqnarray*}
 0 & \overset{\lambda}{\longrightarrow} & X\\
 X+V_{s} & \overset{(1-\mu)\beta}{\longrightarrow} & Y_{s}\\
-X+V_{s} & \overset{\mu\beta/3^{L}}{\longrightarrow} & Y_{s'}\\
+X+V_{s} & \overset{\mu\beta/3L}{\longrightarrow} & Y_{s'}\\
 Y_{s} & \overset{k}{\longrightarrow} & Y_{s}+V_{s}\\
 X & \overset{d}{\longrightarrow} & 0\\
 Y_{s} & \overset{a}{\longrightarrow} & 0\\
@@ -131,7 +131,7 @@ y distribution
 \frac{\partial}{\partial t}P(N_{X},\vec{N}_{Y,}\vec{N}_{V},t) & = & \lambda\left[P(N_{X}-1,\vec{N}_{Y},\vec{N}_{V},t)-P(N_{X,}\vec{N}_{Y},\vec{N}_{V},t)\right]\\
  &  & +(1-\mu)\beta\sum_{s}\Big[(N_{X}+1)(N_{V}^{(s)}+1)P(N_{X}+1,\vec{N}_{Y}^{-s},\vec{N}_{V}^{+s},t)\\
  &  & -N_{X}N_{V}^{(s)}P(N_{X},\vec{N}_{Y},\vec{N}_{V},t)\Big]\\
- &  & +\frac{\mu\beta}{3^{L}}\sum_{s}\sum_{s'\in N_{s}}\Big[(N_{X}+1)(N_{V}^{(s)}+1)P(N_{X}+1,\vec{N}_{Y}^{-s'},\vec{N}_{V}^{+s},t)\\
+ &  & +\frac{\mu\beta}{3L}\sum_{s}\sum_{s'\in N_{s}}\Big[(N_{X}+1)(N_{V}^{(s)}+1)P(N_{X}+1,\vec{N}_{Y}^{-s'},\vec{N}_{V}^{+s},t)\\
  &  & -N_{X}N_{V}^{(s)}P(N_{X,}\vec{N}_{Y},\vec{N}_{V},t)\Big]\\
  &  & +k\sum_{s}N_{Y}^{(s)}\Big[P(N_{X},\vec{N}_{Y},\vec{N}_{V}^{-s},t)-P(N_{X},\vec{N}_{Y},\vec{N}_{V},t)\Big]\\
  &  & +\text{decay terms}
