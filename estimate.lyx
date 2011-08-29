@@ -115,8 +115,8 @@ Taking into account the fact that the symmetry of the problem requires
 \begin{eqnarray}
 \dot{x} & = & \lambda-dx-\beta x\sum_{h=0}^{L}V(h)\nonumber \\
 \dot{Y}(h) & = & (1-\mu)\beta xV(h)+\frac{\mu}{3L}\beta x\big(g(h-1|h)V(h-1)\\
- &  & +g(h|h)V(h)+g(h+1|h)V(h+1)\big)\\
- &  & -aY(h)\\
+ &  & +g(h|h)V(h)+g(h+1|h)V(h+1)\big)\nonumber \\
+ &  & -aY(h)\nonumber \\
 \dot{V}(h) & = & kY(h)-\beta xV(h)-uV(h).
 \end{eqnarray}
 
