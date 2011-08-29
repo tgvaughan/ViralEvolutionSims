@@ -27,11 +27,26 @@ void dumpState(StateVec state, double t) {
 
 	std::map<Sequence,double>::iterator it;
 
-	for (it = state.genetic[0].pop.begin(); it != state.genetic[0].pop.end(); it++)
-		std::cout << "Ny " << it->first << " = " << it->second << std::endl;
+	double Ny = 0.0;
+	double Ny2 = 0.0;
+	for (it = state.genetic[0].pop.begin(); it != state.genetic[0].pop.end(); it++) {
+		//std::cout << "Ny " << it->first << " = " << it->second << std::endl;
 
-	for (it = state.genetic[1].pop.begin(); it != state.genetic[1].pop.end(); it++)
-		std::cout << "Nv " << it->first << " = " << it->second << std::endl;
+		Ny += it->second;
+		Ny2 += it->second*it->second;
+	}
+
+	double Nv = 0.0;
+	double Nv2 = 0.0;
+	for (it = state.genetic[1].pop.begin(); it != state.genetic[1].pop.end(); it++) {
+		//std::cout << "Nv " << it->first << " = " << it->second << std::endl;
+
+		Nv += it->second;
+		Nv2 += it->second*it->second;
+	}
+
+	std::cout << "Y diversity = " << Ny*Ny/Ny2 << std::endl;
+	std::cout << "V diversity = " << Nv*Nv/Nv2 << std::endl;
 
 	std::cout << "--- t = " << t << " days" << std::endl;
 }

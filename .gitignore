@@ -13,3 +13,6 @@ tags
 
 # Ignore lyx backup files:
 *.lyx~
+
+# Ignore PDFs - they should be in manuscript repo.
+*.pdf
