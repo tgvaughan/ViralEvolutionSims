@@ -70,12 +70,12 @@ div <- getDiv(df)
 ###   Plot figure    ###
 ########################
 
-pdf('div_deterministic.pdf', onefile=F, width=7, height=6)
+#pdf('div_deterministic.pdf', onefile=F, width=7, height=6)
 
 plot(div$t, div$y, 'l', col='blue', xlab='Time (days)', ylab='Inverse Simpson Index', main='Deterministic diversity dynamics')
 lines(div$t, div$v, col='red')
 legend('bottomright', inset=.05, c('Infected cells', 'Virions'), lty=1, col=c('blue','red'))
 
-dev.off()
+#dev.off()
 
 ########################

@@ -81,17 +81,30 @@ if __name__ == '__main__':
 
 	# Model parameters:
 	p = {}
-	L = 105
-	p['lambda'] = 2.5e8
-	p['k'] = 1e3
-	p['beta'] = 5e-13
+	L = 35
+	p['lambda'] = 1e5
+	p['k'] = 100.
+	p['beta'] = 2e-7
 	p['mu'] = 2e-5*L
-	p['d'] = 1e-3
-	p['a'] = 1.
-	p['u'] = 3.
+	p['d'] = 0.1
+	p['a'] = 0.5
+	p['u'] = 5.0
+	p['V0'] = 100
+
+	# Model parameters (FULL):
+	#p = {}
+	#L = 105
+	#p['lambda'] = 2.5e8
+	#p['k'] = 1e3
+	#p['beta'] = 5e-13
+	#p['mu'] = 2e-5*L
+	#p['d'] = 1e-3
+	#p['a'] = 1.
+	#p['u'] = 3.
+	#p['V0'] = 1
 
 	# Simulation parameters:
-	T = 10.
+	T = 30.
 	Nt = 1001
 	Nsamples = 101
 
@@ -104,7 +117,7 @@ if __name__ == '__main__':
 	X = p['lambda']/p['d']  # Uninfected steady state
 	Y = zeros(L+1)
 	V = zeros(L+1)
-	V[0] = 1
+	V[0] = p['V0']
 
 	# Generate header:
 	header(L)
