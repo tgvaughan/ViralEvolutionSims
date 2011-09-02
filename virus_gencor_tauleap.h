@@ -478,6 +478,9 @@ class Reaction {
 
 					if (isMutation) {
 
+						// Adjust propensity to account for number of neighbouring sequences:
+						thisProp /= thisSeq.getNumNeighbours();
+
 						for (int neighbourNum = 0; neighbourNum < thisSeq.getNumNeighbours(); neighbourNum++) {
 
 							double nreacts = poissonian(thisProp*dt, buf);
