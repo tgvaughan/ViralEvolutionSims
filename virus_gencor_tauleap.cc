@@ -97,10 +97,10 @@ int main (int argc, char **argv)
 	int mpi_size = MPI::COMM_WORLD.Get_size();
 
 	// Simulation parameters:
-	double T = 30.0;		// Total simulation time
+	double T = 10.0;		// Total simulation time
 	int Ntraj = 1;			// Number of trajectories to generate
 	int Nt_full = 20001;	// Number of full-sized tau-leaps
-	double alpha = 10.0;	// Magic number which influences criticality criterion
+	double alpha = 20.0;	// Magic number which influences criticality criterion
 	int Nsamples = 1001;	// Number of samples to record
 
 	// Genetic parameters:
@@ -109,6 +109,9 @@ int main (int argc, char **argv)
 
 	// Calculation conditional on no extinction?
 	bool conditional = true;
+
+	// Perform half-sized time step calculation?
+	bool halfstep = false;
 
 	// Model parameters:
 	double d = 1e-3;
@@ -216,6 +219,10 @@ int main (int argc, char **argv)
 	// Start timer:
 	time_t sim_time = time(NULL);
 
+	// Hack to allow us to skip the half-step calculation:
+	int maxphase = 1;
+	if (halfstep)
+		maxphase = 0;
 
 	/////////////////////////////////
 	// Trajectory loop:
@@ -223,7 +230,7 @@ int main (int argc, char **argv)
 
 	for (int traj=0; traj<chunk_size; traj++) {
 
-		for (int phase=0; phase<=1; phase++) {
+		for (int phase=0; phase<=maxphase; phase++) {
 
 			// Report simulation phase:
 			switch(phase) {
@@ -291,13 +298,6 @@ int main (int argc, char **argv)
 
 					}
 
-					if (critReaction>=0) {
-						cout << "Rank " << mpi_rank << ": Reaction " << critReaction
-							<< " critical at time "
-							<< dt[phase]*tidx+t
-							<< " with delta " << delta << "." << endl;
-					}
-
 					// Perform tau-leap:
 					for (int r=0; r<Nreactions; r++)
 						if (!reactions[r].isCritical())
@@ -306,6 +306,14 @@ int main (int argc, char **argv)
 					// Will a critical reaction occur before end of current interval?
 					if (critReaction<0)
 						break;
+
+					// DEBUG: Report critial reaction:
+					/*
+					cout << "Rank " << mpi_rank << ": Implementing critical reaction " << critReaction
+						<< " at time "
+						<< dt[phase]*tidx+t
+						<< " with delta " << delta << "." << endl;
+					*/
 
 					// Implement chosen critical reaction:
 					reactions[critReaction].implementCritical(x, buf);
