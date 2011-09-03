@@ -392,24 +392,10 @@ class Reaction {
 
 							// Critical reaction: choose reaction time
 
-							if (isMutation) {
-
-								for (int i=0; i<thisSeq.size()*(thisSeq.nChar-1); i++) {
-									
-									double thisCriticalDelta = -log(erand48(buf))/a;
-									if (criticalDelta < 0 || thisCriticalDelta < criticalDelta) {
-										criticalDelta = thisCriticalDelta;
-										criticalSeq = thisSeq;
-									}
-								}
-
-							} else {
-
-								double thisCriticalDelta = -log(erand48(buf))/a;
-								if (criticalDelta < 0 || thisCriticalDelta < criticalDelta) {
-									criticalDelta = thisCriticalDelta;
-									criticalSeq = thisSeq;
-								}
+							double thisCriticalDelta = -log(erand48(buf))/a;
+							if (criticalDelta < 0 || thisCriticalDelta < criticalDelta) {
+								criticalDelta = thisCriticalDelta;
+								criticalSeq = thisSeq;
 							}
 
 						} else {
