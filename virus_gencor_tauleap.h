@@ -371,7 +371,7 @@ class Reaction {
 
 						// Determine critical reaction number:
 						//double Nc = delta*a + alpha*sqrt(delta*a);
-						double Nc = 1000.0;
+						double Nc = 100.0;
 
 						// Check for criticality:
 						for (int i=0; i<x.genetic.size(); i++) {
@@ -424,7 +424,7 @@ class Reaction {
 
 					// Determine critical reaction number:
 					//double Nc = a*delta + alpha*sqrt(a*delta);
-					double Nc = 1000.0;
+					double Nc = 100.0;
 
 					// Check for criticality
 					for (int i=0; i<x.nonGenetic.size(); i++) {
@@ -513,6 +513,9 @@ class Reaction {
 				}
 
 			} else {
+
+				if (isCritical())
+					return;
 
 				double nreacts = poissonian(propensity*dt, buf);
 

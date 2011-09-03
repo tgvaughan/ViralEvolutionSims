@@ -221,7 +221,7 @@ int main (int argc, char **argv)
 
 	// Hack to allow us to skip the half-step calculation:
 	int maxphase = 1;
-	if (halfstep)
+	if (!halfstep)
 		maxphase = 0;
 
 	/////////////////////////////////
@@ -299,9 +299,9 @@ int main (int argc, char **argv)
 					}
 
 					// Perform tau-leap:
+					// (tauLeap() automatically avoids critical reactions)
 					for (int r=0; r<Nreactions; r++)
-						if (!reactions[r].isCritical())
-							reactions[r].tauLeap(x, delta, buf);
+						reactions[r].tauLeap(x, delta, buf);
 
 					// Will a critical reaction occur before end of current interval?
 					if (critReaction<0)
