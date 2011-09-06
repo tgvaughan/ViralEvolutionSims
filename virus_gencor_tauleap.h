@@ -144,18 +144,6 @@ class GenPopulation {
 			return it->second;
 		}
 
-		// Negativity check:
-		bool isnegative () {
-
-			std::map<Sequence, double>::iterator it;
-
-			for (it = pop.begin(); it != pop.end(); it++)
-				if (it->second < 0)
-					return true;
-
-			return false;
-		}
-
 		// Get total size:
 		double popSize() {
 
@@ -170,14 +158,18 @@ class GenPopulation {
 		}
 
 		// Add particles to population with zero-removal:
-		double popAdd (double n, Sequence s) {
+		bool popAdd (double n, Sequence s) {
 			double newval = pop[s] + n;
+
 			if (newval != 0)
 				pop[s] = newval;
 			else
 				pop.erase(s);
 
-			return newval;
+			if (newval<0)
+				return false; // Negative population size generated
+
+			return true; // New population size >= 0
 		}
 };
 
@@ -234,20 +226,6 @@ class StateVec {
 		StateVec(const StateVec & arg) {
 			nonGenetic = arg.nonGenetic;
 			genetic = arg.genetic;
-		}
-
-		// Check for negative populations:
-		bool isnegative() {
-
-			for (int i=0; i<nonGenetic.size(); i++)
-				if (nonGenetic[i].isnegative())
-					return true;
-
-			for (int i=0; i<genetic.size(); i++)
-				if (genetic[i].isnegative())
-					return true;
-
-			return false;
 		}
 
 };
@@ -371,7 +349,7 @@ class Reaction {
 
 						// Determine critical reaction number:
 						//double Nc = delta*a + alpha*sqrt(delta*a);
-						double Nc = 100.0;
+						double Nc = 10.0;
 
 						// Check for criticality:
 						for (int i=0; i<x.genetic.size(); i++) {
@@ -424,7 +402,7 @@ class Reaction {
 
 					// Determine critical reaction number:
 					//double Nc = a*delta + alpha*sqrt(a*delta);
-					double Nc = 100.0;
+					double Nc = 10.0;
 
 					// Check for criticality
 					for (int i=0; i<x.nonGenetic.size(); i++) {
@@ -453,7 +431,7 @@ class Reaction {
 		}
 
 		// Perform tau-leaping integration step:
-		void tauLeap(StateVec & x, double dt, unsigned short *buf)
+		bool tauLeap(StateVec & x, double dt, unsigned short *buf)
 		{
 
 			if (isGen) {
@@ -479,16 +457,33 @@ class Reaction {
 
 								for (int i=0; i<x.genetic.size(); i++) {
 									if (!mutate[i]) {
-										if (outGen[i]-inGen[i] != 0)
-											x.genetic[i].popAdd(nreacts*(outGen[i]-inGen[i]), thisSeq);
+										if (outGen[i]-inGen[i] != 0) {
+											if(!x.genetic[i].popAdd(nreacts*(outGen[i]-inGen[i]), thisSeq)) {
+												std::cout << "Propensity*dt = " << thisProp*dt 
+													<< " out-in = " << outGen[i] - inGen[i]
+													<< " nreacts = " << nreacts << std::endl;
+												return false;
+											}
+										}
 									} else {
-										x.genetic[i].popAdd(-nreacts*inGen[i], thisSeq);
+										if (!x.genetic[i].popAdd(-nreacts*inGen[i], thisSeq)) {
+											std::cout << "Propensity*dt = " << thisProp*dt 
+												<< " -in = " << - inGen[i]
+												<< " nreacts = " << nreacts << std::endl;
+											return false;
+										}
 										x.genetic[i].popAdd(nreacts*outGen[i], mutantSeq);
 									}
 								}
 								for (int i=0; i<x.nonGenetic.size(); i++) {
-									if (outNonGen[i]-inNonGen[i] != 0)
-										x.nonGenetic[i].n += nreacts*(outNonGen[i]-inNonGen[i]);
+									if (outNonGen[i]-inNonGen[i] != 0) {
+										if ((x.nonGenetic[i].n += nreacts*(outNonGen[i]-inNonGen[i])) < 0) {
+											std::cout << "Propensity*dt = " << thisProp*dt 
+												<< " out-in = " << outNonGen[i] - inNonGen[i]
+												<< " nreacts = " << nreacts << std::endl;
+											return false;
+										}
+									}
 								}
 							}
 						}
@@ -499,33 +494,49 @@ class Reaction {
 
 						if (nreacts>0) {
 							for (int i=0; i<x.genetic.size(); i++) {
-								if ((outGen[i] - inGen[i]) != 0)
-									x.genetic[i].popAdd(nreacts*(outGen[i]-inGen[i]), thisSeq);
+								if ((outGen[i] - inGen[i]) != 0) {
+									if (!x.genetic[i].popAdd(nreacts*(outGen[i]-inGen[i]), thisSeq)) {
+										std::cout << "Propensity*dt = " << thisProp*dt 
+											<< " out-in = " << outGen[i] - inGen[i]
+											<< " nreacts = " << nreacts << std::endl;
+										return false;
+									}
+								}
 							}
 							for (int i=0; i<x.nonGenetic.size(); i++) {
-								if ((outNonGen[i] - inNonGen[i]) != 0)
-									x.nonGenetic[i].n += nreacts*(outNonGen[i]-inNonGen[i]);
+								if ((outNonGen[i] - inNonGen[i]) != 0) {
+									if ((x.nonGenetic[i].n += nreacts*(outNonGen[i]-inNonGen[i])) < 0) {
+										std::cout << "Propensity*dt = " << thisProp*dt 
+											<< " out-in = " << outNonGen[i] - inNonGen[i]
+											<< " nreacts = " << nreacts << std::endl;
+										return false;
+									}
+								}
 							}
 						}
-
 					}
-
 				}
 
 			} else {
 
 				if (isCritical())
-					return;
+					return true;
 
 				double nreacts = poissonian(propensity*dt, buf);
 
 				for (int i=0; i<x.nonGenetic.size(); i++) {
 					if (outNonGen[i]-inNonGen[i] != 0) {
-						x.nonGenetic[i].n += nreacts*(outNonGen[i]-inNonGen[i]);
+						if ((x.nonGenetic[i].n += nreacts*(outNonGen[i]-inNonGen[i])) < 0) {
+							std::cout << "Propensity*dt = " << propensity*dt 
+								<< " out-in = " << outNonGen[i] - inNonGen[i]
+								<< " nreacts = " << nreacts << std::endl;
+							return false;
+						}
 					}
 				}
-
 			}
+
+			return true;
 		}
 
 		// Implement critical reaction on given state:

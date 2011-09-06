@@ -45,8 +45,10 @@ void dumpState(StateVec state, double t) {
 		Nv2 += it->second*it->second;
 	}
 
-	std::cout << "Y diversity = " << Ny*Ny/Ny2 << std::endl;
-	std::cout << "V diversity = " << Nv*Nv/Nv2 << std::endl;
+	std::cout << "Y diversity = " << Ny*Ny/Ny2
+		<< ", richness = " << state.genetic[0].pop.size() << std::endl;
+	std::cout << "V diversity = " << Nv*Nv/Nv2
+		<< ", richness = " << state.genetic[1].pop.size() << std::endl;
 
 	std::cout << "--- t = " << t << " days" << std::endl;
 }
@@ -99,8 +101,8 @@ int main (int argc, char **argv)
 	// Simulation parameters:
 	double T = 10.0;		// Total simulation time
 	int Ntraj = 1;			// Number of trajectories to generate
-	int Nt_full = 20001;	// Number of full-sized tau-leaps
-	double alpha = 20.0;	// Magic number which influences criticality criterion
+	int Nt_full = 8001;	// Number of full-sized tau-leaps
+	double alpha = 30.0;	// Magic number which influences criticality criterion
 	int Nsamples = 1001;	// Number of samples to record
 
 	// Genetic parameters:
@@ -296,24 +298,30 @@ int main (int argc, char **argv)
 							delta = reactions[r].criticalDelta;
 						}
 
+						// DEBUG: Report critial reaction:
+						if (reactions[r].isCritical()) {
+							cout << "Rank " << mpi_rank << ": reaction " << r
+								<< " marked as critical at time "
+								<< dt[phase]*tidx+t
+								<< " with delta " << reactions[r].criticalDelta << "." << endl;
+						}
+
 					}
 
 					// Perform tau-leap:
 					// (tauLeap() automatically avoids critical reactions)
-					for (int r=0; r<Nreactions; r++)
-						reactions[r].tauLeap(x, delta, buf);
+					for (int r=0; r<Nreactions; r++) {
+						if (!reactions[r].tauLeap(x, delta, buf)) {
+
+							// Check for negative values:
+							cout << "FATAL ERROR: Negative population size generated!  Aborting..." << endl;
+							MPI::COMM_WORLD.Abort(1);
+						}
+					}
 
 					// Will a critical reaction occur before end of current interval?
 					if (critReaction<0)
 						break;
-
-					// DEBUG: Report critial reaction:
-					/*
-					cout << "Rank " << mpi_rank << ": Implementing critical reaction " << critReaction
-						<< " at time "
-						<< dt[phase]*tidx+t
-						<< " with delta " << delta << "." << endl;
-					*/
 
 					// Implement chosen critical reaction:
 					reactions[critReaction].implementCritical(x, buf);
@@ -321,12 +329,6 @@ int main (int argc, char **argv)
 					// Increment within-interval time:
 					t += delta;
 
-				}
-
-				// Check for negative values:
-				if (x.isnegative()) {
-					cout << "FATAL ERROR: Negative population size generated!  Aborting..." << endl;
-					MPI::COMM_WORLD.Abort(1);
 				}
 
 			}
