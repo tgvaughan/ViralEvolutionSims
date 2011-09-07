@@ -430,7 +430,7 @@ The final reaction to consider is the infection of uninfected target cells
 
 \end_inset
 
-Applying the results used in the previous sections, this becomes
+Applying the theorems used in the previous sections, this becomes
 \begin_inset Formula 
 \begin{eqnarray*}
 \frac{\partial}{\partial t}P(N_{X},\vec{n}_{Y},\vec{n}_{V}) & = & (1-\mu)\beta\sum_{h=0}^{L}\sum_{i=1}^{g(h)}\Big[\\
@@ -459,6 +459,126 @@ Infection: with mutation
 \begin_layout Standard
 We now consider infection reactions which are accompanied by a point mutation
  of the provirus.
+ The terms we need to simplify are
+\begin_inset Formula 
+\begin{eqnarray*}
+\frac{\partial}{\partial t}P(N_{X},\vec{n}_{Y},\vec{n}_{V}) & = & \frac{\mu\beta}{3L}\sum_{|\vec{N}_{Y}^{0}|=n_{Y}^{0}}\ldots\sum_{h=0}^{L}\sum_{i=1}^{g(h)}\Big[(N_{X}+1)(N_{V}^{h,i}+1)\Big\{\\
+ &  & \sum_{j=1}^{g(h-1)}\Gamma_{h-1,j}^{h,i}P(N_{X}+1,(\ldots,N_{Y}^{h-1,j}-1,\ldots),(\ldots,N_{V}^{h,i}+1,\ldots))\\
+ &  & +\sum_{j=1}^{g(h)}\Gamma_{h,j}^{h,i}P(N_{X}+1,(\ldots,N_{Y}^{h,j}-1,\ldots),(\ldots,N_{V}^{h,i}+1,\ldots))\\
+ &  & +\sum_{j=1}^{g(h+1}\Gamma_{h+1,j}^{h,i}P(N_{X}+1,(\ldots,N_{Y}^{h+1,j}-1,\ldots),(\ldots,N_{V}^{h,i}+1,\ldots))\Big\}\\
+ &  & -N_{X}N_{V}^{h,i}P(N_{X},\vec{N}_{Y},\vec{N}_{V})\Big].
+\end{eqnarray*}
+
+\end_inset
+
+Here we define the symbol 
+\begin_inset Formula $\Gamma_{h',j}^{h,i}$
+\end_inset
+
+ to be unity if the sequences specified by 
+\begin_inset Formula $(h,i)$
+\end_inset
+
+ and 
+\begin_inset Formula $(h',j)$
+\end_inset
+
+ are separated by a single point mutation and zero otherwise.
+\end_layout
+
+\begin_layout Standard
+Under application of the theorems developed in the previous sections, this
+ becomes
+\begin_inset Formula 
+\begin{eqnarray*}
+\frac{\partial}{\partial t}P(N_{X},\vec{n}_{Y},\vec{n}_{V}) & = & \frac{\mu\beta}{3L}\sum_{h=0}^{L}\sum_{i=1}^{g(h)}\Big[\ldots\sum_{|\vec{N}_{V}^{h}|=n_{V}^{h}+1}\ldots(N_{X}+1)N_{V}^{h,i}\Big\{\\
+ &  & \ldots\sum_{|\vec{N}_{Y}^{h-1}|=n_{Y}^{h-1}-1}\ldots\sum_{j=1}^{g(h-1)}\Gamma_{h-1,j}^{h,i}P(N_{X}+1,\vec{N}_{Y},\vec{N}_{V})\\
+ &  & +\ldots\sum_{|\vec{N}_{Y}^{h}|=n_{Y}^{h}-1}\ldots\sum_{j=1}^{g(h)}\Gamma_{h,j}^{h,i}P(N_{X}+1,\vec{N}_{Y},\vec{N}_{V})\\
+ &  & +\ldots\sum_{|\vec{N}_{Y}^{h+1}|=n_{Y}^{h+1}-1}\ldots\sum_{j=1}^{g(h+1}\Gamma_{h+1,j}^{h,i}P(N_{X}+1,\vec{N}_{Y},\vec{N}_{V})\Big\}\\
+ &  & -\sum_{|\vec{N}_{Y}^{0}|=n_{Y}^{0}}\sum_{|\vec{N}_{V}^{0}|=n_{V}^{0}}\ldots N_{X}N_{V}^{h,i}P(N_{X},\vec{N}_{Y},\vec{N}_{V})\Big].
+\end{eqnarray*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+It is an important property of our sequence space partitioning scheme that
+ the function 
+\begin_inset Formula 
+\[
+g(h'|h)=\sum_{j=1}^{g(h')}\Gamma_{h',j}^{h,i},
+\]
+
+\end_inset
+
+which represents the number of sequences neighbouring sequence 
+\begin_inset Formula $(h,i)$
+\end_inset
+
+ and lying a distance 
+\begin_inset Formula $h'$
+\end_inset
+
+ from the founder strain, is independent of the particular sequence index
+ 
+\begin_inset Formula $i$
+\end_inset
+
+.
+ Using this fact allows us to write
+\begin_inset Formula 
+\begin{eqnarray*}
+\frac{\partial}{\partial t}P(N_{X},\vec{n}_{Y},\vec{n}_{V}) & = & \frac{\mu\beta}{3L}\sum_{h=0}^{L}\sum_{i=1}^{g(h)}\Big[\ldots\sum_{|\vec{N}_{V}^{h}|=n_{V}^{h}+1}\ldots(N_{X}+1)N_{V}^{h,i}\Big\{\\
+ &  & \ldots\sum_{|\vec{N}_{Y}^{h-1}|=n_{Y}^{h-1}-1}\ldots g(h-1|h)P(N_{X}+1,\vec{N}_{Y},\vec{N}_{V})\\
+ &  & +\ldots\sum_{|\vec{N}_{Y}^{h}|=n_{Y}^{h}-1}\ldots g(h|h)P(N_{X}+1,\vec{N}_{Y},\vec{N}_{V})\\
+ &  & +\ldots\sum_{|\vec{N}_{Y}^{h+1}|=n_{Y}^{h+1}-1}\ldots g(h+1|h)P(N_{X}+1,\vec{N}_{Y},\vec{N}_{V})\Big\}\\
+ &  & -\sum_{|\vec{N}_{Y}^{0}|=n_{Y}^{0}}\sum_{|\vec{N}_{V}^{0}|=n_{V}^{0}}\ldots N_{X}N_{V}^{h,i}P(N_{X},\vec{N}_{Y},\vec{N}_{V})\Big].
+\end{eqnarray*}
+
+\end_inset
+
+This becomes
+\begin_inset Formula 
+\begin{eqnarray*}
+\frac{\partial}{\partial t}P(N_{X},\vec{n}_{Y},\vec{n}_{V}) & = & \frac{\mu\beta}{3L}\sum_{h=0}^{L}\Big[(N_{X}+1)(n_{V}^{h}+1)\Big\{\\
+ &  & g(h-1|h)P(N_{X}+1,\vec{n}_{Y}^{-(h-1)},\vec{n}_{V}^{+h})\\
+ &  & +g(h|h)P(N_{X}+1,\vec{n}_{Y}^{-h},\vec{n}_{V}^{+h})\\
+ &  & +g(h+1|h)P(N_{X}+1,\vec{n}_{Y}^{-(h+1)},\vec{n}_{V}^{+h})\Big\}\\
+ &  & -N_{X}n_{V}^{h}P(N_{X},\vec{n}_{Y},\vec{n}_{V})\Big].
+\end{eqnarray*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Marginalised CME
+\end_layout
+
+\begin_layout Standard
+We thus find the following equation of motion for the marginalised distribution:
+\begin_inset Formula 
+\begin{eqnarray*}
+\frac{\partial}{\partial t}P(N_{X},\vec{n}_{Y},\vec{n}_{V}) & = & \lambda\left[P(N_{X}-1,\vec{n}_{Y},\vec{n}_{V})-P(N_{X},\vec{n}_{Y},\vec{n}_{V})\right]\\
+ &  & +(1-\mu)\beta\sum_{h=0}^{L}\Big[(N_{X}+1)(n_{V}^{h}+1)P(N_{X}+1,\vec{n}_{Y}^{-h},\vec{n}_{V}^{+h})\\
+ &  & -N_{X}n_{V}^{h}P(N_{X},\vec{n}_{Y},\vec{n}_{V})\Big]\\
+ &  & +\frac{\mu\beta}{3L}\sum_{h=0}^{L}\Big[(N_{X}+1)(n_{V}^{h}+1)\Big\{\\
+ &  & +g(h-1|h)P(N_{X}+1,\vec{n}_{Y}^{-(h-1)},\vec{n}_{V}^{+h})\\
+ &  & +g(h|h)P(N_{X}+1,\vec{n}_{Y}^{-h},\vec{n}_{V}^{+h})\\
+ &  & +g(h+1|h)P(N_{X}+1,\vec{n}_{Y}^{-(h+1)},\vec{n}_{V}^{+h})\Big\}\\
+ &  & -N_{X}n_{V}^{h}P(N_{X},\vec{n}_{Y},\vec{n}_{V})\Big]\\
+ &  & +k\sum_{h=0}^{L}n_{Y}^{h}\left[P(N_{X},\vec{n}_{Y},\vec{n}_{V}^{-h})-P(N_{X},\vec{n}_{Y},\vec{n}_{V})\right]\\
+ &  & +d\left[(N_{X}+1)P(N_{X}+1,\vec{n}_{Y},\vec{n}_{V})-N_{X}P(N_{X},\vec{n}_{Y},\vec{n}_{V})\right]\\
+ &  & +a\sum_{h=0}^{L}\left[(n_{Y}^{h}+1)P(N_{X},\vec{n}_{Y}^{+h},\vec{n}_{V})-n_{Y}^{h}P(N_{X},\vec{n}_{Y},\vec{n}_{V})\right]\\
+ &  & +u\sum_{h=0}^{L}\left[(n_{YV}^{h}+1)P(N_{X},\vec{n}_{Y},\vec{n}_{V}^{+h})-n_{V}^{h}P(N_{X},\vec{n}_{Y},\vec{n}_{V})\right].
+\end{eqnarray*}
+
+\end_inset
+
+
 \end_layout
 
 \end_body
