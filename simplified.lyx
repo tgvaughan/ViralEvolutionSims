@@ -148,70 +148,317 @@ Simplification through symmetry
 \end_layout
 
 \begin_layout Standard
-Due to the stated initial condition and the neutrality of the evolution
- in this model, there is a high degree of symmetry in the problem and the
- resulting solutions.
+Due to the neutrality of the evolution in this model, there is a high degree
+ of symmetry in the problem and the resulting solutions.
  In this section, we attempt to exploint this symmetry in order to reduce
  the state space needed to describe the system.
 \end_layout
 
 \begin_layout Standard
-We proceed by introducing the vector 
-\begin_inset Formula $\vec{R}_{h}(\vec{N})$
+We firstly need to make explicit some additional notation.
+ Up until now the ordering of the elements of the vectors 
+\begin_inset Formula $\vec{N}_{Y}$
 \end_inset
 
- whose elements consist of those elements of 
-\begin_inset Formula $\vec{N}$
+ and 
+\begin_inset Formula $\vec{N}_{V}$
 \end_inset
 
- corresponding to sequences 
-\begin_inset Formula $s$
+ has been arbitrary.
+ We now consider that these vectors can be written, without loss of generality,
+ in the following way:
+\begin_inset Formula 
+\begin{eqnarray*}
+\vec{N}_{Y} & = & (N_{Y}^{0,1};N_{Y}^{(1,0)},\ldots,N_{Y}^{(1,g(1))};\ldots;N_{Y}^{(h,1)},\ldots,N_{Y}^{(h,g(h))};\ldots,N_{Y}^{(L,g(L))})\\
+\vec{N}_{V} & = & (N_{V}^{0,1};N_{V}^{(1,0)},\ldots,N_{V}^{(1,g(1))};\ldots;N_{V}^{(h,1)},\ldots,N_{V}^{(h,g(h))};\ldots,N_{V}^{(L,g(L))}).
+\end{eqnarray*}
+
 \end_inset
 
- satisfying 
-\begin_inset Formula $H_{s,0}=h$
+Here
+\begin_inset Formula 
+\[
+g(h)=3^{h}\binom{L}{h}
+\]
+
+\end_inset
+
+is the number of sequences which differ at 
+\begin_inset Formula $h$
+\end_inset
+
+ loci from the sequence belonging to the founder strain.
+ We have effectively defined each sequence in terms of its Hamming distance
+ from the founder and an additional index to take care of the multiplicity
+ of sequences having this same distance.
+ We also define the vector 
+\begin_inset Formula $\vec{N}_{Y}^{h}=(N_{Y}^{(h,1)},\ldots,N_{Y}^{(h,g(h))})$
+\end_inset
+
+ and similarly the vector 
+\begin_inset Formula $\vec{N}_{V}^{h}$
 \end_inset
 
 .
- Then, using the notation 
-\begin_inset Formula $|\vec{N}|=\sum_{s}N^{(s)}$
+ We use the notation 
+\begin_inset Formula $|\vec{N}_{Y}^{h}|=\sum_{i=1}^{g(h)}N_{Y}^{(h,i)}$
 \end_inset
 
-, we define the following marginalised probability distribution:
+.
+\end_layout
+
+\begin_layout Standard
+We are interested in the following marginal probability distribution:
 \begin_inset Formula 
-\begin{eqnarray}
-P(N_{X},\vec{n}_{Y},\vec{n}_{V},t) & = & \sum_{|\vec{R}_{0}(\vec{N}_{Y})|=n_{Y}^{(0)}}\sum_{|\vec{R}_{0}(\vec{N}_{V})|=n_{V}^{(0)}}\ldots\sum_{|\vec{R}_{h}(\vec{N}_{Y})|=n_{Y}^{(h)}}\sum_{|\vec{R}_{h}(\vec{N}_{V})|=n_{V}^{(h)}}\nonumber \\
- &  & \ldots\sum_{|\vec{R}_{L}(\vec{N}_{Y})|=n_{Y}^{(L)}}\sum_{|\vec{R}_{L}(\vec{N}_{V})|=n_{V}^{(L)}}P(N_{X,}\vec{N}_{Y},\vec{N}_{V},t).
-\end{eqnarray}
+\[
+P(N_{X},\vec{n}_{Y},\vec{n}_{V},t)=\sum_{|\vec{N}_{Y}^{0}|=n_{y}^{0}}\sum_{|\vec{N}_{V}^{0}|=n_{V}^{0}}\ldots\sum_{|\vec{N}_{Y}^{L}|=n_{Y}^{L}}\sum_{|\vec{N}_{V}^{L}|=n_{V}^{L}}P(N_{X},\vec{N}_{Y},\vec{N}_{V},t).
+\]
+
+\end_inset
+
+Our aim is to derive the equation of motion for this distribution by marginalisi
+ng the CME.
+ For the target cell production reaction this is trivial:
+\begin_inset Formula 
+\begin{eqnarray*}
+\frac{\partial}{\partial t}P(N_{X},\vec{n}_{Y},\vec{n}_{V})|_{\text{T cell prod}} & = & \lambda\left[P(N_{X}-1,\vec{n}_{Y},\vec{n}_{V})-P(N_{X},\vec{n}_{Y},\vec{n}_{V})\right].
+\end{eqnarray*}
+
+\end_inset
+
+The uninfected cell death reaction is also easy:
+\begin_inset Formula 
+\begin{eqnarray*}
+\frac{\partial}{\partial t}P(N_{X},\vec{n}_{Y},\vec{n}_{V})|_{\text{T cell death}} & = & d\left[(N_{X}+1)P(N_{X}+1,\vec{n}_{Y},\vec{n}_{V})-N_{X}P(N_{X},\vec{n}_{Y},\vec{n}_{V})\right].
+\end{eqnarray*}
+
+\end_inset
+
+ The remaining reactions, however, need a little more thought.
+\end_layout
+
+\begin_layout Subsection
+Virion production
+\end_layout
+
+\begin_layout Standard
+Besides the trivial examples above, the virion production reaction is the
+ next easiest to deal with.
+ We have:
+\begin_inset Formula 
+\begin{eqnarray*}
+\frac{\partial}{\partial t}P(N_{X},\vec{n}_{Y},\vec{n}_{V}) & =k & \sum_{|\vec{N}_{Y}^{0}|=n_{Y}^{0}}\ldots\sum_{h=0}^{L}\sum_{i=1}^{g(h)}N_{Y}^{(h,i)}\Big[P(N_{X},\vec{N}_{Y},(\ldots N_{V}^{(h,i)}-1,\ldots))\\
+ &  & -P(N_{X},\vec{N}_{Y},\vec{N}_{V})\Big].
+\end{eqnarray*}
+
+\end_inset
+
+ We now make use of the following fact: if a distribution 
+\begin_inset Formula $P(\vec{N})$
+\end_inset
+
+ over the vector 
+\begin_inset Formula $\vec{N}$
+\end_inset
+
+ is zero whenever 
+\begin_inset Formula $\vec{N}$
+\end_inset
+
+ contains a negative element, then
+\begin_inset Formula 
+\[
+\sum_{|\vec{N}|=n}P(\vec{N}^{-k})=\sum_{|\vec{N}|=n-1}P(\vec{N}),
+\]
+
+\end_inset
+
+where 
+\begin_inset Formula $\vec{N}^{-k}=(N_{1},\ldots,N_{k}-1,\ldots)$
+\end_inset
+
+.
+ This is easy to show by defining a new variable 
+\begin_inset Formula $M=N_{k}-1$
+\end_inset
+
+ and noting that terms involving 
+\begin_inset Formula $M<0$
+\end_inset
+
+ vanish.
+\end_layout
+
+\begin_layout Standard
+Using this result we can write
+\begin_inset Formula 
+\begin{eqnarray*}
+\frac{\partial}{\partial t}P(N_{X},\vec{n}_{Y},\vec{n}_{V}) & = & k\sum_{h=0}^{L}\sum_{i=1}^{g(h)}\ldots\sum_{|\vec{N}_{Y}^{h}|=n_{Y}^{h}}\sum_{|\vec{N}_{V}^{h}|=n_{V}^{h}-1}\ldots N_{Y}^{(h,i)}P(N_{X},\vec{N}_{Y},\vec{N}_{V})\\
+ &  & -k\sum_{h=0}^{L}\sum_{i=1}^{g(h)}\ldots\sum_{|\vec{N}_{Y}^{h}|=n_{Y}^{h}}\sum_{|\vec{N}_{V}^{h}|=n_{V}^{h}}\ldots N_{Y}^{(h,i)}P(N_{X},\vec{N}_{Y},\vec{N}_{V}).
+\end{eqnarray*}
+
+\end_inset
+
+This easily reduces to
+\begin_inset Formula 
+\[
+\frac{\partial}{\partial t}P(\vec{N}_{X},\vec{n}_{Y},\vec{n}_{V})=k\sum_{h=0}^{L}n_{Y}^{h}\left[P(N_{X},\vec{n}_{Y},\vec{n}_{V}^{-h})-P(N_{X},\vec{n}_{Y},\vec{n}_{V})\right],
+\]
+
+\end_inset
+
+with 
+\begin_inset Formula $\vec{n}_{V}^{-h}=(\ldots,n_{V}^{h}-1,\ldots)$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Subsection
+Infected cell and virion decay
+\end_layout
+
+\begin_layout Standard
+The infected cell death reaction corresponds to the following line in the
+ equation of motion for the marginalised distribution:
+\begin_inset Formula 
+\begin{eqnarray*}
+\frac{\partial}{\partial t}P(N_{X},\vec{n}_{Y},\vec{n}_{V}) & = & a\sum_{|\vec{N}_{Y}^{0}|=n_{Y}^{0}}\ldots\sum_{h=0}^{L}\sum_{i=1}^{g(h)}\Big[(N_{Y}^{(h,i)}+1)P(N_{X},(\ldots,N_{Y}^{(h,i)}+1,\ldots),\vec{N}_{V})\\
+ &  & -N_{Y}^{(h,i)}P(N_{X},\vec{N}_{Y},\vec{N}_{V})\Big].
+\end{eqnarray*}
+
+\end_inset
+
+ At this point we need to use an additional result: if 
+\begin_inset Formula $P(\vec{N})$
+\end_inset
+
+ is a distribution over vectors 
+\begin_inset Formula $\vec{N}$
+\end_inset
+
+ of non-negative integers, then
+\begin_inset Formula 
+\[
+\sum_{|\vec{N}|=n}(N_{k}+1)P(\vec{N}^{+k})=\sum_{|\vec{N}|=n+1}N_{k}P(\vec{N}),
+\]
+
+\end_inset
+
+where 
+\begin_inset Formula $\vec{N}^{+k}=(N_{1},\ldots,N_{k}+1,\ldots)$
+\end_inset
+
+.
+ This is easily shown by defining a new variable 
+\begin_inset Formula $M=N_{k}+1$
+\end_inset
+
+ and noting that, although 
+\begin_inset Formula $M$
+\end_inset
+
+ is restricted to the domain 
+\begin_inset Formula $[1,N_{k}+1]$
+\end_inset
+
+, the product 
+\begin_inset Formula $MP(\ldots,N_{k-1},M,N_{k+1})$
+\end_inset
+
+ vanishes whenever 
+\begin_inset Formula $M=0$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+This result allows us to write
+\begin_inset Formula 
+\begin{eqnarray*}
+\frac{\partial}{\partial t}P(N_{X},\vec{n}_{Y},\vec{n}_{V}) & = & a\sum_{h=0}^{L}\sum_{i=1}^{g(h)}\ldots\sum_{|\vec{N}_{Y}^{h}|=n_{Y}^{h}+1}\sum_{|\vec{N}_{V}^{h}|=n_{V}^{h}}\ldots N_{Y}^{(h,i)}P(N_{X},\vec{N}_{Y},\vec{N}_{V})\\
+ &  & -a\sum_{h=0}^{L}\sum_{i=1}^{g(h)}\ldots\sum_{|\vec{N}_{Y}^{h}|=n_{Y}^{h}}\sum_{|\vec{N}_{V}^{h}|=n_{V}^{h}}\ldots N_{Y}^{(h,i)}P(N_{X},\vec{N}_{Y},\vec{N}_{V}).
+\end{eqnarray*}
+
+\end_inset
+
+Once more this quickly simplifies to
+\begin_inset Formula 
+\[
+\frac{\partial}{\partial t}P(N_{X},\vec{n}_{Y},\vec{n}_{V})=a\sum_{h=0}^{L}\left[(n_{Y}^{h}+1)P(N_{X},\vec{n}_{Y}^{+h},\vec{n}_{V})-n_{Y}^{h}P(N_{X},\vec{n}_{Y},\vec{n}_{V})\right]
+\]
+
+\end_inset
+
+where 
+\begin_inset Formula $\vec{n}_{Y}^{+h}=(\ldots,n_{Y}^{h}+1,\ldots)$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+In exactly the same way, the virion death reaction terms in the equation
+ of motion for the marginalised distribution must be
+\begin_inset Formula 
+\[
+\frac{\partial}{\partial t}P(N_{X},\vec{n}_{Y},\vec{n}_{V})=u\sum_{h=0}^{L}\left[(n_{YV}^{h}+1)P(N_{X},\vec{n}_{Y},\vec{n}_{V}^{+h})-n_{V}^{h}P(N_{X},\vec{n}_{Y},\vec{n}_{V})\right].
+\]
 
 \end_inset
 
 
 \end_layout
 
+\begin_layout Subsection
+Infection: no mutation
+\end_layout
+
 \begin_layout Standard
-The symmetry resulting from the initial condition and the lack of selection
- results in the following equality:
+The final reaction to consider is the infection of uninfected target cells
+ by the virus.
+ We firstly restrict ourselves to infections which do not involve a mutation.
+ The relevant terms in the equation of motion for the marginalised distribution
+ are
 \begin_inset Formula 
-\begin{equation}
-P(N_{X},\hat{\pi}_{h}\vec{N}_{Y},\vec{N}_{V},t)=P(N_{X},\vec{N}_{Y},\hat{\pi}_{h}\vec{N}_{V},t)=P(N_{X},\vec{N}_{Y},\vec{N}_{V},t),
-\end{equation}
+\begin{eqnarray*}
+\frac{\partial}{\partial t}P(N_{X},\vec{n}_{Y},\vec{n}_{V}) & = & (1-\mu)\beta\sum_{|\vec{N}_{Y}^{0}|=n_{Y}^{0}}\ldots\sum_{h=0}^{L}\sum_{i=1}^{g(h)}\Big[\\
+ &  & (N_{X}+1)(N_{V}^{(h,i)}+1)P(N_{X}+1,(\ldots,N_{Y}^{(h,i)}-1,\ldots),(\ldots,N_{V}^{(h,i)}+1,\ldots))\\
+ &  & -N_{X}N_{V}^{(h,i)}P(N_{X},\vec{N}_{Y},\vec{N}_{V})\Big].
+\end{eqnarray*}
 
 \end_inset
 
-where 
-\begin_inset Formula $\hat{\pi}_{h}$
+Applying the results used in the previous sections, this becomes
+\begin_inset Formula 
+\begin{eqnarray*}
+\frac{\partial}{\partial t}P(N_{X},\vec{n}_{Y},\vec{n}_{V}) & = & (1-\mu)\beta\sum_{h=0}^{L}\sum_{i=1}^{g(h)}\Big[\\
+ &  & \ldots\sum_{|\vec{N}_{Y}^{h}|=n_{Y}^{h}-1}\sum_{|\vec{N}_{V}^{h}|=n_{V}^{h}+1}\ldots(N_{X}+1)N_{V}^{(h,i)}P(N_{X}+1,\vec{N}_{Y},\vec{N}_{V})\\
+ &  & -\ldots\sum_{|\vec{N}_{Y}^{h}|=n_{Y}^{h}}\sum_{|\vec{N}_{V}^{h}|=n_{V}^{h}}\ldots N_{X}N_{V}^{(h,i)}P(N_{X},\vec{N}_{Y},\vec{N}_{V})\Big],
+\end{eqnarray*}
+
 \end_inset
 
- is an operator which permutes elements of 
-\begin_inset Formula $\vec{N}$
+which simplifies to
+\begin_inset Formula 
+\begin{eqnarray*}
+\frac{\partial}{\partial t}P(N_{X},\vec{n}_{Y},\vec{n}_{V}) & = & (1-\mu)\beta\sum_{h=0}^{L}\Big[(N_{X}+1)(n_{V}^{h}+1)P(N_{X}+1,\vec{n}_{Y}^{-h},\vec{n}_{V}^{+h})\\
+ &  & -N_{X}n_{V}^{h}P(N_{X},\vec{n}_{Y},\vec{n}_{V})\Big].
+\end{eqnarray*}
+
 \end_inset
 
- corresponding to sequences satisfying 
-\begin_inset Formula $H_{s,0}=h$
-\end_inset
 
-.
+\end_layout
+
+\begin_layout Subsection
+Infection: with mutation
+\end_layout
+
+\begin_layout Standard
+We now consider infection reactions which are accompanied by a point mutation
+ of the provirus.
 \end_layout
 
 \end_body
