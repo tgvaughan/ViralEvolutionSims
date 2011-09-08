@@ -465,8 +465,8 @@ We now consider infection reactions which are accompanied by a point mutation
 \frac{\partial}{\partial t}P(N_{X},\vec{n}_{Y},\vec{n}_{V}) & = & \frac{\mu\beta}{3L}\sum_{|\vec{N}_{Y}^{0}|=n_{Y}^{0}}\ldots\sum_{h=0}^{L}\sum_{i=1}^{g(h)}\Big[(N_{X}+1)(N_{V}^{h,i}+1)\Big\{\\
  &  & \sum_{j=1}^{g(h-1)}\Gamma_{h-1,j}^{h,i}P(N_{X}+1,(\ldots,N_{Y}^{h-1,j}-1,\ldots),(\ldots,N_{V}^{h,i}+1,\ldots))\\
  &  & +\sum_{j=1}^{g(h)}\Gamma_{h,j}^{h,i}P(N_{X}+1,(\ldots,N_{Y}^{h,j}-1,\ldots),(\ldots,N_{V}^{h,i}+1,\ldots))\\
- &  & +\sum_{j=1}^{g(h+1}\Gamma_{h+1,j}^{h,i}P(N_{X}+1,(\ldots,N_{Y}^{h+1,j}-1,\ldots),(\ldots,N_{V}^{h,i}+1,\ldots))\Big\}\\
- &  & -N_{X}N_{V}^{h,i}P(N_{X},\vec{N}_{Y},\vec{N}_{V})\Big].
+ &  & +\sum_{j=1}^{g(h+1)}\Gamma_{h+1,j}^{h,i}P(N_{X}+1,(\ldots,N_{Y}^{h+1,j}-1,\ldots),(\ldots,N_{V}^{h,i}+1,\ldots))\Big\}\\
+ &  & -3LN_{X}N_{V}^{h,i}P(N_{X},\vec{N}_{Y},\vec{N}_{V})\Big].
 \end{eqnarray*}
 
 \end_inset
@@ -495,7 +495,7 @@ Under application of the theorems developed in the previous sections, this
  &  & \ldots\sum_{|\vec{N}_{Y}^{h-1}|=n_{Y}^{h-1}-1}\ldots\sum_{j=1}^{g(h-1)}\Gamma_{h-1,j}^{h,i}P(N_{X}+1,\vec{N}_{Y},\vec{N}_{V})\\
  &  & +\ldots\sum_{|\vec{N}_{Y}^{h}|=n_{Y}^{h}-1}\ldots\sum_{j=1}^{g(h)}\Gamma_{h,j}^{h,i}P(N_{X}+1,\vec{N}_{Y},\vec{N}_{V})\\
  &  & +\ldots\sum_{|\vec{N}_{Y}^{h+1}|=n_{Y}^{h+1}-1}\ldots\sum_{j=1}^{g(h+1}\Gamma_{h+1,j}^{h,i}P(N_{X}+1,\vec{N}_{Y},\vec{N}_{V})\Big\}\\
- &  & -\sum_{|\vec{N}_{Y}^{0}|=n_{Y}^{0}}\sum_{|\vec{N}_{V}^{0}|=n_{V}^{0}}\ldots N_{X}N_{V}^{h,i}P(N_{X},\vec{N}_{Y},\vec{N}_{V})\Big].
+ &  & -\sum_{|\vec{N}_{Y}^{0}|=n_{Y}^{0}}\sum_{|\vec{N}_{V}^{0}|=n_{V}^{0}}\ldots3LN_{X}N_{V}^{h,i}P(N_{X},\vec{N}_{Y},\vec{N}_{V})\Big].
 \end{eqnarray*}
 
 \end_inset
@@ -534,7 +534,7 @@ which represents the number of sequences neighbouring sequence
  &  & \ldots\sum_{|\vec{N}_{Y}^{h-1}|=n_{Y}^{h-1}-1}\ldots g(h-1|h)P(N_{X}+1,\vec{N}_{Y},\vec{N}_{V})\\
  &  & +\ldots\sum_{|\vec{N}_{Y}^{h}|=n_{Y}^{h}-1}\ldots g(h|h)P(N_{X}+1,\vec{N}_{Y},\vec{N}_{V})\\
  &  & +\ldots\sum_{|\vec{N}_{Y}^{h+1}|=n_{Y}^{h+1}-1}\ldots g(h+1|h)P(N_{X}+1,\vec{N}_{Y},\vec{N}_{V})\Big\}\\
- &  & -\sum_{|\vec{N}_{Y}^{0}|=n_{Y}^{0}}\sum_{|\vec{N}_{V}^{0}|=n_{V}^{0}}\ldots N_{X}N_{V}^{h,i}P(N_{X},\vec{N}_{Y},\vec{N}_{V})\Big].
+ &  & -\sum_{|\vec{N}_{Y}^{0}|=n_{Y}^{0}}\sum_{|\vec{N}_{V}^{0}|=n_{V}^{0}}\ldots3LN_{X}N_{V}^{h,i}P(N_{X},\vec{N}_{Y},\vec{N}_{V})\Big].
 \end{eqnarray*}
 
 \end_inset
@@ -546,7 +546,7 @@ This becomes
  &  & g(h-1|h)P(N_{X}+1,\vec{n}_{Y}^{-(h-1)},\vec{n}_{V}^{+h})\\
  &  & +g(h|h)P(N_{X}+1,\vec{n}_{Y}^{-h},\vec{n}_{V}^{+h})\\
  &  & +g(h+1|h)P(N_{X}+1,\vec{n}_{Y}^{-(h+1)},\vec{n}_{V}^{+h})\Big\}\\
- &  & -N_{X}n_{V}^{h}P(N_{X},\vec{n}_{Y},\vec{n}_{V})\Big].
+ &  & -3LN_{X}n_{V}^{h}P(N_{X},\vec{n}_{Y},\vec{n}_{V})\Big].
 \end{eqnarray*}
 
 \end_inset
@@ -569,7 +569,7 @@ We thus find the following equation of motion for the marginalised distribution:
  &  & +g(h-1|h)P(N_{X}+1,\vec{n}_{Y}^{-(h-1)},\vec{n}_{V}^{+h})\\
  &  & +g(h|h)P(N_{X}+1,\vec{n}_{Y}^{-h},\vec{n}_{V}^{+h})\\
  &  & +g(h+1|h)P(N_{X}+1,\vec{n}_{Y}^{-(h+1)},\vec{n}_{V}^{+h})\Big\}\\
- &  & -N_{X}n_{V}^{h}P(N_{X},\vec{n}_{Y},\vec{n}_{V})\Big]\\
+ &  & -3LN_{X}n_{V}^{h}P(N_{X},\vec{n}_{Y},\vec{n}_{V})\Big]\\
  &  & +k\sum_{h=0}^{L}n_{Y}^{h}\left[P(N_{X},\vec{n}_{Y},\vec{n}_{V}^{-h})-P(N_{X},\vec{n}_{Y},\vec{n}_{V})\right]\\
  &  & +d\left[(N_{X}+1)P(N_{X}+1,\vec{n}_{Y},\vec{n}_{V})-N_{X}P(N_{X},\vec{n}_{Y},\vec{n}_{V})\right]\\
  &  & +a\sum_{h=0}^{L}\left[(n_{Y}^{h}+1)P(N_{X},\vec{n}_{Y}^{+h},\vec{n}_{V})-n_{Y}^{h}P(N_{X},\vec{n}_{Y},\vec{n}_{V})\right]\\
@@ -579,6 +579,55 @@ We thus find the following equation of motion for the marginalised distribution:
 \end_inset
 
 
+\end_layout
+
+\begin_layout Section
+Effective reactions
+\end_layout
+
+\begin_layout Standard
+The marginalised CME corresponds to the following aggregated reactions:
+\begin_inset Formula 
+\begin{eqnarray*}
+0 & \overset{\lambda}{\longrightarrow} & X\\
+X+V^{(h)} & \overset{(1-\mu)\beta}{\longrightarrow} & Y^{(h)}\\
+X+V^{(h)} & \overset{\mu\beta g(h-1|h)}{\longrightarrow} & Y^{(h-1)}\\
+X+V^{(h)} & \overset{\mu\beta g(h|h)}{\longrightarrow} & Y^{(h)}\\
+X+V^{(h)} & \overset{\mu\beta g(h+1|h)}{\longrightarrow} & Y^{(h-1)}\\
+Y^{(h)} & \overset{k}{\longrightarrow} & Y^{(h)}+V^{(h)}\\
+X & \overset{d}{\longrightarrow} & 0\\
+Y^{(h)} & \overset{a}{\longrightarrow} & 0\\
+V^{(h)} & \overset{u}{\longrightarrow} & 0
+\end{eqnarray*}
+
+\end_inset
+
+Expressing the dynamics in terms of these reactions greatly reduces the
+ size of the state space which needs to be considered, as 
+\begin_inset Formula $\vec{N}_{Y}$
+\end_inset
+
+ and 
+\begin_inset Formula $\vec{N}_{V}$
+\end_inset
+
+ each contain 
+\begin_inset Formula $4^{L}$
+\end_inset
+
+ distinct populations sizes, while 
+\begin_inset Formula $\vec{n}_{Y}$
+\end_inset
+
+ and 
+\begin_inset Formula $\vec{n}_{V}$
+\end_inset
+
+ contain only 
+\begin_inset Formula $L+1$
+\end_inset
+
+ population sizes.
 \end_layout
 
 \end_body
