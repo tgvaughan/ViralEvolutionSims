@@ -36,3 +36,24 @@ class StateVec {
         }
 
 };
+
+
+int main (int argc, char **argv)
+{
+    using namespace std;
+
+    // Parse command line parameters:
+    if (argc < 2) {
+        cout << "Usage: " << argv[0] << " outfile" << endl;
+        exit(0);
+    }
+    char *ofname = argv[1];
+
+    // Simulation parameters:
+
+    // Model parameters:
+
+    // Initialise RNG:
+
+
+}
