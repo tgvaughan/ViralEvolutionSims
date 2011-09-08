@@ -33,10 +33,10 @@ def ddt (X, Y, V, L, p):
 		dYdt[h] += mup*p['beta']*X*g(h,h,L)*V[h]
 
 		if h>0:
-			dYdt[h] += mup*p['beta']*X*g(h-1,h,L)*3*(L-h+1)/h*V[h-1]
+			dYdt[h] += mup*p['beta']*X*g(h,h-1,L)*V[h-1]
 
 		if h<L:
-			dYdt[h] += mup*p['beta']*X*g(h+1,h,L)*(h+1)/3/(L-h)*V[h+1]
+			dYdt[h] += mup*p['beta']*X*g(h,h+1,L)*V[h+1]
 	
 	dVdt = p['k']*Y - p['beta']*X*V - p['u']*V
 
