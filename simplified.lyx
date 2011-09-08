@@ -591,9 +591,9 @@ The marginalised CME corresponds to the following aggregated reactions:
 \begin{eqnarray*}
 0 & \overset{\lambda}{\longrightarrow} & X\\
 X+V^{(h)} & \overset{(1-\mu)\beta}{\longrightarrow} & Y^{(h)}\\
-X+V^{(h)} & \overset{\mu\beta g(h-1|h)}{\longrightarrow} & Y^{(h-1)}\\
-X+V^{(h)} & \overset{\mu\beta g(h|h)}{\longrightarrow} & Y^{(h)}\\
-X+V^{(h)} & \overset{\mu\beta g(h+1|h)}{\longrightarrow} & Y^{(h-1)}\\
+X+V^{(h)} & \overset{\frac{\mu\beta}{3L}g(h-1|h)}{\longrightarrow} & Y^{(h-1)}\\
+X+V^{(h)} & \overset{\frac{\mu\beta}{3L}g(h|h)}{\longrightarrow} & Y^{(h)}\\
+X+V^{(h)} & \overset{\frac{\mu\beta}{3L}g(h+1|h)}{\longrightarrow} & Y^{(h-1)}\\
 Y^{(h)} & \overset{k}{\longrightarrow} & Y^{(h)}+V^{(h)}\\
 X & \overset{d}{\longrightarrow} & 0\\
 Y^{(h)} & \overset{a}{\longrightarrow} & 0\\
