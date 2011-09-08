@@ -24,8 +24,8 @@ class StateVec {
             L = length;
 
             X = 0.0;
-            Y.resize(L,0.0);
-            V.resize(L,0.0);
+            Y.resize(L+1,0.0);
+            V.resize(L+1,0.0);
         }
 
         // Copy constructor:
@@ -37,6 +37,19 @@ class StateVec {
 
 };
 
+// Number of neighbouring sequences of a sequence on
+// h1 which lie on h2:
+double gcond(int h2, int h1)
+{
+	switch (h2) {
+		case h1:
+		case h1+1:
+		case h1-1:
+		default:
+			return 0.0;
+	}
+
+}
 
 int main (int argc, char **argv)
 {
