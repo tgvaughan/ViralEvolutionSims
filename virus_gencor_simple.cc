@@ -51,6 +51,36 @@ double gcond(int h2, int h1)
 
 }
 
+// Reaction class
+class Reaction {
+	public:
+
+		int inX, inY, inV;
+		int outX, outY, outV;
+		bool mutY, mutV;
+
+		// Constructor:
+		Reaction(int p_inX, int p_inY, int p_inV,
+				int p_outX, int p_outY, int p_outV,
+				bool p_mutY, bool p_mutV) {
+
+			inX = p_inX;
+			inY = p_inY;
+			inV = p_inV;
+			outX = p_outX;
+			outY = p_outY;
+			outV = p_outV;
+
+			mutY = p_mutY;
+			mutV = p_mutV;
+		}
+
+		// Get reaction propensity:
+		void getPropensity(StateVec & sv) {
+		}
+
+};
+
 int main (int argc, char **argv)
 {
     using namespace std;
