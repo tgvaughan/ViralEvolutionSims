@@ -1,10 +1,15 @@
-all: virus_gencor virus_gencor_tauleap
+all: virus_gencor_simple
 
-tags: virus_gencor_tauleap.cc virus_gencor_tauleap.h poissonian.cc poissonian.h
-	ctags virus_gencor_tauleap.cc \
-		virus_gencor_tauleap.h \
+tags: virus_gencor_simple.cc poissonian.cc poissonian.h
+	ctags virus_gencor_simple.cc \
 		poissonian.cc \
 		poissonian.h
+
+virus_gencor_simple: virus_gencor_simple.o poissonian.o
+	g++ -o virus_gencor_simple virus_gencor_simple.o poissonian.o
+
+virus_gencor_simple.o: virus_gencor_simple.cc
+	g++ -c virus_gencor_simple.cc
 
 virus_gencor: virus_gencor.o
 	mpic++ -o virus_gencor virus_gencor.o
