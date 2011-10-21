@@ -373,6 +373,10 @@ int main (int argc, char **argv)
 		scalarMoments[i].normalise(Npaths);
 	for (int i=0; i<NVectorMoments; i++)
 		vectorMoments[i].normalise(Npaths);
+
+
+	// TODO: Write moments to disk.
+
 		
 	// Done!
 	exit(0);
