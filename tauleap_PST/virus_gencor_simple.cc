@@ -356,6 +356,9 @@ int main (int argc, char **argv)
 		// Simulation loop:
 		for (int t_idx=0; t_idx < Nt; t_idx++) {
 
+			// DEBUG:
+			std::cout << "Executing step " << t_idx + 1 << " of " << Nt << std::endl;
+
 			// Sample if necessary:
 			if (t_idx % steps_per_sample == 0) {
 				for (int i=0; i<NScalarMoments; i++)
