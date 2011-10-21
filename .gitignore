@@ -16,3 +16,8 @@ tags
 
 # Ignore PDFs - they should be in manuscript repo.
 *.pdf
+
+# Ignore Eclipse stuff:
+.metadata
+.project
+.cproject
