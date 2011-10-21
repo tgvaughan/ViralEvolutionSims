@@ -9,6 +9,8 @@
 
 #include "poissonian.h"
 
+
+// Class for system state vectors:
 class StateVec {
     public:
 
@@ -151,6 +153,7 @@ class Reaction {
 
 };
 
+// Class for scalar moments:
 class MomentScalar {
 	public:
 
@@ -191,6 +194,7 @@ class MomentScalar {
 		}
 };
 
+// Class for vector moments:
 class MomentVector {
 	public:
 
@@ -246,6 +250,7 @@ class MomentVector {
 		}
 };
 
+// Sampling functions for use in moment calculations:
 double samplefunc_mean_X (StateVec & sv) {
 	return sv.X;
 }
@@ -338,7 +343,7 @@ int main (int argc, char **argv)
 	// Loop over paths:
 	for (int path=0; path<Npaths; path++) {
 
-		// Initialise state vector:
+		// Initialize state vector:
 		StateVec sv = sv0;
 
 		// Perform initial sample:
