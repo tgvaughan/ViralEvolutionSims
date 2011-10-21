@@ -39,7 +39,7 @@ class Sequence : public std::vector<int> {
 			neighbours.resize(size()*(nChar-1));
 
 			int idx=0;
-			for (int i=0; i<size(); i++) {
+			for (unsigned int i=0; i<size(); i++) {
 				for (int j=1; j<nChar; j++) {
 					Sequence a = *this;
 					a[i] = (a[i]+j) % nChar;
@@ -91,7 +91,7 @@ std::ostream & operator<< (std::ostream & output, const Sequence & seq)
 {
 	output << "[";
 
-	for (int i=0; i<seq.size(); i++) {
+	for (unsigned int i=0; i<seq.size(); i++) {
 
 //		if (i>0)
 //			output << ",";
@@ -273,13 +273,13 @@ class Reaction {
 			rate = p_rate;
 
 			isGen = false;
-			for (int i=0; i<inGen.size(); i++) {
+			for (unsigned int i=0; i<inGen.size(); i++) {
 				if (inGen[i]>0 || outGen[i]>0)
 					isGen = true;
 			}
 
 			isMutation = false;
-			for (int i=0; i<mutate.size(); i++)
+			for (unsigned int i=0; i<mutate.size(); i++)
 				if (mutate[i])
 					isMutation = true;
 
@@ -307,9 +307,9 @@ class Reaction {
 				// non-zero for each of the reactant species, so it makes sense
 				// to consider only those genotypes extant in the reactant
 				// population with the smallest diversity.)
-				int mindiversity = 0;
+				unsigned int mindiversity = 0;
 				int imin = -1;
-				for (int i=0; i<x.genetic.size(); i++) {
+				for (unsigned int i=0; i<x.genetic.size(); i++) {
 					if (inGen[i]>0) {
 						if (imin<0 || x.genetic[i].pop.size()<mindiversity) {
 							mindiversity = x.genetic[i].pop.size();
@@ -333,11 +333,11 @@ class Reaction {
 						a *= thisSeq.size()*3;
 					*/
 
-					for (int i=0; i<x.genetic.size(); i++) {
+					for (unsigned int i=0; i<x.genetic.size(); i++) {
 						for (int m=0; m<inGen[i]; m++)
 							a *= x.genetic[i][thisSeq] - m;
 					}
-					for (int i=0; i<x.nonGenetic.size(); i++) {
+					for (unsigned int i=0; i<x.nonGenetic.size(); i++) {
 						for (int m=0; m<inNonGen[i]; m++)
 							a *= x.nonGenetic[i].n - m;
 					}
@@ -352,7 +352,7 @@ class Reaction {
 						double Nc = 10.0;
 
 						// Check for criticality:
-						for (int i=0; i<x.genetic.size(); i++) {
+						for (unsigned int i=0; i<x.genetic.size(); i++) {
 							if (!mutate[i]) {
 								if (x.genetic[i][thisSeq] < Nc*(inGen[i]-outGen[i]))
 									crit = true;
@@ -361,7 +361,7 @@ class Reaction {
 									crit = true;
 							}
 						}
-						for (int i=0; i<x.nonGenetic.size(); i++) {
+						for (unsigned int i=0; i<x.nonGenetic.size(); i++) {
 							if (x.nonGenetic[i].n < Nc*(inNonGen[i] - outNonGen[i]))
 									crit = true;
 						}
@@ -390,7 +390,7 @@ class Reaction {
 
 				// Determine reaction propensity:
 				double a = rate;
-				for (int i=0; i<x.nonGenetic.size(); i++) {
+				for (unsigned int i=0; i<x.nonGenetic.size(); i++) {
 					for (int m=0; m<inNonGen[i]; m++) {
 						a *= x.nonGenetic[i].n - m;
 					}
@@ -405,7 +405,7 @@ class Reaction {
 					double Nc = 10.0;
 
 					// Check for criticality
-					for (int i=0; i<x.nonGenetic.size(); i++) {
+					for (unsigned int i=0; i<x.nonGenetic.size(); i++) {
 						if (x.nonGenetic[i].n < Nc*(inNonGen[i] - outNonGen[i]))
 							crit = true;
 					}
@@ -455,7 +455,7 @@ class Reaction {
 
 								Sequence mutantSeq = thisSeq.getNeighbour(neighbourNum);
 
-								for (int i=0; i<x.genetic.size(); i++) {
+								for (unsigned int i=0; i<x.genetic.size(); i++) {
 									if (!mutate[i]) {
 										if (outGen[i]-inGen[i] != 0) {
 											if(!x.genetic[i].popAdd(nreacts*(outGen[i]-inGen[i]), thisSeq)) {
@@ -475,7 +475,7 @@ class Reaction {
 										x.genetic[i].popAdd(nreacts*outGen[i], mutantSeq);
 									}
 								}
-								for (int i=0; i<x.nonGenetic.size(); i++) {
+								for (unsigned int i=0; i<x.nonGenetic.size(); i++) {
 									if (outNonGen[i]-inNonGen[i] != 0) {
 										if ((x.nonGenetic[i].n += nreacts*(outNonGen[i]-inNonGen[i])) < 0) {
 											std::cout << "Propensity*dt = " << thisProp*dt 
@@ -493,7 +493,7 @@ class Reaction {
 						double nreacts = poissonian(thisProp*dt, buf);
 
 						if (nreacts>0) {
-							for (int i=0; i<x.genetic.size(); i++) {
+							for (unsigned int i=0; i<x.genetic.size(); i++) {
 								if ((outGen[i] - inGen[i]) != 0) {
 									if (!x.genetic[i].popAdd(nreacts*(outGen[i]-inGen[i]), thisSeq)) {
 										std::cout << "Propensity*dt = " << thisProp*dt 
@@ -503,7 +503,7 @@ class Reaction {
 									}
 								}
 							}
-							for (int i=0; i<x.nonGenetic.size(); i++) {
+							for (unsigned int i=0; i<x.nonGenetic.size(); i++) {
 								if ((outNonGen[i] - inNonGen[i]) != 0) {
 									if ((x.nonGenetic[i].n += nreacts*(outNonGen[i]-inNonGen[i])) < 0) {
 										std::cout << "Propensity*dt = " << thisProp*dt 
@@ -524,7 +524,7 @@ class Reaction {
 
 				double nreacts = poissonian(propensity*dt, buf);
 
-				for (int i=0; i<x.nonGenetic.size(); i++) {
+				for (unsigned int i=0; i<x.nonGenetic.size(); i++) {
 					if (outNonGen[i]-inNonGen[i] != 0) {
 						if ((x.nonGenetic[i].n += nreacts*(outNonGen[i]-inNonGen[i])) < 0) {
 							std::cout << "Propensity*dt = " << propensity*dt 
@@ -549,7 +549,7 @@ class Reaction {
 
 					Sequence mutantSeq = criticalSeq.chooseNeighbour(buf);
 
-					for (int i=0; i<x.genetic.size(); i++) {
+					for (unsigned int i=0; i<x.genetic.size(); i++) {
 						if (mutate[i]) {
 							if (inGen[i] > 0)
 								x.genetic[i].pop[criticalSeq] -= inGen[i];
@@ -560,22 +560,22 @@ class Reaction {
 								x.genetic[i].pop[criticalSeq] += outGen[i]-inGen[i];
 						}
 					}
-					for (int i=0; i<x.nonGenetic.size(); i++)
+					for (unsigned int i=0; i<x.nonGenetic.size(); i++)
 						x.nonGenetic[i].n += outNonGen[i]-inNonGen[i];
 
 				} else {
 
-					for (int i=0; i<x.genetic.size(); i++) {
+					for (unsigned int i=0; i<x.genetic.size(); i++) {
 						if (outGen[i]-inGen[i] != 0)
 							x.genetic[i].pop[criticalSeq] += outGen[i]-inGen[i];
 					}
-					for (int i=0; i<x.nonGenetic.size(); i++)
+					for (unsigned int i=0; i<x.nonGenetic.size(); i++)
 						x.nonGenetic[i].n += outNonGen[i]-inNonGen[i];
 				}
 
 			} else {
 
-				for (int i=0; i<x.nonGenetic.size(); i++)
+				for (unsigned int i=0; i<x.nonGenetic.size(); i++)
 					x.nonGenetic[i].n += outNonGen[i]-inNonGen[i];
 			}
 

@@ -44,7 +44,7 @@ void sample(unsigned int genome_L,
 			it != sv.V.end(); ++it)
 	{
 		int HD = 0;
-		for (int i=0; i<genome_L; i++)
+		for (unsigned int i=0; i<genome_L; i++)
 			if ((it->first)[i] != seq0[i])
 				HD++;
 
@@ -61,7 +61,7 @@ void sample(unsigned int genome_L,
 		{
 			int HD = 0;
 
-			for (int i=0; i<genome_L; i++)
+			for (unsigned int i=0; i<genome_L; i++)
 				if ((it->first)[i] != (itp->first)[i])
 					HD++;
 
@@ -80,13 +80,13 @@ void sample(unsigned int genome_L,
 				it != sv.V.end(); ++it)
 		{
 			int HD = 0;
-			for (int i=0; i<genome_L; i++)
+			for (unsigned int i=0; i<genome_L; i++)
 				if ((it->first)[i] != seq0[i])
 					HD++;
 
 			momentvec[m+HD][samp] += (double)(it->second)/(double)sv.NV;
 		}
-		for (int HD=0; HD<=genome_L; HD++)
+		for (unsigned int HD=0; HD<=genome_L; HD++)
 			jointpcount[p+HD][samp]++;
 	}
 	m += genome_L+1;
@@ -102,7 +102,7 @@ void sample(unsigned int genome_L,
 			{
 				int HD = 0;
 
-				for (int i=0; i<genome_L; i++)
+				for (unsigned int i=0; i<genome_L; i++)
 					if ((it->first)[i] != (itp->first)[i])
 						HD++;
 
@@ -110,7 +110,7 @@ void sample(unsigned int genome_L,
 					/pow((double)sv.NV,2.0);
 			}
 		}
-		for (int HD=0; HD <= genome_L; HD++)
+		for (unsigned int HD=0; HD <= genome_L; HD++)
 			jointpcount[p+HD][samp]++;
 	}
 	m += genome_L+1;
@@ -161,13 +161,13 @@ void dump_results(unsigned int Ntraj, double samp_dt, unsigned int genome_L,
 		<< time_s << " seconds to complete." << std::endl
 		<< "#" << std::endl
 		<< "t NX NY NV NVsq";
-	for (int i=0; i<=genome_L; i++)
+	for (unsigned int i=0; i<=genome_L; i++)
 		of << " V" << i;
-	for (int i=0; i<=genome_L; i++)
+	for (unsigned int i=0; i<=genome_L; i++)
 		of << " VV" << i;
-	for (int i=0; i<=genome_L; i++)
+	for (unsigned int i=0; i<=genome_L; i++)
 		of << " P" << i;
-	for (int i=0; i<=genome_L; i++)
+	for (unsigned int i=0; i<=genome_L; i++)
 		of << " PP" << i;
 	of << " div_V" << std::endl;
 
@@ -465,7 +465,7 @@ int main (int argc, char **argv)
 
 		double *recv_moment = new double [Nsamples];
 		unsigned long *recv_jointpcounts = new unsigned long [Nsamples];
-		for (unsigned int recv_rank = 1; recv_rank<mpi_size; recv_rank++) {
+		for (int recv_rank = 1; recv_rank<mpi_size; recv_rank++) {
 
 			for (unsigned int m=0; m<Nmoments; m++) {
 				MPI::COMM_WORLD.Recv(recv_moment, Nsamples, MPI::DOUBLE, recv_rank, m);

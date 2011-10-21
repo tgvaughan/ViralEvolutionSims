@@ -438,7 +438,6 @@ int main (int argc, char **argv)
 		}
 		ofile << endl;
 
-		int sidx = 0;
 		for (int s=0; s<Nsamples; s++) {
 
 			ofile << dt[0]*(double)(s*steps_per_sample[0]) << " ";
