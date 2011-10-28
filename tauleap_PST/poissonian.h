@@ -1,7 +1,12 @@
 // poisson.h - Declares the function poisson() which returns a random
 // number (cast as a double) belonging to a Poissonian distribution.
 
-double gammln(double xx);
-double poissonian_knuth(double lambda, unsigned short *buf);
-double poissonian_reject(double lambda, unsigned short *buf);
-double poissonian(double lambda, unsigned short *buf);
+#ifndef POISSONIAN_H_
+#define POISSONIAN_H_
+
+double gammln(double);
+double poissonian_knuth(double, unsigned short *);
+double poissonian_reject(double, unsigned short *);
+double poissonian(double, unsigned short *buf);
+
+#endif /* POISSONIAN_H_ */
