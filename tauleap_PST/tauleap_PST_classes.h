@@ -23,28 +23,33 @@ class StateVec {
         std::vector<double> Y, V;
 
         StateVec (int length);
-        StateVec (const StateVec &);
-        StateVec operator= (const StateVec &);
+        StateVec (const StateVec & sv);
+        StateVec operator= (const StateVec & sv);
 
 };
 
 class Reaction {
 	public:
 
+		// Variables describing reaction stoichiometry:
 		int inX, inY, inV;
 		int outX, outY, outV;
 
+		// Whether or not new virions or infected cells have mutated genome:
 		bool mutY, mutV;
 
+		// Set to true for reactions which involve mutation:
 		bool mutation;
 
+		// Base reaction rate and mutation rate:
 		double rate, mutrate;
 
-		Reaction(int,int,int, int,int,int, bool,bool, double,double);
+		Reaction(int inX, int inY, int inV, int outX, int outY, int outV,
+				bool mutY, bool mutV, double rate, double mutrate);
 		Reaction();
 
-		double get_gcond(int, int, int);
-		bool leap(double, StateVec &, StateVec &, unsigned short *);
+		double get_gcond(int h2, int h1, int sequenceL);
+		bool leap(double tau, StateVec & sv, StateVec & sv_new, unsigned short *buf);
 
 };
 
@@ -62,48 +67,13 @@ class MomentVector {
 
 		int sequenceL;
 
-		// Constructor:
 		MomentVector(int p_Nsamples, std::vector<double> (*p_samplefunc)(const StateVec &),
-				std::string p_name, int p_sequenceL) {
+				std::string p_name, int p_sequenceL);
+		MomentVector();
 
-			Nsamples = p_Nsamples;
-			samplefunc = p_samplefunc;
-			name = p_name;
-			sequenceL = p_sequenceL;
+		void sample(const StateVec & sv, int samp);
+		void normalise (int Npaths);
 
-			mean.resize(Nsamples*(sequenceL+1));
-			var.resize(Nsamples*(sequenceL+1));
-			sem.resize(Nsamples*(sequenceL+1));
-		}
-		MomentVector() { };
-
-		// Sample moment:
-		void sample(const StateVec & sv, int samp) {
-
-			std::vector<double> tmp = (*samplefunc)(sv);
-
-			for (int h=0; h<=sequenceL; h++) {
-				int idx = (sequenceL+1)*samp + h;
-
-				mean[idx] += tmp[h];
-				var[idx] += tmp[h]*tmp[h];
-			}
-		}
-
-		// Post processing of moment data:
-		void normalise (int Npaths) {
-
-			for (int samp=0; samp<Nsamples; samp++) {
-				for (int h=0; h<=sequenceL; h++) {
-					int idx = (sequenceL+1)*samp + h;
-
-					mean[idx] /= Npaths;
-					var[idx] = var[idx]/Npaths - mean[idx]*mean[idx];
-					sem[idx] = sqrt(var[idx]/Npaths);
-				}
-			}
-
-		}
 };
 
 class MomentScalar {
@@ -118,32 +88,12 @@ class MomentScalar {
 		std::vector<double> sem;
 
 		// Constructor:
-		MomentScalar(int p_Nsamples, double (*p_samplefunc)(const StateVec &), std::string p_name) {
-			Nsamples = p_Nsamples;
-			samplefunc = p_samplefunc;
-			name = p_name;
+		MomentScalar(int p_Nsamples, double (*p_samplefunc)(const StateVec &), std::string p_name);
+		MomentScalar();
 
-			mean.resize(Nsamples);
-			var.resize(Nsamples);
-			sem.resize(Nsamples);
-		}
-		MomentScalar() { };
+		void sample(const StateVec & sv, int samp);
+		void normalise (int Npaths);
 
-		// Sample moment:
-		void sample(const StateVec & sv, int samp) {
-			double tmp = (*samplefunc)(sv);
-			mean[samp] += tmp;
-			var[samp] += tmp*tmp;
-		}
-
-		// Post processing of moment data:
-		void normalise (int Npaths) {
-			for (int s=0; s<Nsamples; s++) {
-				mean[s] /= Npaths;
-				var[s] = var[s]/Npaths - mean[s]*mean[s];
-				sem[s] = sqrt(var[s]/Npaths);
-			}
-		}
 };
 
 #endif /* TAULEAP_PST_CLASSES_H_ */

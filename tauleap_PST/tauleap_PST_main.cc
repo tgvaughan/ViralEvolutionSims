@@ -136,7 +136,7 @@ int main (int argc, char **argv)
 	sv0.V[0] = 100;
 
     // Initialise RNG:
-	unsigned short buf[3] = {42, 53, 1534};
+	unsigned short buf[3] = {42, 53, time(NULL)};
 	
 	// Loop over paths:
 	for (int path=0; path<Npaths; path++) {

@@ -157,3 +157,87 @@ bool Reaction::leap (double tau, StateVec & sv, StateVec & sv_new, unsigned shor
 
 	return true;
 }
+
+
+// MomentVector member functions:
+
+MomentVector::MomentVector(int p_Nsamples, std::vector<double> (*p_samplefunc)(const StateVec &),
+		std::string p_name, int p_sequenceL) {
+
+	Nsamples = p_Nsamples;
+	samplefunc = p_samplefunc;
+	name = p_name;
+	sequenceL = p_sequenceL;
+
+	mean.resize(Nsamples*(sequenceL+1));
+	var.resize(Nsamples*(sequenceL+1));
+	sem.resize(Nsamples*(sequenceL+1));
+}
+
+MomentVector::MomentVector() { };
+
+/**
+ * Sample moment
+ */
+void MomentVector::sample(const StateVec & sv, int samp) {
+
+	std::vector<double> tmp = (*samplefunc)(sv);
+
+	for (int h=0; h<=sequenceL; h++) {
+		int idx = (sequenceL+1)*samp + h;
+
+		mean[idx] += tmp[h];
+		var[idx] += tmp[h]*tmp[h];
+	}
+}
+
+/**
+ * Perform post-processing of moment data
+ */
+void MomentVector::normalise (int Npaths) {
+
+	for (int samp=0; samp<Nsamples; samp++) {
+		for (int h=0; h<=sequenceL; h++) {
+			int idx = (sequenceL+1)*samp + h;
+
+			mean[idx] /= Npaths;
+			var[idx] = var[idx]/Npaths - mean[idx]*mean[idx];
+			sem[idx] = sqrt(var[idx]/Npaths);
+		}
+	}
+
+}
+
+
+// MomentScalar member functions
+
+MomentScalar::MomentScalar(int p_Nsamples, double (*p_samplefunc)(const StateVec &), std::string p_name) {
+	Nsamples = p_Nsamples;
+	samplefunc = p_samplefunc;
+	name = p_name;
+
+	mean.resize(Nsamples);
+	var.resize(Nsamples);
+	sem.resize(Nsamples);
+}
+MomentScalar::MomentScalar() { };
+
+/**
+ * Sample moment
+ */
+void MomentScalar::sample(const StateVec & sv, int samp) {
+	double tmp = (*samplefunc)(sv);
+	mean[samp] += tmp;
+	var[samp] += tmp*tmp;
+}
+
+/**
+ * Perform post-processing of moment data
+ */
+void MomentScalar::normalise (int Npaths) {
+	for (int s=0; s<Nsamples; s++) {
+		mean[s] /= Npaths;
+		var[s] = var[s]/Npaths - mean[s]*mean[s];
+		sem[s] = sqrt(var[s]/Npaths);
+	}
+}
