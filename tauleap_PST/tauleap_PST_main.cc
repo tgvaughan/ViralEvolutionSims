@@ -17,6 +17,9 @@
 #include <cstdlib>
 #include <ctime>
 
+// Ensure macro points to correct function:
+#define H5Gcreate_vers 2
+
 #include <hdf5.h>
 #include <hdf5_hl.h>
 
@@ -48,8 +51,8 @@ int main (int argc, char **argv)
     // Ensure output filename ends with ".h5" and record basename:
     string ofname = argv[1];
     string ofbasename;
-    if (ofname.length()>3 && (ofname.substr(ofname.length()-4)==".h5"))
-    	ofbasename = ofname.substr(0,ofname.length()-4);
+    if (ofname.length()>3 && (ofname.compare(ofname.length()-4,3,".h5")))
+    	ofbasename = ofname.substr(0,ofname.length()-3);
     else
     	ofbasename = ofname;
     ofname = ofbasename + ".h5";
