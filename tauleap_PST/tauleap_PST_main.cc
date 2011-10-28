@@ -24,6 +24,7 @@
 #include "tauleap_PST_classes.h"
 
 
+// Functions which calculate the moments to be sampled:
 double samplefunc_X (const StateVec & sv) {
 	return sv.X;
 }
@@ -40,7 +41,7 @@ int main (int argc, char **argv)
 
     // Parse command line parameters:
     if (argc < 2) {
-        cout << "Usage: " << argv[0] << " outfile" << endl;
+        cout << "Usage: " << argv[0] << " outfile[.h5]" << endl;
         exit(0);
     }
 
@@ -64,7 +65,7 @@ int main (int argc, char **argv)
 
     // Simulation parameters:
 	double T = 30.0;
-	int Nt = 10001;
+	int Nt = 30001;
 	int Nsamples = 1001;
 	int Npaths = 1;
 

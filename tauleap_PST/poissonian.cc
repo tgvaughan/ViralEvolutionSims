@@ -2,10 +2,8 @@
 // variables.  Note: values are returned as doubles rather than unsigned ints
 // which would perhaps be more appropriate but I think is just finicky.
 
-#include <stdlib.h>
+#include <cstdlib>
 #include <cmath>
-
-#include "poissonian.h"
 
 #define PI 3.141592653589793238
 

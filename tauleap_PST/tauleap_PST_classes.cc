@@ -25,13 +25,19 @@ StateVec::StateVec (int length) {
 	V.resize(L+1,0.0);
 }
 
-StateVec::StateVec (const StateVec & sv) {
-	L = sv.L;
-	neighbourNum = sv.neighbourNum;
+StateVec::StateVec (const StateVec & src) {
+	L = src.L;
+	neighbourNum = src.neighbourNum;
 
-	X = sv.X;
-	Y = sv.Y;
-	V = sv.V;
+	X = src.X;
+
+	Y.resize(L+1,0.0);
+	V.resize(L+1,0.0);
+
+	for (int h=0; h<=L; h++) {
+		Y[h] = src.Y[h];
+		V[h] = src.V[h];
+	}
 }
 
 StateVec StateVec::operator= (const StateVec & src) {
@@ -40,8 +46,11 @@ StateVec StateVec::operator= (const StateVec & src) {
 	neighbourNum = src.neighbourNum;
 
 	X = src.X;
-	Y = src.Y;
-	V = src.V;
+
+	for (int h=0; h<=L; h++) {
+		Y[h] = src.Y[h];
+		V[h] = src.V[h];
+	}
 
 	return *this;
 }
@@ -159,6 +168,40 @@ bool Reaction::leap (double tau, StateVec & sv, StateVec & sv_new, unsigned shor
 }
 
 
+// MomentScalar member functions
+
+MomentScalar::MomentScalar(int p_Nsamples, double (*p_samplefunc)(const StateVec &), std::string p_name) {
+	Nsamples = p_Nsamples;
+	samplefunc = p_samplefunc;
+	name = p_name;
+
+	mean.resize(Nsamples);
+	var.resize(Nsamples);
+	sem.resize(Nsamples);
+}
+MomentScalar::MomentScalar() { };
+
+/**
+ * Sample moment
+ */
+void MomentScalar::sample(const StateVec & sv, int samp) {
+	double tmp = (*samplefunc)(sv);
+	mean[samp] += tmp;
+	var[samp] += tmp*tmp;
+}
+
+/**
+ * Perform post-processing of moment data
+ */
+void MomentScalar::normalise (int Npaths) {
+	for (int s=0; s<Nsamples; s++) {
+		mean[s] /= Npaths;
+		var[s] = var[s]/Npaths - mean[s]*mean[s];
+		sem[s] = sqrt(var[s]/Npaths);
+	}
+}
+
+
 // MomentVector member functions:
 
 MomentVector::MomentVector(int p_Nsamples, std::vector<double> (*p_samplefunc)(const StateVec &),
@@ -206,38 +249,4 @@ void MomentVector::normalise (int Npaths) {
 		}
 	}
 
-}
-
-
-// MomentScalar member functions
-
-MomentScalar::MomentScalar(int p_Nsamples, double (*p_samplefunc)(const StateVec &), std::string p_name) {
-	Nsamples = p_Nsamples;
-	samplefunc = p_samplefunc;
-	name = p_name;
-
-	mean.resize(Nsamples);
-	var.resize(Nsamples);
-	sem.resize(Nsamples);
-}
-MomentScalar::MomentScalar() { };
-
-/**
- * Sample moment
- */
-void MomentScalar::sample(const StateVec & sv, int samp) {
-	double tmp = (*samplefunc)(sv);
-	mean[samp] += tmp;
-	var[samp] += tmp*tmp;
-}
-
-/**
- * Perform post-processing of moment data
- */
-void MomentScalar::normalise (int Npaths) {
-	for (int s=0; s<Nsamples; s++) {
-		mean[s] /= Npaths;
-		var[s] = var[s]/Npaths - mean[s]*mean[s];
-		sem[s] = sqrt(var[s]/Npaths);
-	}
 }
