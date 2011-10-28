@@ -327,7 +327,7 @@ int main (int argc, char **argv)
 	double sample_dt = T/(Nsamples-1);
 
 	// Genetic parameters:
-	int sequenceL = 35*3; // DNA sequence length coresponding to V3
+	int sequenceL = 35*3; // DNA sequence length corresponding to V3
 	double mu = 2e-5/3.0; // Mutation rate per character given outcome
 
     // Demographic parameters:
@@ -394,7 +394,7 @@ int main (int argc, char **argv)
 	// Loop over paths:
 	for (int path=0; path<Npaths; path++) {
 
-		// Initialize state vector:
+		// Initialise state vector:
 		StateVec sv = sv0;
 		StateVec sv_new = sv0;
 
