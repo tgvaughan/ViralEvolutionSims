@@ -30,14 +30,8 @@ StateVec::StateVec (const StateVec & src) {
 	neighbourNum = src.neighbourNum;
 
 	X = src.X;
-
-	Y.resize(L+1,0.0);
-	V.resize(L+1,0.0);
-
-	for (int h=0; h<=L; h++) {
-		Y[h] = src.Y[h];
-		V[h] = src.V[h];
-	}
+	Y = src.Y;
+	V = src.V;
 }
 
 StateVec StateVec::operator= (const StateVec & src) {
@@ -46,11 +40,8 @@ StateVec StateVec::operator= (const StateVec & src) {
 	neighbourNum = src.neighbourNum;
 
 	X = src.X;
-
-	for (int h=0; h<=L; h++) {
-		Y[h] = src.Y[h];
-		V[h] = src.V[h];
-	}
+	Y = src.Y;
+	V = src.V;
 
 	return *this;
 }

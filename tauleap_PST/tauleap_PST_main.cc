@@ -145,7 +145,8 @@ int main (int argc, char **argv)
 	// Loop over paths:
 	for (int path=0; path<Npaths; path++) {
 
-		cout << "Path " << path+1 << " of " << Npaths << "..." << endl;
+		cout << "Path " << path+1 << " of " << Npaths << "...";
+		cout.flush();
 
 		// Initialise state vector:
 		StateVec sv = sv0;
@@ -180,6 +181,8 @@ int main (int argc, char **argv)
 
 			sv = sv_new;
 		}
+
+		cout << "done." << endl;
 	}
 
 	// Perform moment post-processing:
