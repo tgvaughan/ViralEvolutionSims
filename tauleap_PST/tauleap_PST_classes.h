@@ -41,6 +41,9 @@ class Reaction {
 		// Set to true for reactions which involve mutation:
 		bool mutation;
 
+		// Set to true for reactions which only involve X:
+		bool scalar;
+
 		// Base reaction rate and mutation rate:
 		double rate, mutrate;
 
@@ -49,7 +52,7 @@ class Reaction {
 		Reaction();
 
 		double get_gcond(int h2, int h1, int sequenceL);
-		bool leap(double tau, StateVec & sv, StateVec & sv_new, unsigned short *buf);
+		bool leap(double tau, const StateVec & sv, StateVec & sv_new, unsigned short *buf);
 
 };
 

@@ -80,6 +80,11 @@ Reaction::Reaction(int p_inX, int p_inY, int p_inV,
 		mutation = true;
 	else
 		mutation = false;
+
+	if ((inY == 0) && (inV == 0) && (outY == 0) && (outV == 0))
+		scalar = true;
+	else
+		scalar = false;
 }
 
 Reaction::Reaction() { };
@@ -113,13 +118,26 @@ double Reaction::get_gcond(int h2, int h1, int L)
  *
  * Returns:	true or false depending on the
  */
-bool Reaction::leap (double tau, StateVec & sv, StateVec & sv_new, unsigned short *buf) {
+bool Reaction::leap (double tau, const StateVec & sv, StateVec & sv_new,
+		unsigned short *buf) {
+
+	double aX = rate;
+	for (int m=0; m<inX; m++)
+		aX *= sv.X-m;
+
+	if (scalar) {
+		int q = poissonian(aX*tau, buf);
+		sv_new.X += q*(outX - inX);
+
+		if (sv_new.X<0)
+			return false;
+
+		return true;
+	}
 
 	for (int h=0; h<=sv.L; h++) {
 
-		double a = rate;
-		for (int m=0; m<inX; m++)
-			a *= sv.X-m;
+		double a = aX;
 		for (int m=0; m<inY; m++)
 			a *= sv.Y[h]-m;
 		for (int m=0; m<inV; m++)
@@ -135,9 +153,7 @@ bool Reaction::leap (double tau, StateVec & sv, StateVec & sv_new, unsigned shor
 
 				int q = poissonian(ap*tau, buf);
 
-				sv_new.X += q*(outX-inX);
 				sv_new.Y[h] -= q*inY;
-
 				if (mutY)
 					sv_new.Y[hp] += q*outY;
 				else

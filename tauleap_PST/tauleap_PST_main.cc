@@ -68,7 +68,7 @@ int main (int argc, char **argv)
 
     // Simulation parameters:
 	double T = 30.0;
-	int Nt = 30001;
+	int Nt = 3001;
 	int Nsamples = 1001;
 	int Npaths = 1;
 
@@ -145,6 +145,8 @@ int main (int argc, char **argv)
 	// Loop over paths:
 	for (int path=0; path<Npaths; path++) {
 
+		cout << "Path " << path+1 << " of " << Npaths << "..." << endl;
+
 		// Initialise state vector:
 		StateVec sv = sv0;
 		StateVec sv_new = sv0;
@@ -165,8 +167,6 @@ int main (int argc, char **argv)
 					scalarMoments[i].sample(sv, t_idx/steps_per_sample);
 				for (int i=0; i<NVectorMoments; i++)
 					vectorMoments[i].sample(sv, t_idx/steps_per_sample);
-
-				std::cout << "Recording sample " << t_idx/steps_per_sample + 1 << " of " << Nsamples << std::endl;
 			}
 
 			// Implement reactions:
