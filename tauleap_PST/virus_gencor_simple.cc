@@ -7,6 +7,7 @@
 
 #include <cmath>
 #include <cstdlib>
+#include <ctime>
 
 #include <hdf5.h>
 #include <hdf5_hl.h>
@@ -41,10 +42,25 @@ class StateVec {
         // Copy constructor:
         StateVec (const StateVec & sv) {
             L = sv.L;
+            neighbourNum = sv.neighbourNum;
+
+            X = sv.X;
             Y = sv.Y;
             V = sv.V;
         }
 
+        // Assignment operator:
+        StateVec operator= (const StateVec & src) {
+
+        	L = src.L;
+        	neighbourNum = src.neighbourNum;
+
+        	X = src.X;
+        	Y = src.Y;
+        	V = src.V;
+
+        	return *this;
+        }
 };
 
 // Number of neighbouring sequences of a sequence on
@@ -104,55 +120,59 @@ class Reaction {
 		Reaction () { };
 
 		// Implement tau-leap:
-		void leap (double tau, StateVec & sv0, StateVec & sv_res, unsigned short *buf) {
+		// (Returns true on success, false if negative populations were generated.)
+		bool leap (double tau, StateVec & sv, StateVec & sv_new, unsigned short *buf) {
 
-			for (int h=0; h<sv0.L; h++) {
+			for (int h=0; h<=sv.L; h++) {
 
 				double a = rate;
 				for (int m=0; m<inX; m++)
-					a *= sv0.X-m;
+					a *= sv.X-m;
 				for (int m=0; m<inY; m++)
-					a *= sv0.Y[h]-m;
+					a *= sv.Y[h]-m;
 				for (int m=0; m<inV; m++)
-					a *= sv0.V[h]-m;
+					a *= sv.V[h]-m;
 
 				if (mutation) {
 
-					for (int hp=(h>0 ? h-1 : 0); hp<=(h<sv0.L ? h+1 : sv0.L); hp++) {
+					for (int hp=(h>0 ? h-1 : 0); hp<=(h<sv.L ? h+1 : sv.L); hp++) {
 
-						double ap = a*mutrate*gcond(hp,h,sv0.L);
+						double ap = a*mutrate*gcond(hp,h,sv.L);
 						if (hp==h)
-							ap += a*(1-sv0.neighbourNum*mutrate);
+							ap += a*(1-sv.neighbourNum*mutrate);
 
 						int q = poissonian(ap*tau, buf);
 
-						sv_res.X += q*(outX-inX);
-						sv_res.Y[h] -= q*inY;
+						sv_new.X += q*(outX-inX);
+						sv_new.Y[h] -= q*inY;
 
 						if (mutY)
-							sv_res.Y[hp] += q*outY;
+							sv_new.Y[hp] += q*outY;
 						else
-							sv_res.Y[h] += q*outY;
+							sv_new.Y[h] += q*outY;
 
-						sv_res.V[h] -= q*inV;
+						sv_new.V[h] -= q*inV;
 						if (mutV)
-							sv_res.V[hp] += q*outV;
+							sv_new.V[hp] += q*outV;
 						else
-							sv_res.V[h] += q*outV;
+							sv_new.V[h] += q*outV;
 					}
 
 				} else {
 
 					int q = poissonian(a*tau, buf);
 
-					sv_res.X += q*(outX-inX);
-					sv_res.Y[h] += q*(outY-inY);
-					sv_res.V[h] += q*(outV-inV);
+					sv_new.X += q*(outX-inX);
+					sv_new.Y[h] += q*(outY-inY);
+					sv_new.V[h] += q*(outV-inV);
 
+					if (sv_new.X<0 || sv_new.Y[h]<0 || sv_new.V[h]<0)
+						return false;
 				}
 
 			}
 			
+			return true;
 		}
 
 };
@@ -162,7 +182,7 @@ class MomentScalar {
 	public:
 
 		int Nsamples;
-		double (*samplefunc)(StateVec &);
+		double (*samplefunc)(const StateVec &);
 		std::string name;
 
 		std::vector<double> mean;
@@ -170,7 +190,7 @@ class MomentScalar {
 		std::vector<double> sem;
 
 		// Constructor:
-		MomentScalar(int p_Nsamples, double (*p_samplefunc)(StateVec &), std::string p_name) {
+		MomentScalar(int p_Nsamples, double (*p_samplefunc)(const StateVec &), std::string p_name) {
 			Nsamples = p_Nsamples;
 			samplefunc = p_samplefunc;
 			name = p_name;
@@ -182,7 +202,7 @@ class MomentScalar {
 		MomentScalar() { };
 
 		// Sample moment:
-		void sample(StateVec & sv, int samp) {
+		void sample(const StateVec & sv, int samp) {
 			double tmp = (*samplefunc)(sv);
 			mean[samp] += tmp;
 			var[samp] += tmp*tmp;
@@ -203,7 +223,7 @@ class MomentVector {
 	public:
 
 		int Nsamples;
-		std::vector<double> (*samplefunc)(StateVec &);
+		std::vector<double> (*samplefunc)(const StateVec &);
 		std::string name;
 
 		std::vector<double> mean;
@@ -213,7 +233,7 @@ class MomentVector {
 		int sequenceL;
 
 		// Constructor:
-		MomentVector(int p_Nsamples, std::vector<double> (*p_samplefunc)(StateVec &),
+		MomentVector(int p_Nsamples, std::vector<double> (*p_samplefunc)(const StateVec &),
 				std::string p_name, int p_sequenceL) {
 
 			Nsamples = p_Nsamples;
@@ -228,7 +248,7 @@ class MomentVector {
 		MomentVector() { };
 
 		// Sample moment:
-		void sample(StateVec & sv, int samp) {
+		void sample(const StateVec & sv, int samp) {
 
 			std::vector<double> tmp = (*samplefunc)(sv);
 
@@ -243,9 +263,9 @@ class MomentVector {
 		// Post processing of moment data:
 		void normalise (int Npaths) {
 
-			for (int s=0; s<Nsamples; s++) {
+			for (int samp=0; samp<Nsamples; samp++) {
 				for (int h=0; h<=sequenceL; h++) {
-					int idx = (sequenceL+1)*s + h;
+					int idx = (sequenceL+1)*samp + h;
 
 					mean[idx] /= Npaths;
 					var[idx] = var[idx]/Npaths - mean[idx]*mean[idx];
@@ -257,13 +277,13 @@ class MomentVector {
 };
 
 // Sampling functions for use in moment calculations:
-double samplefunc_mean_X (StateVec & sv) {
+double samplefunc_X (const StateVec & sv) {
 	return sv.X;
 }
-std::vector<double> samplefunc_mean_Y (StateVec & sv) {
+std::vector<double> samplefunc_Y (const StateVec & sv) {
 	return sv.Y;
 }
-std::vector<double> samplefunc_mean_V (StateVec & sv) {
+std::vector<double> samplefunc_V (const StateVec & sv) {
 	return sv.V;
 }
 
@@ -288,16 +308,16 @@ int main (int argc, char **argv)
 
     // Attempt to create output file:
     // (Better to fail before the calculation begins.)
-    hid_t file_id = H5Fcreate(ofname.c_str(), H5F_ACC_EXCL, H5P_DEFAULT, H5P_DEFAULT);
+    hid_t file_id = H5Fcreate(ofname.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
     if (file_id<0) {
-    	cout << "Error: File '" << ofname << "' already exists or target location is not writaable."
+    	cout << "Error: Cannot open file '" << ofname << "' for writing."
     			<< endl;
     	exit(1);
     }
 
     // Simulation parameters:
-	double T = 5.0;
-	int Nt = 1001;
+	double T = 30.0;
+	int Nt = 10001;
 	int Nsamples = 1001;
 	int Npaths = 1;
 
@@ -311,12 +331,19 @@ int main (int argc, char **argv)
 	double mu = 2e-5/3.0; // Mutation rate per character given outcome
 
     // Demographic parameters:
-	double param_d = 1e-3;
+	/*double param_d = 1e-3;
 	double param_a = 1.0;
 	double param_u = 3.0;
 	double param_lambda = 2.5e8;
 	double param_beta = 5e-13;
-	double param_k = 1e3;
+	double param_k = 1e3;*/
+
+	double param_d = 0.1;
+	double param_a = 0.5;
+	double param_u = 5.0;
+	double param_lambda = 1e5;
+	double param_beta = 2e-7;
+	double param_k = 100;
 
 	// Set up reactions:
 	int Nreactions = 6;
@@ -327,7 +354,7 @@ int main (int argc, char **argv)
 			param_lambda,0.0);
 
 	reactions[1] = Reaction(1,0,1, 0,1,0,
-			true,false,
+			false,false,
 			param_beta,mu);
 
 	reactions[2] = Reaction(0,1,0, 0,1,1,
@@ -338,7 +365,7 @@ int main (int argc, char **argv)
 			false,false,
 			param_d,0.0);
 
-	reactions[4] = Reaction(0,1,0, 0,1,0,
+	reactions[4] = Reaction(0,1,0, 0,0,0,
 			false,false,
 			param_a,0.0);
 
@@ -349,12 +376,12 @@ int main (int argc, char **argv)
 	// Set up moments:
 	int NScalarMoments = 1;
 	MomentScalar scalarMoments[1];
-	scalarMoments[0] = MomentScalar (Nsamples, samplefunc_mean_X, "X");
+	scalarMoments[0] = MomentScalar (Nsamples, samplefunc_X, "X");
 
 	int NVectorMoments = 2;
 	MomentVector vectorMoments[2];
-	vectorMoments[0] = MomentVector (Nsamples, samplefunc_mean_Y, "Y", sequenceL);
-	vectorMoments[1] = MomentVector (Nsamples, samplefunc_mean_V, "V", sequenceL);
+	vectorMoments[0] = MomentVector (Nsamples, samplefunc_Y, "Y", sequenceL);
+	vectorMoments[1] = MomentVector (Nsamples, samplefunc_V, "V", sequenceL);
 
 	// Set up initial condition:
 	StateVec sv0(sequenceL);
@@ -362,13 +389,14 @@ int main (int argc, char **argv)
 	sv0.V[0] = 100;
 
     // Initialise RNG:
-	unsigned short buf[3] = {42, 53, 1234};
+	unsigned short buf[3] = {42, 53, 1534};
 	
 	// Loop over paths:
 	for (int path=0; path<Npaths; path++) {
 
 		// Initialize state vector:
 		StateVec sv = sv0;
+		StateVec sv_new = sv0;
 
 		// Perform initial sample:
 		for (int i=0; i<NScalarMoments; i++)
@@ -378,10 +406,7 @@ int main (int argc, char **argv)
 		
 
 		// Simulation loop:
-		for (int t_idx=0; t_idx < Nt; t_idx++) {
-
-			// DEBUG:
-			std::cout << "Executing step " << t_idx + 1 << " of " << Nt << std::endl;
+		for (int t_idx=1; t_idx < Nt; t_idx++) {
 
 			// Sample if necessary:
 			if (t_idx % steps_per_sample == 0) {
@@ -389,12 +414,18 @@ int main (int argc, char **argv)
 					scalarMoments[i].sample(sv, t_idx/steps_per_sample);
 				for (int i=0; i<NVectorMoments; i++)
 					vectorMoments[i].sample(sv, t_idx/steps_per_sample);
+
+				std::cout << "Recording sample " << t_idx/steps_per_sample + 1 << " of " << Nsamples << std::endl;
 			}
 
 			// Implement reactions:
-			StateVec sv_new = sv;
-			for (int r=0; r<Nreactions; r++)
-				reactions[r].leap(dt, sv, sv_new, buf);
+			for (int r=0; r<Nreactions; r++) {
+				if (!reactions[r].leap(dt, sv, sv_new, buf)) {
+					cout << "Error: negative population generated. Exiting..." << endl;
+					H5close();
+					exit(1);
+				}
+			}
 
 			sv = sv_new;
 		}
@@ -445,12 +476,12 @@ int main (int argc, char **argv)
 	}
 
 	// Write sample times to file:
-	vector<double> tvec;
-	tvec.resize(Nsamples);
+	vector<double> t_vec;
+	t_vec.resize(Nsamples);
 	for (int s=0; s<Nsamples; s++)
-		tvec[s] = sample_dt*s;
+		t_vec[s] = sample_dt*s;
 	H5LTmake_dataset(group_id, "t", scalar_rank, scalar_dims,
-			H5T_NATIVE_DOUBLE, &(tvec[0]));
+			H5T_NATIVE_DOUBLE, &(t_vec[0]));
 
 	// Close HDF file:
 	H5Fclose(file_id);
