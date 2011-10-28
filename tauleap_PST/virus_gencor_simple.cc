@@ -2,10 +2,14 @@
 // sequence space of dramatically reduced dimension.
 
 #include <iostream>
+#include <string>
 #include <vector>
 
 #include <cmath>
 #include <cstdlib>
+
+#include <hdf5.h>
+#include <hdf5_hl.h>
 
 #include "poissonian.h"
 
@@ -202,9 +206,9 @@ class MomentVector {
 		std::vector<double> (*samplefunc)(StateVec &);
 		std::string name;
 
-		std::vector<std::vector<double> > mean;
-		std::vector<std::vector<double> > var;
-		std::vector<std::vector<double> > sem;
+		std::vector<double> mean;
+		std::vector<double> var;
+		std::vector<double> sem;
 
 		int sequenceL;
 
@@ -217,36 +221,38 @@ class MomentVector {
 			name = p_name;
 			sequenceL = p_sequenceL;
 
-			mean.resize(Nsamples);
-			var.resize(Nsamples);
-			sem.resize(Nsamples);
-
-			for (int s=0; s<Nsamples; s++) {
-				mean[s].resize(sequenceL);
-				var[s].resize(sequenceL);
-				sem[s].resize(sequenceL);
-			}
+			mean.resize(Nsamples*(sequenceL+1));
+			var.resize(Nsamples*(sequenceL+1));
+			sem.resize(Nsamples*(sequenceL+1));
 		}
 		MomentVector() { };
 
 		// Sample moment:
 		void sample(StateVec & sv, int samp) {
+
 			std::vector<double> tmp = (*samplefunc)(sv);
+
 			for (int h=0; h<=sequenceL; h++) {
-				mean[samp][h] += tmp[h];
-				var[samp][h] += tmp[h]*tmp[h];
+				int idx = (sequenceL+1)*samp + h;
+
+				mean[idx] += tmp[h];
+				var[idx] += tmp[h]*tmp[h];
 			}
 		}
 
 		// Post processing of moment data:
 		void normalise (int Npaths) {
+
 			for (int s=0; s<Nsamples; s++) {
 				for (int h=0; h<=sequenceL; h++) {
-					mean[s][h] /= Npaths;
-					var[s][h] = var[s][h]/Npaths - mean[s][h]*mean[s][h];
-					sem[s][h] = sqrt(var[s][h]/Npaths);
+					int idx = (sequenceL+1)*s + h;
+
+					mean[idx] /= Npaths;
+					var[idx] = var[idx]/Npaths - mean[idx]*mean[idx];
+					sem[idx] = sqrt(var[idx]/Npaths);
 				}
 			}
+
 		}
 };
 
@@ -270,7 +276,24 @@ int main (int argc, char **argv)
         cout << "Usage: " << argv[0] << " outfile" << endl;
         exit(0);
     }
-    char *ofname = argv[1];
+
+    // Ensure output filename ends with ".h5" and record basename:
+    string ofname = argv[1];
+    string ofbasename;
+    if (ofname.length()>3 && (ofname.substr(ofname.length()-4)==".h5"))
+    	ofbasename = ofname.substr(0,ofname.length()-4);
+    else
+    	ofbasename = ofname;
+    ofname = ofbasename + ".h5";
+
+    // Attempt to create output file:
+    // (Better to fail before the calculation begins.)
+    hid_t file_id = H5Fcreate(ofname.c_str(), H5F_ACC_EXCL, H5P_DEFAULT, H5P_DEFAULT);
+    if (file_id<0) {
+    	cout << "Error: File '" << ofname << "' already exists or target location is not writaable."
+    			<< endl;
+    	exit(1);
+    }
 
     // Simulation parameters:
 	double T = 5.0;
@@ -281,6 +304,7 @@ int main (int argc, char **argv)
 	// Derived simulation parameters:
 	int steps_per_sample = (Nt-1)/(Nsamples-1);
 	double dt = T/(Nt-1);
+	double sample_dt = T/(Nsamples-1);
 
 	// Genetic parameters:
 	int sequenceL = 35*3; // DNA sequence length coresponding to V3
@@ -382,10 +406,55 @@ int main (int argc, char **argv)
 	for (int i=0; i<NVectorMoments; i++)
 		vectorMoments[i].normalise(Npaths);
 
+	// Create group with same name as output file
+	hid_t group_id = H5Gcreate(file_id, ("/"+ofbasename).c_str(),
+			H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
 
-	// TODO: Write moments to disk.
+	// Write scalar moments to file:
+	int scalar_rank = 1;
+	hsize_t scalar_dims[1] = {Nsamples};
 
-		
+	for (int m=0; m<NScalarMoments; m++) {
+
+		H5LTmake_dataset(group_id, (scalarMoments[m].name + "_mean").c_str(), scalar_rank, scalar_dims,
+				H5T_NATIVE_DOUBLE, &(scalarMoments[m].mean[0]));
+
+		H5LTmake_dataset(group_id, (scalarMoments[m].name + "_var").c_str(), scalar_rank, scalar_dims,
+				H5T_NATIVE_DOUBLE, &(scalarMoments[m].var[0]));
+
+		H5LTmake_dataset(group_id, (scalarMoments[m].name + "_sem").c_str(), scalar_rank, scalar_dims,
+				H5T_NATIVE_DOUBLE, &(scalarMoments[m].sem[0]));
+
+	}
+
+	// Write vector moments to file:
+	int vector_rank = 2;
+	hsize_t vector_dims[2] = {Nsamples, sequenceL+1};
+
+	for (int m=0; m<NVectorMoments; m++) {
+
+		H5LTmake_dataset(group_id, (vectorMoments[m].name + "_mean").c_str(), vector_rank, vector_dims,
+				H5T_NATIVE_DOUBLE, &(vectorMoments[m].mean[0]));
+
+		H5LTmake_dataset(group_id, (vectorMoments[m].name + "_var").c_str(), vector_rank, vector_dims,
+				H5T_NATIVE_DOUBLE, &(vectorMoments[m].var[0]));
+
+		H5LTmake_dataset(group_id, (vectorMoments[m].name + "_sem").c_str(), vector_rank, vector_dims,
+				H5T_NATIVE_DOUBLE, &(vectorMoments[m].sem[0]));
+
+	}
+
+	// Write sample times to file:
+	vector<double> tvec;
+	tvec.resize(Nsamples);
+	for (int s=0; s<Nsamples; s++)
+		tvec[s] = sample_dt*s;
+	H5LTmake_dataset(group_id, "t", scalar_rank, scalar_dims,
+			H5T_NATIVE_DOUBLE, &(tvec[0]));
+
+	// Close HDF file:
+	H5Fclose(file_id);
+
 	// Done!
 	exit(0);
 }
