@@ -10,6 +10,7 @@ tags
 
 # Ignore data files:
 *.txt
+*.h5
 
 # Ignore lyx backup files:
 *.lyx~
