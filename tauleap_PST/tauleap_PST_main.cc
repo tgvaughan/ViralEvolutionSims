@@ -67,7 +67,7 @@ int main (int argc, char **argv)
     }
 
     // Simulation parameters:
-	double T = 100.0;
+	double T = 30.0;
 	int Nt = 10001;
 	int Nsamples = 1001;
 	int Npaths = 1;
@@ -105,7 +105,7 @@ int main (int argc, char **argv)
 			param_lambda,0.0);
 
 	reactions[1] = Reaction(1,0,1, 0,1,0,
-			false,false,
+			true,false,
 			param_beta,mu);
 
 	reactions[2] = Reaction(0,1,0, 0,1,1,
@@ -189,7 +189,7 @@ int main (int argc, char **argv)
 					// Implement critical reaction:
 					reactions[crit_react].doCritical(sv_new, buf);
 
-					cout << "C" << crit_react; // DEBUG
+					cout << "C" << crit_react; // DEBUG: imp. critical
 				}
 
 				// Implement reactions:

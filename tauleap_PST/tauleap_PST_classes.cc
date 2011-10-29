@@ -127,7 +127,7 @@ double Reaction::getLeapDistance (double tau, double Ncrit, const StateVec & sv,
 
 			critX = true;
 
-//			std::cout << "M"; // DEBUG
+//			std::cout << "M"; // DEBUG: marked critical
 
 			double newtaucrit = -log(erand48(buf))/aX;
 			if (newtaucrit<tau)
@@ -196,7 +196,7 @@ double Reaction::getLeapDistance (double tau, double Ncrit, const StateVec & sv,
 
 				crit[h] = true;
 
-//				std::cout << "M"; // DEBUG
+//				std::cout << "M"; // DEBUG: marked critical
 
 				double newtaucrit = -log(erand48(buf))/a[h];
 				if (newtaucrit < taucrit) {
