@@ -68,9 +68,11 @@ int main (int argc, char **argv)
 
     // Simulation parameters:
 	double T = 30.0;
-	int Nt = 300001;
+	int Nt = 30001;
 	int Nsamples = 1001;
 	int Npaths = 1;
+
+	double alpha = 10; // Reaction criticality parameter
 
 	// Derived simulation parameters:
 	int steps_per_sample = (Nt-1)/(Nsamples-1);
@@ -138,7 +140,7 @@ int main (int argc, char **argv)
 	// Loop over paths:
 	for (int path=0; path<Npaths; path++) {
 
-		cout << "Path " << path+1 << " of " << Npaths << "...";
+		cout << "Path " << path+1 << " of " << Npaths;
 		cout.flush();
 
 		// Initialise state vector:
@@ -161,17 +163,42 @@ int main (int argc, char **argv)
 					scalarMoments[i].sample(sv, t_idx/steps_per_sample);
 				for (int i=0; i<NVectorMoments; i++)
 					vectorMoments[i].sample(sv, t_idx/steps_per_sample);
+
 			}
 
-			// Implement reactions:
-			for (int r=0; r<Nreactions; r++) {
-				if (!reactions[r].leap(dt, sv, sv_new, buf)) {
-					cout << "Error: negative population generated at time t="
-							<< dt*t_idx <<". Exiting..." << endl;
-					H5close();
-					exit(1);
+			// Loop to get us through a single interval of length dt
+			double t=0.0;
+			do {
+				// Determine leap time to use
+				double tau = dt-t;
+				int crit_react = -1;
+				for (int r=0; r<Nreactions; r++) {
+					double thistau = reactions[r].getLeapDistance(tau, alpha, sv, buf);
+					if (thistau<tau) {
+						tau = thistau;
+						crit_react = r;
+					}
 				}
-			}
+
+				if (crit_react>=0) {
+					// Implement critical reaction:
+					reactions[crit_react].doCritical(sv_new, buf);
+				}
+
+				// Implement reactions:
+				for (int r=0; r<Nreactions; r++) {
+					if (!reactions[r].tauleap(fmin(tau,dt-t), sv_new, buf)) {
+						cout << "Error: negative population generated at time t="
+								<< dt*t_idx <<". Exiting..." << endl;
+						H5close();
+						exit(1);
+					}
+				}
+
+				t += tau;
+
+			} while (t<dt);
+
 
 			sv = sv_new;
 		}

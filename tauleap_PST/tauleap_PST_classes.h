@@ -42,17 +42,30 @@ class Reaction {
 		bool mutation;
 
 		// Set to true for reactions which only involve X:
-		bool scalar;
+		bool onlyX; // this is dumb
 
 		// Base reaction rate and mutation rate:
 		double rate, mutrate;
+
+		// Propensities:
+		double aX;
+		std::vector<double> a, amut;
+
+		// Critical reaction flags:
+		bool critX;
+		std::vector<double> crit, critmut;
+
+		// Critical reaction identifier
+		int critreact;
 
 		Reaction(int inX, int inY, int inV, int outX, int outY, int outV,
 				bool mutY, bool mutV, double rate, double mutrate);
 		Reaction();
 
-		double get_gcond(int h2, int h1, int sequenceL);
-		bool leap(double tau, const StateVec & sv, StateVec & sv_new, unsigned short *buf);
+		const double get_gcond(int h2, int h1, int sequenceL);
+		double getLeapDistance(double tau, double alpha, const StateVec & sv, unsigned short *buf);
+		bool tauleap(double dt, StateVec & sv_new, unsigned short *buf);
+		void doCritical(StateVec & sv_new, unsigned short *buf);
 
 };
 

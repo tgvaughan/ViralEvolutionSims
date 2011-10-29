@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 
+#include <cstdlib>
 #include <cmath>
 
 #include "poissonian.h"
@@ -73,9 +74,9 @@ Reaction::Reaction(int p_inX, int p_inY, int p_inV,
 		mutation = false;
 
 	if ((inY == 0) && (inV == 0) && (outY == 0) && (outV == 0))
-		scalar = true;
+		onlyX = true;
 	else
-		scalar = false;
+		onlyX = false;
 }
 
 Reaction::Reaction() { };
@@ -85,7 +86,7 @@ Reaction::Reaction() { };
  * a given sequence located in h1 and end with any sequence
  * located in h2.
  */
-double Reaction::get_gcond(int h2, int h1, int L)
+const double Reaction::get_gcond(int h2, int h1, int L)
 {
 	switch (h2-h1) {
 		case -1:
@@ -100,78 +101,230 @@ double Reaction::get_gcond(int h2, int h1, int L)
 }
 
 /**
- * Implements the reaction as a tau-leap.
+ * Calculate reaction propensities and return safe leap distance.
  *
- * tau: 	size of leap
+ * tau:		desired leap distance
  * sv:		StateVec used to calculate propensities
- * sv_new:	StateVec modified as a result of the reaction(s)
  * buf:		RNG buffer
  *
- * Returns:	true or false depending on the
+ * returns:	safe leap distance
  */
-bool Reaction::leap (double tau, const StateVec & sv, StateVec & sv_new,
-		unsigned short *buf) {
+double Reaction::getLeapDistance (double tau, double alpha, const StateVec & sv, unsigned short *buf) {
 
-	double aX = rate;
+	// Calculate X portion of propensity:
+	aX = rate;
 	for (int m=0; m<inX; m++)
 		aX *= sv.X-m;
 
-	if (scalar) {
-		int q = poissonian(aX*tau, buf);
-		sv_new.X += q*(outX - inX);
+	if (onlyX) {
 
+		// Check for critical X reaction:
+		double dX = aX*tau*(outX - inX);
+		if (sv.X + dX - alpha*sqrt(fabs(dX)) < 0) {
+			critX = true;
+			return -log(erand48(buf))/aX;
+		} else {
+			critX = false;
+			return tau;
+		}
+	}
+
+	double taucrit = tau;
+
+	// Ensure propensity vectors are allocated:
+	if (mutation) {
+		if (amut.size() == 0)
+			amut.resize(3*sv.L);
+	} else {
+		if (a.size() == 0)
+			a.resize(sv.L);
+	}
+
+	for (int h=0; h<=sv.L; h++) {
+
+		double atmp = aX;
+		for (int m=0; m<inY; m++)
+			atmp *= sv.Y[h]-m;
+		for (int m=0; m<inV; m++)
+			atmp *= sv.V[h]-m;
+
+		if (mutation) {
+
+			for (int hp=(h>0 ? h-1 : 0); hp<=(h<sv.L ? h+1 : sv.L); hp++) {
+
+				int idx = 3*h + hp - h + 1;
+
+				amut[idx] = atmp*mutrate*get_gcond(hp,h,sv.L);
+				if (hp==h)
+					amut[idx] += atmp*(1-sv.neighbourNum*mutrate);
+
+				// Check for critical mutation reaction:
+				double dY = -amut[idx]*tau*inY;
+				double dV = -amut[idx]*tau*inV;
+				if ((sv.Y[h] + dY - alpha*sqrt(fabs(dY)) < 0)
+						|| (sv.V[h] + dV - alpha*sqrt(fabs(dV)) < 0)) {
+
+					critmut[idx] = true;
+
+					double newtaucrit = -log(erand48(buf))/amut[idx];
+					if (newtaucrit < taucrit) {
+						taucrit = newtaucrit;
+						critreact = idx;
+					}
+				} else
+					critmut[idx] = false;
+
+			}
+
+		} else {
+
+			a[h] = atmp;
+
+			// Check for critical non-mutation reaction:
+			double dY = a[h]*tau*(outY-inY);
+			double dV = a[h]*tau*(outV-inV);
+			if ((sv.Y[h] + dY - alpha*sqrt(fabs(dY)) < 0)
+					|| (sv.V[h] + dV - alpha*sqrt(fabs(dV)) < 0)) {
+
+				crit[h] = true;
+
+				double newtaucrit = -log(erand48(buf))/a[h];
+				if (newtaucrit < taucrit) {
+					taucrit = newtaucrit;
+					critreact = h;
+				}
+			} else
+				crit[h] = false;
+		}
+	}
+
+	return taucrit;
+}
+
+/**
+ * Uses tau-leaping to implement non-critical reactions.
+ *
+ * tau:		length of leap
+ * new_sv:	StateVec to modify
+ * buf:		RNG buffer
+ *
+ * returns:	false if leap resulted in negative pop, true otherwise.
+ */
+bool Reaction::tauleap(double dt, StateVec & sv_new, unsigned short int *buf) {
+
+	if (onlyX) {
+
+		// Skip if reaction critical:
+		if (critX)
+			return true;
+
+		// Implement reaction:
+		int q = poissonian(dt*aX, buf);
+		sv_new.X += q*(outX-inX);
+
+		// Check for negative population:
 		if (sv_new.X<0)
 			return false;
 
 		return true;
 	}
 
-	for (int h=0; h<=sv.L; h++) {
-
-		double a = aX;
-		for (int m=0; m<inY; m++)
-			a *= sv.Y[h]-m;
-		for (int m=0; m<inV; m++)
-			a *= sv.V[h]-m;
+	for (int h=0; h<=sv_new.L; h++) {
 
 		if (mutation) {
 
-			for (int hp=(h>0 ? h-1 : 0); hp<=(h<sv.L ? h+1 : sv.L); hp++) {
+			for (int hp=(h>0 ? h-1 : 0); hp<=(h<sv_new.L ? h+1 : sv_new.L); hp++) {
+				int idx = 3*h + hp - h + 1;
 
-				double ap = a*mutrate*get_gcond(hp,h,sv.L);
-				if (hp==h)
-					ap += a*(1-sv.neighbourNum*mutrate);
+				// Skip if reaction critical:
+				if (critmut[idx])
+					continue;
 
-				int q = poissonian(ap*tau, buf);
-
-				sv_new.Y[h] -= q*inY;
-				if (mutY)
+				// Implement reaction:
+				int q = poissonian(dt*amut[idx], buf);
+				sv_new.X += q*(outX - inX);
+				if (mutY) {
+					sv_new.Y[h] -= q*inY;
 					sv_new.Y[hp] += q*outY;
-				else
-					sv_new.Y[h] += q*outY;
-
-				sv_new.V[h] -= q*inV;
-				if (mutV)
+					sv_new.V[h] += q*(outV - inV);
+				}
+				if (mutV) {
+					sv_new.Y[h] += q*(outY - inY);
+					sv_new.V[h] -= q*inV;
 					sv_new.V[hp] += q*outV;
-				else
-					sv_new.V[h] += q*outV;
+				}
+
+				// Check for negative populations:
+				if (sv_new.X < 0 || sv_new.Y[h] < 0 || sv_new.V[h] < 0)
+					return false;
 			}
 
 		} else {
 
-			int q = poissonian(a*tau, buf);
+			// Skip if reaction critical:
+			if (crit[h])
+				continue;
 
-			sv_new.X += q*(outX-inX);
-			sv_new.Y[h] += q*(outY-inY);
-			sv_new.V[h] += q*(outV-inV);
+			// Implement reaction:
+			int q = poissonian(dt*a[h], buf);
+			sv_new.X += q*(outX - inX);
+			sv_new.Y[h] += q*(outY - inY);
+			sv_new.V[h] += q*(outV - inV);
 
-			if (sv_new.X<0 || sv_new.Y[h]<0 || sv_new.V[h]<0)
+			// Check for negative populations:
+			if (sv_new.X < 0 || sv_new.Y[h] < 0 || sv_new.V[h] < 0)
 				return false;
 		}
 
 	}
 
 	return true;
+}
+
+/**
+ * Implement "next" critical reaction.
+ *
+ * sv_new:		StateVec to update
+ * buf:			RNG buffer
+ */
+void Reaction::doCritical(StateVec & sv_new, unsigned short int *buf) {
+
+	// Implement X component
+	sv_new.X += outX - inX;
+
+	// If X is all there is, we're done:
+	if (critX)
+		return;
+
+	if (mutation) {
+
+		// Implement Y and V components for mutation
+
+		int h = critreact/3;
+		int hp = h + (critreact%3) - 1;
+
+		if (mutY) {
+			sv_new.Y[h] -= inY;
+			sv_new.Y[hp] += outY;
+			sv_new.V[h] += outV-inV;
+		}
+		if (mutV) {
+			sv_new.Y[h] += outY-inY;
+			sv_new.V[h] -= inV;
+			sv_new.V[hp] += outV;
+		}
+
+	} else {
+
+		// Implement Y and V components for non-mutation
+
+		int h = critreact;
+		sv_new.Y[h] += outY-inY;
+		sv_new.V[h] += outV-inV;
+	}
+
+	return;
+
 }
 
 
