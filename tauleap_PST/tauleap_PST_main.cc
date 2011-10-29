@@ -68,7 +68,7 @@ int main (int argc, char **argv)
 
     // Simulation parameters:
 	double T = 30.0;
-	int Nt = 3001;
+	int Nt = 300001;
 	int Nsamples = 1001;
 	int Npaths = 1;
 
@@ -82,19 +82,17 @@ int main (int argc, char **argv)
 	double mu = 2e-5/3.0; // Mutation rate per character given outcome
 
     // Demographic parameters:
-	/*double param_d = 1e-3;
+	double param_d = 1e-3;
 	double param_a = 1.0;
 	double param_u = 3.0;
 	double param_lambda = 2.5e8;
 	double param_beta = 5e-13;
-	double param_k = 1e3;*/
+	double param_k = 1e3;
 
-	double param_d = 0.1;
-	double param_a = 0.5;
-	double param_u = 5.0;
-	double param_lambda = 1e5;
-	double param_beta = 2e-7;
-	double param_k = 100;
+	// Set up initial condition:
+	StateVec sv0(sequenceL);
+	sv0.X = param_lambda/param_d;
+	sv0.V[0] = 1000;
 
 	// Set up reactions:
 	int Nreactions = 6;
@@ -134,11 +132,6 @@ int main (int argc, char **argv)
 	vectorMoments[0] = MomentVector (Nsamples, samplefunc_Y, "Y", sequenceL);
 	vectorMoments[1] = MomentVector (Nsamples, samplefunc_V, "V", sequenceL);
 
-	// Set up initial condition:
-	StateVec sv0(sequenceL);
-	sv0.X = param_lambda/param_d;
-	sv0.V[0] = 100;
-
     // Initialise RNG:
 	unsigned short buf[3] = {42, 53, time(NULL)};
 	
@@ -173,7 +166,8 @@ int main (int argc, char **argv)
 			// Implement reactions:
 			for (int r=0; r<Nreactions; r++) {
 				if (!reactions[r].leap(dt, sv, sv_new, buf)) {
-					cout << "Error: negative population generated. Exiting..." << endl;
+					cout << "Error: negative population generated at time t="
+							<< dt*t_idx <<". Exiting..." << endl;
 					H5close();
 					exit(1);
 				}
@@ -201,13 +195,16 @@ int main (int argc, char **argv)
 
 	for (int m=0; m<NScalarMoments; m++) {
 
-		H5LTmake_dataset(group_id, (scalarMoments[m].name + "_mean").c_str(), scalar_rank, scalar_dims,
+		H5LTmake_dataset(group_id, (scalarMoments[m].name + "_mean").c_str(),
+				scalar_rank, scalar_dims,
 				H5T_NATIVE_DOUBLE, &(scalarMoments[m].mean[0]));
 
-		H5LTmake_dataset(group_id, (scalarMoments[m].name + "_var").c_str(), scalar_rank, scalar_dims,
+		H5LTmake_dataset(group_id, (scalarMoments[m].name + "_var").c_str(),
+				scalar_rank, scalar_dims,
 				H5T_NATIVE_DOUBLE, &(scalarMoments[m].var[0]));
 
-		H5LTmake_dataset(group_id, (scalarMoments[m].name + "_sem").c_str(), scalar_rank, scalar_dims,
+		H5LTmake_dataset(group_id, (scalarMoments[m].name + "_sem").c_str(),
+				scalar_rank, scalar_dims,
 				H5T_NATIVE_DOUBLE, &(scalarMoments[m].sem[0]));
 
 	}
@@ -218,13 +215,16 @@ int main (int argc, char **argv)
 
 	for (int m=0; m<NVectorMoments; m++) {
 
-		H5LTmake_dataset(group_id, (vectorMoments[m].name + "_mean").c_str(), vector_rank, vector_dims,
+		H5LTmake_dataset(group_id, (vectorMoments[m].name + "_mean").c_str(),
+				vector_rank, vector_dims,
 				H5T_NATIVE_DOUBLE, &(vectorMoments[m].mean[0]));
 
-		H5LTmake_dataset(group_id, (vectorMoments[m].name + "_var").c_str(), vector_rank, vector_dims,
+		H5LTmake_dataset(group_id, (vectorMoments[m].name + "_var").c_str(),
+				vector_rank, vector_dims,
 				H5T_NATIVE_DOUBLE, &(vectorMoments[m].var[0]));
 
-		H5LTmake_dataset(group_id, (vectorMoments[m].name + "_sem").c_str(), vector_rank, vector_dims,
+		H5LTmake_dataset(group_id, (vectorMoments[m].name + "_sem").c_str(),
+				vector_rank, vector_dims,
 				H5T_NATIVE_DOUBLE, &(vectorMoments[m].sem[0]));
 
 	}
