@@ -120,7 +120,7 @@ double Reaction::getLeapDistance (double tau, double alpha, const StateVec & sv,
 
 		// Check for critical X reaction:
 		double dX = aX*tau*(outX - inX);
-		if (sv.X + dX - alpha*sqrt(fabs(dX)) < 0) {
+		if ((dX<0) && (sv.X + dX - alpha*sqrt(fabs(dX))) < 0) {
 			critX = true;
 			return -log(erand48(buf))/aX;
 		} else {
@@ -133,11 +133,11 @@ double Reaction::getLeapDistance (double tau, double alpha, const StateVec & sv,
 
 	// Ensure propensity vectors are allocated:
 	if (mutation) {
-		if (amut.size() == 0)
-			amut.resize(3*sv.L);
+		amut.resize(3*(sv.L+1), 0.0);
+		critmut.resize(3*(sv.L+1), false);
 	} else {
-		if (a.size() == 0)
-			a.resize(sv.L);
+		a.resize(sv.L+1, 0.0);
+		crit.resize(sv.L+1, false);
 	}
 
 	for (int h=0; h<=sv.L; h++) {
@@ -161,8 +161,8 @@ double Reaction::getLeapDistance (double tau, double alpha, const StateVec & sv,
 				// Check for critical mutation reaction:
 				double dY = -amut[idx]*tau*inY;
 				double dV = -amut[idx]*tau*inV;
-				if ((sv.Y[h] + dY - alpha*sqrt(fabs(dY)) < 0)
-						|| (sv.V[h] + dV - alpha*sqrt(fabs(dV)) < 0)) {
+				if (((dY<0) && (sv.Y[h] + dY - alpha*sqrt(dY) < 0))
+						|| ((dV<0) && (sv.V[h] + dV - alpha*sqrt(dV) < 0))) {
 
 					critmut[idx] = true;
 
@@ -183,8 +183,8 @@ double Reaction::getLeapDistance (double tau, double alpha, const StateVec & sv,
 			// Check for critical non-mutation reaction:
 			double dY = a[h]*tau*(outY-inY);
 			double dV = a[h]*tau*(outV-inV);
-			if ((sv.Y[h] + dY - alpha*sqrt(fabs(dY)) < 0)
-					|| (sv.V[h] + dV - alpha*sqrt(fabs(dV)) < 0)) {
+			if (((dY<0) && (sv.Y[h] + dY - alpha*sqrt(dY) < 0))
+					|| ((dV<0) && (sv.V[h] + dV - alpha*sqrt(dV) < 0))) {
 
 				crit[h] = true;
 
@@ -219,7 +219,7 @@ bool Reaction::tauleap(double dt, StateVec & sv_new, unsigned short int *buf) {
 			return true;
 
 		// Implement reaction:
-		int q = poissonian(dt*aX, buf);
+		double q = poissonian(dt*aX, buf);
 		sv_new.X += q*(outX-inX);
 
 		// Check for negative population:
@@ -241,7 +241,7 @@ bool Reaction::tauleap(double dt, StateVec & sv_new, unsigned short int *buf) {
 					continue;
 
 				// Implement reaction:
-				int q = poissonian(dt*amut[idx], buf);
+				double q = poissonian(dt*amut[idx], buf);
 				sv_new.X += q*(outX - inX);
 				if (mutY) {
 					sv_new.Y[h] -= q*inY;
@@ -266,7 +266,7 @@ bool Reaction::tauleap(double dt, StateVec & sv_new, unsigned short int *buf) {
 				continue;
 
 			// Implement reaction:
-			int q = poissonian(dt*a[h], buf);
+			double q = poissonian(dt*a[h], buf);
 			sv_new.X += q*(outX - inX);
 			sv_new.Y[h] += q*(outY - inY);
 			sv_new.V[h] += q*(outV - inV);

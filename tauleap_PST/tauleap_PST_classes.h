@@ -53,7 +53,7 @@ class Reaction {
 
 		// Critical reaction flags:
 		bool critX;
-		std::vector<double> crit, critmut;
+		std::vector<bool> crit, critmut;
 
 		// Critical reaction identifier
 		int critreact;

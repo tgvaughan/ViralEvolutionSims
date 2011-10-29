@@ -72,7 +72,7 @@ int main (int argc, char **argv)
 	int Nsamples = 1001;
 	int Npaths = 1;
 
-	double alpha = 10; // Reaction criticality parameter
+	double alpha = 100; // Reaction criticality parameter
 
 	// Derived simulation parameters:
 	int steps_per_sample = (Nt-1)/(Nsamples-1);
@@ -164,6 +164,11 @@ int main (int argc, char **argv)
 				for (int i=0; i<NVectorMoments; i++)
 					vectorMoments[i].sample(sv, t_idx/steps_per_sample);
 
+				cout << ".";
+				if ((t_idx/steps_per_sample)%50 == 0)
+					cout << endl;
+				else
+					cout.flush();
 			}
 
 			// Loop to get us through a single interval of length dt
@@ -189,7 +194,7 @@ int main (int argc, char **argv)
 				for (int r=0; r<Nreactions; r++) {
 					if (!reactions[r].tauleap(fmin(tau,dt-t), sv_new, buf)) {
 						cout << "Error: negative population generated at time t="
-								<< dt*t_idx <<". Exiting..." << endl;
+								<< dt*t_idx << " by reaction " << r <<". Exiting..." << endl;
 						H5close();
 						exit(1);
 					}
