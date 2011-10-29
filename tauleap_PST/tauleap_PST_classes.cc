@@ -119,6 +119,8 @@ double Reaction::getLeapDistance (double tau, double Ncrit, const StateVec & sv,
 
 	if (onlyX) {
 
+		critX = false;
+
 		// Check for critical X reaction:
 		double dX = Ncrit*(outX - inX);
 		if ((dX<0) && (sv.X + dX < 0)) {
@@ -130,8 +132,7 @@ double Reaction::getLeapDistance (double tau, double Ncrit, const StateVec & sv,
 			double newtaucrit = -log(erand48(buf))/aX;
 			if (newtaucrit<tau)
 				return newtaucrit;
-		} else
-			critX = false;
+		}
 
 		return tau;
 	}
@@ -302,7 +303,7 @@ void Reaction::doCritical(StateVec & sv_new, unsigned short int *buf) {
 	sv_new.X += outX - inX;
 
 	// If X is all there is, we're done:
-	if (critX)
+	if (onlyX)
 		return;
 
 	if (mutation) {

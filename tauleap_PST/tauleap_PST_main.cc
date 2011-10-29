@@ -72,7 +72,7 @@ int main (int argc, char **argv)
 	int Nsamples = 1001;
 	int Npaths = 1;
 
-	double Ncrit = 0; // Reaction criticality parameter
+	double Ncrit = 100; // Reaction criticality parameter
 
 	// Derived simulation parameters:
 	int steps_per_sample = (Nt-1)/(Nsamples-1);
@@ -94,7 +94,7 @@ int main (int argc, char **argv)
 	// Set up initial condition:
 	StateVec sv0(sequenceL);
 	sv0.X = param_lambda/param_d;
-	sv0.V[0] = 10;
+	sv0.V[0] = 100;
 
 	// Set up reactions:
 	int Nreactions = 6;
@@ -194,7 +194,7 @@ int main (int argc, char **argv)
 
 				// Implement reactions:
 				for (int r=0; r<Nreactions; r++) {
-					if (!reactions[r].tauleap(fmin(tau,dt-t), sv_new, buf)) {
+					if (!reactions[r].tauleap(tau, sv_new, buf)) {
 						cout << "Error: negative population generated at time t="
 								<< dt*t_idx << " by reaction " << r <<". Exiting..." << endl;
 						H5close();
