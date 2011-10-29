@@ -5,6 +5,7 @@
  *      Author: Tim Vaughan
  */
 
+#include <iostream>
 #include <string>
 #include <vector>
 
@@ -109,7 +110,7 @@ const double Reaction::get_gcond(int h2, int h1, int L)
  *
  * returns:	safe leap distance
  */
-double Reaction::getLeapDistance (double tau, double alpha, const StateVec & sv, unsigned short *buf) {
+double Reaction::getLeapDistance (double tau, double Ncrit, const StateVec & sv, unsigned short *buf) {
 
 	// Calculate X portion of propensity:
 	aX = rate;
@@ -119,14 +120,20 @@ double Reaction::getLeapDistance (double tau, double alpha, const StateVec & sv,
 	if (onlyX) {
 
 		// Check for critical X reaction:
-		double dX = aX*tau*(outX - inX);
-		if ((dX<0) && (sv.X + dX - alpha*sqrt(fabs(dX))) < 0) {
+		double dX = Ncrit*(outX - inX);
+		if ((dX<0) && (sv.X + dX < 0)) {
+
 			critX = true;
-			return -log(erand48(buf))/aX;
-		} else {
+
+//			std::cout << "M"; // DEBUG
+
+			double newtaucrit = -log(erand48(buf))/aX;
+			if (newtaucrit<tau)
+				return newtaucrit;
+		} else
 			critX = false;
-			return tau;
-		}
+
+		return tau;
 	}
 
 	double taucrit = tau;
@@ -159,10 +166,10 @@ double Reaction::getLeapDistance (double tau, double alpha, const StateVec & sv,
 					amut[idx] += atmp*(1-sv.neighbourNum*mutrate);
 
 				// Check for critical mutation reaction:
-				double dY = -amut[idx]*tau*inY;
-				double dV = -amut[idx]*tau*inV;
-				if (((dY<0) && (sv.Y[h] + dY - alpha*sqrt(dY) < 0))
-						|| ((dV<0) && (sv.V[h] + dV - alpha*sqrt(dV) < 0))) {
+				double dY = -Ncrit*inY;
+				double dV = -Ncrit*inV;
+				if (((dY<0) && (sv.Y[h] + dY < 0))
+						|| ((dV<0) && (sv.V[h] + dV < 0))) {
 
 					critmut[idx] = true;
 
@@ -181,12 +188,14 @@ double Reaction::getLeapDistance (double tau, double alpha, const StateVec & sv,
 			a[h] = atmp;
 
 			// Check for critical non-mutation reaction:
-			double dY = a[h]*tau*(outY-inY);
-			double dV = a[h]*tau*(outV-inV);
-			if (((dY<0) && (sv.Y[h] + dY - alpha*sqrt(dY) < 0))
-					|| ((dV<0) && (sv.V[h] + dV - alpha*sqrt(dV) < 0))) {
+			double dY = Ncrit*(outY-inY);
+			double dV = Ncrit*(outV-inV);
+			if (((dY<0) && (sv.Y[h] + dY < 0))
+					|| ((dV<0) && (sv.V[h] + dV < 0))) {
 
 				crit[h] = true;
+
+//				std::cout << "M"; // DEBUG
 
 				double newtaucrit = -log(erand48(buf))/a[h];
 				if (newtaucrit < taucrit) {

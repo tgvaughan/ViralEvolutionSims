@@ -67,12 +67,12 @@ int main (int argc, char **argv)
     }
 
     // Simulation parameters:
-	double T = 30.0;
-	int Nt = 30001;
+	double T = 100.0;
+	int Nt = 10001;
 	int Nsamples = 1001;
 	int Npaths = 1;
 
-	double alpha = 100; // Reaction criticality parameter
+	double Ncrit = 0; // Reaction criticality parameter
 
 	// Derived simulation parameters:
 	int steps_per_sample = (Nt-1)/(Nsamples-1);
@@ -94,7 +94,7 @@ int main (int argc, char **argv)
 	// Set up initial condition:
 	StateVec sv0(sequenceL);
 	sv0.X = param_lambda/param_d;
-	sv0.V[0] = 1000;
+	sv0.V[0] = 10;
 
 	// Set up reactions:
 	int Nreactions = 6;
@@ -178,7 +178,7 @@ int main (int argc, char **argv)
 				double tau = dt-t;
 				int crit_react = -1;
 				for (int r=0; r<Nreactions; r++) {
-					double thistau = reactions[r].getLeapDistance(tau, alpha, sv, buf);
+					double thistau = reactions[r].getLeapDistance(tau, Ncrit, sv, buf);
 					if (thistau<tau) {
 						tau = thistau;
 						crit_react = r;
@@ -188,6 +188,8 @@ int main (int argc, char **argv)
 				if (crit_react>=0) {
 					// Implement critical reaction:
 					reactions[crit_react].doCritical(sv_new, buf);
+
+					cout << "C" << crit_react; // DEBUG
 				}
 
 				// Implement reactions:
