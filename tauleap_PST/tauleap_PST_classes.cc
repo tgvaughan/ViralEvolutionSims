@@ -87,7 +87,7 @@ Reaction::Reaction() { };
  * a given sequence located in h1 and end with any sequence
  * located in h2.
  */
-const double Reaction::get_gcond(int h2, int h1, int L)
+const double Reaction::get_gcond(int h1, int h2, int L)
 {
 	switch (h2-h1) {
 		case -1:
@@ -110,7 +110,7 @@ const double Reaction::get_gcond(int h2, int h1, int L)
  *
  * returns:	safe leap distance
  */
-double Reaction::getLeapDistance (double tau, double Ncrit, const StateVec & sv, unsigned short *buf) {
+double Reaction::getLeapDistance (double tau, double alpha, const StateVec & sv, unsigned short *buf) {
 
 	// Calculate X portion of propensity:
 	aX = rate;
@@ -122,8 +122,8 @@ double Reaction::getLeapDistance (double tau, double Ncrit, const StateVec & sv,
 		critX = false;
 
 		// Check for critical X reaction:
-		double dX = Ncrit*(outX - inX);
-		if ((dX<0) && (sv.X + dX < 0)) {
+		double dX = tau*aX*(outX - inX);
+		if ((dX<0) && (sv.X + dX - alpha*sqrt(-dX)< 0)) {
 
 			critX = true;
 
@@ -162,15 +162,15 @@ double Reaction::getLeapDistance (double tau, double Ncrit, const StateVec & sv,
 
 				int idx = 3*h + hp - h + 1;
 
-				amut[idx] = atmp*mutrate*get_gcond(hp,h,sv.L);
+				amut[idx] = atmp*mutrate*get_gcond(h,hp,sv.L);
 				if (hp==h)
 					amut[idx] += atmp*(1-sv.neighbourNum*mutrate);
 
 				// Check for critical mutation reaction:
-				double dY = -Ncrit*inY;
-				double dV = -Ncrit*inV;
-				if (((dY<0) && (sv.Y[h] + dY < 0))
-						|| ((dV<0) && (sv.V[h] + dV < 0))) {
+				double dY = -tau*amut[idx]*inY;
+				double dV = -tau*amut[idx]*inV;
+				if (((dY<0) && (sv.Y[h] + dY - alpha*sqrt(-dY) < 0))
+						|| ((dV<0) && (sv.V[h] + dV -alpha*sqrt(-dV) < 0))) {
 
 					critmut[idx] = true;
 
@@ -189,10 +189,10 @@ double Reaction::getLeapDistance (double tau, double Ncrit, const StateVec & sv,
 			a[h] = atmp;
 
 			// Check for critical non-mutation reaction:
-			double dY = Ncrit*(outY-inY);
-			double dV = Ncrit*(outV-inV);
-			if (((dY<0) && (sv.Y[h] + dY < 0))
-					|| ((dV<0) && (sv.V[h] + dV < 0))) {
+			double dY = tau*a[h]*(outY-inY);
+			double dV = tau*a[h]*(outV-inV);
+			if (((dY<0) && (sv.Y[h] + dY - alpha*sqrt(-dY) < 0))
+					|| ((dV<0) && (sv.V[h] + dV - alpha*sqrt(-dV) < 0))) {
 
 				crit[h] = true;
 

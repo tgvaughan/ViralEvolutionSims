@@ -37,6 +37,16 @@ std::vector<double> samplefunc_Y (const StateVec & sv) {
 std::vector<double> samplefunc_V (const StateVec & sv) {
 	return sv.V;
 }
+double samplefunc_Vdiv (const StateVec & sv) {
+
+	double N=0, N2=0;
+	for (int h=0; h<=sv.L; h++) {
+		N += sv.V[h];
+		N2 += sv.V[h]*sv.V[h];
+	}
+
+	return N*N/N2;
+}
 
 int main (int argc, char **argv)
 {
@@ -70,9 +80,9 @@ int main (int argc, char **argv)
 	double T = 30.0;
 	int Nt = 10001;
 	int Nsamples = 1001;
-	int Npaths = 1;
+	int Npaths = 50;
 
-	double Ncrit = 100; // Reaction criticality parameter
+	double alpha = 500; // Reaction criticality parameter
 
 	// Derived simulation parameters:
 	int steps_per_sample = (Nt-1)/(Nsamples-1);
@@ -125,9 +135,10 @@ int main (int argc, char **argv)
 			param_u,0.0);
 
 	// Set up moments:
-	int NScalarMoments = 1;
-	MomentScalar scalarMoments[1];
+	int NScalarMoments = 2;
+	MomentScalar scalarMoments[2];
 	scalarMoments[0] = MomentScalar (Nsamples, samplefunc_X, "X");
+	scalarMoments[1] = MomentScalar (Nsamples, samplefunc_Vdiv, "Vdiv");
 
 	int NVectorMoments = 2;
 	MomentVector vectorMoments[2];
@@ -178,7 +189,7 @@ int main (int argc, char **argv)
 				double tau = dt-t;
 				int crit_react = -1;
 				for (int r=0; r<Nreactions; r++) {
-					double thistau = reactions[r].getLeapDistance(tau, Ncrit, sv, buf);
+					double thistau = reactions[r].getLeapDistance(tau, alpha, sv, buf);
 					if (thistau<tau) {
 						tau = thistau;
 						crit_react = r;
