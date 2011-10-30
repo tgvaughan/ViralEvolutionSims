@@ -61,47 +61,47 @@ def step(X, Y, V, dt, L, p):
 
 	return (X, Y, V)
 
+# Calculate diversity:
+def getDiv(V):
+	N = N2 = 0.
+	for h in range(len(V)):
+		N += V[h]
+		N2 += V[h]*V[h]
+	return N*N/N2
+
 # Send sample to stdout:
 def sample(X, Y, V, t):
-	print t, X,
-	for h in range(len(V)):
-		print Y[h], V[h],
-	print
-
-# Produce header for sample file:
-def header(L):
-	print 't X',
-	for h in range(L+1):
-		print 'Y'+str(h), 'V'+str(h),
-	print
+	if t==0:
+		print 't Vdiv'
+	print t, getDiv(V)
 
 
 ## MAIN ##
 if __name__ == '__main__':
 
 	# Model parameters:
-	p = {}
-	L = 1
-	p['lambda'] = 1e5
-	p['k'] = 100.
-	p['beta'] = 2e-7
-	p['mu'] = 0.0
-	p['d'] = 0.1
-	p['a'] = 0.5
-	p['u'] = 5.0
-	p['V0'] = 100
+	#p = {}
+	#L = 1
+	#p['lambda'] = 1e5
+	#p['k'] = 100.
+	#p['beta'] = 2e-7
+	#p['mu'] = 0.0
+	#p['d'] = 0.1
+	#p['a'] = 0.5
+	#p['u'] = 5.0
+	#p['V0'] = 100
 
 	# Model parameters (FULL):
-	#p = {}
-	#L = 105
-	#p['lambda'] = 2.5e8
-	#p['k'] = 1e3
-	#p['beta'] = 5e-13
-	#p['mu'] = 2e-5*L
-	#p['d'] = 1e-3
-	#p['a'] = 1.
-	#p['u'] = 3.
-	#p['V0'] = 1
+	p = {}
+	L = 105
+	p['lambda'] = 2.5e8
+	p['k'] = 1e3
+	p['beta'] = 5e-13
+	p['mu'] = 2e-5*L
+	p['d'] = 1e-3
+	p['a'] = 1.
+	p['u'] = 3.
+	p['V0'] = 100
 
 	# Simulation parameters:
 	T = 30.
@@ -113,20 +113,16 @@ if __name__ == '__main__':
 	steps_per_sample = (Nt-1)/(Nsamples-1)
 
 	# Initial condition:
-
 	X = p['lambda']/p['d']  # Uninfected steady state
 	Y = zeros(L+1)
 	V = zeros(L+1)
 	V[0] = p['V0']
 
-	# Generate header:
-	header(L)
-
 	# Perform first sample:
 	sample(X, Y, V, 0)
 
 	# Integration loop:
-	for tidx in range(Nt):
+	for tidx in range(1,Nt):
 
 		# Perform semi-implicit integration step:
 		X,Y,V = step(X, Y, V, dt, L, p)
