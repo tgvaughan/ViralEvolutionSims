@@ -12,6 +12,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <map>
 
 #include <cmath>
 #include <cstdlib>
@@ -31,21 +32,18 @@
 double samplefunc_X (const StateVec & sv) {
 	return sv.X;
 }
+double samplefunc_Vtot (const StateVec & sv) {
+	double res = 0;
+	for (int h=0; h<=sv.L; h++)
+		res += sv.V[h];
+
+	return res;
+}
 std::vector<double> samplefunc_Y (const StateVec & sv) {
 	return sv.Y;
 }
 std::vector<double> samplefunc_V (const StateVec & sv) {
 	return sv.V;
-}
-double samplefunc_Vdiv (const StateVec & sv) {
-
-	double N=0, N2=0;
-	for (int h=0; h<=sv.L; h++) {
-		N += sv.V[h];
-		N2 += sv.V[h]*sv.V[h];
-	}
-
-	return N*N/N2;
 }
 
 int main (int argc, char **argv)
@@ -61,7 +59,7 @@ int main (int argc, char **argv)
     // Ensure output filename ends with ".h5" and record basename:
     string ofname = argv[1];
     string ofbasename;
-    if (ofname.length()>3 && (ofname.compare(ofname.length()-4,3,".h5")))
+    if (ofname.length()>3 && (ofname.compare(ofname.length()-4,3,".h5")==0))
     	ofbasename = ofname.substr(0,ofname.length()-3);
     else
     	ofbasename = ofname;
@@ -77,34 +75,43 @@ int main (int argc, char **argv)
     }
 
     // Simulation parameters:
-	double T = 30.0;
-	int Nt = 10001;
+	double T = 1.0;
+	int Nt = 1001;
 	int Nsamples = 1001;
-	int Npaths = 50;
+	int Npaths = 200;
 
-	double alpha = 500; // Reaction criticality parameter
+	double alpha = 0; // Reaction criticality parameter  // DEBUG: SSA
 
 	// Derived simulation parameters:
 	int steps_per_sample = (Nt-1)/(Nsamples-1);
 	double dt = T/(Nt-1);
 	double sample_dt = T/(Nsamples-1);
 
-	// Genetic parameters:
-	int sequenceL = 35*3; // DNA sequence length corresponding to V3
-	double mu = 2e-5/3.0; // Mutation rate per character given outcome
-
     // Demographic parameters:
-	double param_d = 1e-3;
-	double param_a = 1.0;
-	double param_u = 3.0;
-	double param_lambda = 2.5e8;
-	double param_beta = 5e-13;
-	double param_k = 1e3;
+	map <string, double> param;
+
+	/*param["lambda"] = 2.5e8;
+	param["beta"] = 5e-13;
+	param["k"] = 1e3;
+	param["d"] = 1e-3;
+	param["a"] = 1.0;
+	param["u"] = 3.0;*/
+
+	param["lambda"] = 1e4;
+	param["beta"] = 2e-7;
+	param["k"] = 1e2;
+	param["d"] = 0.1;
+	param["a"] = 0.5;
+	param["u"] = 5.0;
+
+	// Genetic parameters:
+	param["sequenceL"] = 35*3; // DNA sequence length corresponding to V3
+	param["mu"] = 2e-3/3.0; // Mutation probability per character given outcome
 
 	// Set up initial condition:
-	StateVec sv0(sequenceL);
-	sv0.X = param_lambda/param_d;
-	sv0.V[0] = 100;
+	StateVec sv0(param["sequenceL"]);
+	sv0.X = param["lambda"]/param["d"];
+	sv0.V[0] = 1000;
 
 	// Set up reactions:
 	int Nreactions = 6;
@@ -112,38 +119,38 @@ int main (int argc, char **argv)
 
 	reactions[0] = Reaction(0,0,0, 1,0,0,
 			false,false,
-			param_lambda,0.0);
+			param["lambda"],0.0);
 
 	reactions[1] = Reaction(1,0,1, 0,1,0,
 			true,false,
-			param_beta,mu);
+			param["beta"],param["mu"]);
 
 	reactions[2] = Reaction(0,1,0, 0,1,1,
 			false,false,
-			param_k,0.0);
+			param["k"],0.0);
 
 	reactions[3] = Reaction(1,0,0, 0,0,0,
 			false,false,
-			param_d,0.0);
+			param["d"],0.0);
 
 	reactions[4] = Reaction(0,1,0, 0,0,0,
 			false,false,
-			param_a,0.0);
+			param["a"],0.0);
 
 	reactions[5] = Reaction(0,0,1, 0,0,0,
 			false,false,
-			param_u,0.0);
+			param["u"],0.0);
 
 	// Set up moments:
 	int NScalarMoments = 2;
 	MomentScalar scalarMoments[2];
 	scalarMoments[0] = MomentScalar (Nsamples, samplefunc_X, "X");
-	scalarMoments[1] = MomentScalar (Nsamples, samplefunc_Vdiv, "Vdiv");
+	scalarMoments[1] = MomentScalar (Nsamples, samplefunc_Vtot, "Vtot");
 
 	int NVectorMoments = 2;
 	MomentVector vectorMoments[2];
-	vectorMoments[0] = MomentVector (Nsamples, samplefunc_Y, "Y", sequenceL);
-	vectorMoments[1] = MomentVector (Nsamples, samplefunc_V, "V", sequenceL);
+	vectorMoments[0] = MomentVector (Nsamples, samplefunc_Y, "Y", param["sequenceL"]);
+	vectorMoments[1] = MomentVector (Nsamples, samplefunc_V, "V", param["sequenceL"]);
 
     // Initialise RNG:
 	unsigned short buf[3] = {42, 53, time(NULL)};
@@ -151,7 +158,7 @@ int main (int argc, char **argv)
 	// Loop over paths:
 	for (int path=0; path<Npaths; path++) {
 
-		cout << "Path " << path+1 << " of " << Npaths;
+		cout << "Path " << path+1 << " of " << Npaths << "...";
 		cout.flush();
 
 		// Initialise state vector:
@@ -174,17 +181,12 @@ int main (int argc, char **argv)
 					scalarMoments[i].sample(sv, t_idx/steps_per_sample);
 				for (int i=0; i<NVectorMoments; i++)
 					vectorMoments[i].sample(sv, t_idx/steps_per_sample);
-
-				cout << ".";
-				if ((t_idx/steps_per_sample)%50 == 0)
-					cout << endl;
-				else
-					cout.flush();
 			}
 
 			// Loop to get us through a single interval of length dt
 			double t=0.0;
 			do {
+
 				// Determine leap time to use
 				double tau = dt-t;
 				int crit_react = -1;
@@ -198,9 +200,7 @@ int main (int argc, char **argv)
 
 				if (crit_react>=0) {
 					// Implement critical reaction:
-					reactions[crit_react].doCritical(sv_new, buf);
-
-					cout << "C" << crit_react; // DEBUG: imp. critical
+					reactions[crit_react].doCritical(sv_new);
 				}
 
 				// Implement reactions:
@@ -216,7 +216,6 @@ int main (int argc, char **argv)
 				t += tau;
 
 			} while (t<dt);
-
 
 			sv = sv_new;
 		}
@@ -256,7 +255,7 @@ int main (int argc, char **argv)
 
 	// Write vector moments to file:
 	int vector_rank = 2;
-	hsize_t vector_dims[2] = {Nsamples, sequenceL+1};
+	hsize_t vector_dims[2] = {Nsamples, param["sequenceL"]+1};
 
 	for (int m=0; m<NVectorMoments; m++) {
 
@@ -281,6 +280,10 @@ int main (int argc, char **argv)
 		t_vec[s] = sample_dt*s;
 	H5LTmake_dataset(group_id, "t", scalar_rank, scalar_dims,
 			H5T_NATIVE_DOUBLE, &(t_vec[0]));
+
+	// Write simulation parameters to file:
+	for (map<string,double>::iterator it = param.begin(); it != param.end(); it++)
+		H5LTset_attribute_double(file_id, ("/"+ofbasename).c_str(), (it->first).c_str(), &(it->second), 1);
 
 	// Close HDF file:
 	H5Fclose(file_id);

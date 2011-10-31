@@ -65,7 +65,7 @@ class Reaction {
 		const double get_gcond(int h2, int h1, int sequenceL);
 		double getLeapDistance(double tau, double alpha, const StateVec & sv, unsigned short *buf);
 		bool tauleap(double dt, StateVec & sv_new, unsigned short *buf);
-		void doCritical(StateVec & sv_new, unsigned short *buf);
+		void doCritical(StateVec & sv_new);
 
 };
 

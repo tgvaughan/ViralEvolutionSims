@@ -123,11 +123,9 @@ double Reaction::getLeapDistance (double tau, double alpha, const StateVec & sv,
 
 		// Check for critical X reaction:
 		double dX = tau*aX*(outX - inX);
-		if ((dX<0) && (sv.X + dX - alpha*sqrt(-dX)< 0)) {
+		if (true || ((dX<0) && (sv.X + dX - alpha*sqrt(-dX)< 0))) {	// DEBUG: SSA
 
 			critX = true;
-
-//			std::cout << "M"; // DEBUG: marked critical
 
 			double newtaucrit = -log(erand48(buf))/aX;
 			if (newtaucrit<tau)
@@ -164,13 +162,13 @@ double Reaction::getLeapDistance (double tau, double alpha, const StateVec & sv,
 
 				amut[idx] = atmp*mutrate*get_gcond(h,hp,sv.L);
 				if (hp==h)
-					amut[idx] += atmp*(1-sv.neighbourNum*mutrate);
+					amut[idx] += atmp*(1.0-3.0*sv.L*mutrate);
 
 				// Check for critical mutation reaction:
 				double dY = -tau*amut[idx]*inY;
 				double dV = -tau*amut[idx]*inV;
-				if (((dY<0) && (sv.Y[h] + dY - alpha*sqrt(-dY) < 0))
-						|| ((dV<0) && (sv.V[h] + dV -alpha*sqrt(-dV) < 0))) {
+				if (true || (sv.Y[h] + dY - alpha*sqrt(-dY) < 0) // DEBUG: SSA
+						|| (sv.V[h] + dV -alpha*sqrt(-dV) < 0)) {
 
 					critmut[idx] = true;
 
@@ -191,12 +189,10 @@ double Reaction::getLeapDistance (double tau, double alpha, const StateVec & sv,
 			// Check for critical non-mutation reaction:
 			double dY = tau*a[h]*(outY-inY);
 			double dV = tau*a[h]*(outV-inV);
-			if (((dY<0) && (sv.Y[h] + dY - alpha*sqrt(-dY) < 0))
+			if (true || ((dY<0) && (sv.Y[h] + dY - alpha*sqrt(-dY) < 0)) // DEBUG: SSA
 					|| ((dV<0) && (sv.V[h] + dV - alpha*sqrt(-dV) < 0))) {
 
 				crit[h] = true;
-
-//				std::cout << "M"; // DEBUG: marked critical
 
 				double newtaucrit = -log(erand48(buf))/a[h];
 				if (newtaucrit < taucrit) {
@@ -295,9 +291,8 @@ bool Reaction::tauleap(double dt, StateVec & sv_new, unsigned short int *buf) {
  * Implement "next" critical reaction.
  *
  * sv_new:		StateVec to update
- * buf:			RNG buffer
  */
-void Reaction::doCritical(StateVec & sv_new, unsigned short int *buf) {
+void Reaction::doCritical(StateVec & sv_new) {
 
 	// Implement X component
 	sv_new.X += outX - inX;

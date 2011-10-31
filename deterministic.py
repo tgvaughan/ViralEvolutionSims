@@ -3,7 +3,7 @@
 from scipy import *
 
 # Number of sequences distance hp from 0 and 1 from a sequence at h:
-def g(hp,h,L):
+def g(h,hp,L):
 
 	if hp == h-1:
 		return h
@@ -20,23 +20,20 @@ def g(hp,h,L):
 # Derivatives:
 def ddt (X, Y, V, L, p):
 
-	# Rate of mutation to neighbouring sequences:
-	mup = p['mu']/(3.*L)
-
 	dXdt = p['lambda'] - p['d']*X
 	for h in range(L+1):
 		dXdt -= p['beta']*X*V[h]
 	
-	dYdt = (1.-p['mu'])*p['beta']*X*V - p['a']*Y
+	dYdt = (1.-3.*L*p['mu'])*p['beta']*X*V - p['a']*Y
 	for h in range(L+1):
 
-		dYdt[h] += mup*p['beta']*X*g(h,h,L)*V[h]
+		dYdt[h] += p['mu']*p['beta']*X*g(h,h,L)*V[h]
 
 		if h>0:
-			dYdt[h] += mup*p['beta']*X*g(h,h-1,L)*V[h-1]
+			dYdt[h] += p['mu']*p['beta']*X*g(h-1,h,L)*V[h-1]
 
 		if h<L:
-			dYdt[h] += mup*p['beta']*X*g(h,h+1,L)*V[h+1]
+			dYdt[h] += p['mu']*p['beta']*X*g(h+1,h,L)*V[h+1]
 	
 	dVdt = p['k']*Y - p['beta']*X*V - p['u']*V
 
@@ -72,39 +69,38 @@ def getDiv(V):
 # Send sample to stdout:
 def sample(X, Y, V, t):
 	if t==0:
-		print 't Vdiv'
-	print t, getDiv(V)
+		print 't Vtot V0 V1 Vdiv'
+	print t, sum(V), V[0], V[1], getDiv(V)
 
 
 ## MAIN ##
 if __name__ == '__main__':
 
+	p = {}
+
 	# Model parameters:
-	#p = {}
-	#L = 1
-	#p['lambda'] = 1e5
-	#p['k'] = 100.
-	#p['beta'] = 2e-7
-	#p['mu'] = 0.0
-	#p['d'] = 0.1
-	#p['a'] = 0.5
-	#p['u'] = 5.0
+	#L = 105
+	#p['lambda'] = 2.5e8
+	#p['k'] = 1e3
+	#p['beta'] = 5e-13
+	#p['mu'] = 2e-5/3.
+	#p['d'] = 1e-3
+	#p['a'] = 1.
+	#p['u'] = 3.
 	#p['V0'] = 100
 
-	# Model parameters (FULL):
-	p = {}
 	L = 105
-	p['lambda'] = 2.5e8
-	p['k'] = 1e3
-	p['beta'] = 5e-13
-	p['mu'] = 2e-5*L
-	p['d'] = 1e-3
-	p['a'] = 1.
-	p['u'] = 3.
-	p['V0'] = 100
+	p['lambda'] = 1e4
+	p['k'] = 1e2
+	p['beta'] = 2e-7
+	p['mu'] = 2e-3/3.
+	p['d'] = 0.1
+	p['a'] = 0.5
+	p['u'] = 5.0
+	p['V0'] = 1000
 
 	# Simulation parameters:
-	T = 30.
+	T = 1.
 	Nt = 1001
 	Nsamples = 1001
 
