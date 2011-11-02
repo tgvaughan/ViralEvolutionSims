@@ -109,7 +109,7 @@ const double Reaction::get_gcond(int h1, int h2, int L)
  *
  * returns:	safe leap distance
  */
-double Reaction::getLeapDistance (double tau, double alpha, const StateVec & sv, unsigned short *buf) {
+double Reaction::getLeapDistance (double tau, double alpha, bool newcritcond, const StateVec & sv, unsigned short *buf) {
 
 	// Calculate X portion of propensity:
 	aX = rate;
@@ -119,16 +119,22 @@ double Reaction::getLeapDistance (double tau, double alpha, const StateVec & sv,
 	if (onlyX) {
 
 		// Check for critical X reaction:
-		double dX = tau*aX*(outX - inX);
-		if ((dX<0) && (sv.X + dX - alpha*sqrt(-dX)< 0)) {
+		critX = false;
+		if (newcritcond) {
+			double dX = tau*aX*(outX - inX);
+			if ((dX<0) && (sv.X + dX - alpha*sqrt(-dX)< 0))
+				critX = true;
+		} else {
+			if (sv.X + alpha*(outX - inX) < 0)
+				critX = true;
+		}
 
-			critX = true;
-
+		// If critical, determine reaction time:
+		if (critX) {
 			double newtaucrit = -log(erand48(buf))/aX;
 			if (newtaucrit<tau)
 				return newtaucrit;
-		} else
-			critX = false;
+		}
 
 		return tau;
 	}
@@ -163,21 +169,26 @@ double Reaction::getLeapDistance (double tau, double alpha, const StateVec & sv,
 					amut[idx] += atmp*(1.0-mutrate);
 
 				// Check for critical mutation reaction:
-				double dY = -tau*amut[idx]*inY;
-				double dV = -tau*amut[idx]*inV;
-				if ((sv.Y[h] + dY - alpha*sqrt(-dY) < 0)
-						|| (sv.V[h] + dV -alpha*sqrt(-dV) < 0)) {
+				critmut[idx] = false;
+				if (newcritcond) {
+					double dY = -tau*amut[idx]*inY;
+					double dV = -tau*amut[idx]*inV;
+					if ((sv.Y[h] + dY - alpha*sqrt(-dY) < 0)
+							|| (sv.V[h] + dV -alpha*sqrt(-dV) < 0))
+						critmut[idx] = true;
+				} else {
+					if ((sv.Y[h] - alpha*inY < 0) || (sv.V[h] - alpha*inV < 0))
+						critmut[idx] = true;
+				}
 
-					critmut[idx] = true;
-
+				// If critical, determine reaction time:
+				if (critmut[idx]) {
 					double newtaucrit = -log(erand48(buf))/amut[idx];
 					if (newtaucrit < taucrit) {
 						taucrit = newtaucrit;
 						critreact = idx;
 					}
-				} else
-					critmut[idx] = false;
-
+				}
 			}
 
 		} else {
@@ -185,20 +196,26 @@ double Reaction::getLeapDistance (double tau, double alpha, const StateVec & sv,
 			a[h] = atmp;
 
 			// Check for critical non-mutation reaction:
-			double dY = tau*a[h]*(outY-inY);
-			double dV = tau*a[h]*(outV-inV);
-			if (((dY<0) && (sv.Y[h] + dY - alpha*sqrt(-dY) < 0))
-					|| ((dV<0) && (sv.V[h] + dV - alpha*sqrt(-dV) < 0))) {
+			crit[h] = false;
+			if (newcritcond) {
+				double dY = tau*a[h]*(outY-inY);
+				double dV = tau*a[h]*(outV-inV);
+				if (((dY<0) && (sv.Y[h] + dY - alpha*sqrt(-dY) < 0))
+						|| ((dV<0) && (sv.V[h] + dV - alpha*sqrt(-dV) < 0)))
+					crit[h] = true;
+			} else {
+				if ((sv.Y[h] + alpha*(outY-inY) < 0) || (sv.V[h] + alpha*(outV-inV) < 0))
+					crit[h] = true;
+			}
 
-				crit[h] = true;
-
+			// If critical, determine reaction time:
+			if (crit[h]) {
 				double newtaucrit = -log(erand48(buf))/a[h];
 				if (newtaucrit < taucrit) {
 					taucrit = newtaucrit;
 					critreact = h;
 				}
-			} else
-				crit[h] = false;
+			}
 		}
 	}
 
@@ -227,11 +244,15 @@ bool Reaction::tauleap(double dt, StateVec & sv_new, unsigned short int *buf) {
 		sv_new.X += q*(outX-inX);
 
 		// Check for negative population:
-		if (sv_new.X<0)
-			return false;
+		if (sv_new.X<0) {
+			sv_new.X = 0;
+			return true;
+		}
 
-		return true;
+		return false;
 	}
+
+	bool negativePop = false;
 
 	for (int h=0; h<=sv_new.L; h++) {
 
@@ -259,8 +280,18 @@ bool Reaction::tauleap(double dt, StateVec & sv_new, unsigned short int *buf) {
 				}
 
 				// Check for negative populations:
-				if (sv_new.X < 0 || sv_new.Y[h] < 0 || sv_new.V[h] < 0)
-					return false;
+				if (sv_new.X < 0) {
+					sv_new.X = 0;
+					negativePop = true;
+				}
+				if (sv_new.Y[h] < 0) {
+					sv_new.Y[h] = 0;
+					negativePop = true;
+				}
+				if (sv_new.V[h] < 0) {
+					sv_new.V[h] = 0;
+					negativePop = true;
+				}
 			}
 
 		} else {
@@ -276,13 +307,23 @@ bool Reaction::tauleap(double dt, StateVec & sv_new, unsigned short int *buf) {
 			sv_new.V[h] += q*(outV - inV);
 
 			// Check for negative populations:
-			if (sv_new.X < 0 || sv_new.Y[h] < 0 || sv_new.V[h] < 0)
-				return false;
+			if (sv_new.X < 0) {
+				sv_new.X = 0;
+				negativePop = true;
+			}
+			if (sv_new.Y[h] < 0) {
+				sv_new.Y[h] = 0;
+				negativePop = true;
+			}
+			if (sv_new.V[h] < 0) {
+				sv_new.V[h] = 0;
+				negativePop = true;
+			}
 		}
 
 	}
 
-	return true;
+	return negativePop;
 }
 
 /**

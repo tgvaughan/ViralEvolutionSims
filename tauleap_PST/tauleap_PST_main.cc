@@ -111,11 +111,12 @@ int main (int argc, char **argv)
 
     // Simulation parameters:
 	double T = 100.0;
-	int Nt = 100001;
+	int Nt = 50001;
 	int Nsamples = 1001;
 	int Npaths = 128;
 
-	double alpha = 500; // Reaction criticality parameter
+	double alpha = 1000; // Reaction criticality parameter
+	bool newcritcond = false; // Use new criticality condition
 
 	// Derived simulation parameters:
 	int steps_per_sample = (Nt-1)/(Nsamples-1);
@@ -226,7 +227,7 @@ int main (int argc, char **argv)
 				double tau = dt-t;
 				int crit_react = -1;
 				for (int r=0; r<Nreactions; r++) {
-					double thistau = reactions[r].getLeapDistance(tau, alpha, sv, buf);
+					double thistau = reactions[r].getLeapDistance(tau, alpha, newcritcond, sv, buf);
 					if (thistau<tau) {
 						tau = thistau;
 						crit_react = r;
@@ -240,12 +241,9 @@ int main (int argc, char **argv)
 
 				// Implement reactions:
 				for (int r=0; r<Nreactions; r++) {
-					if (!reactions[r].tauleap(tau, sv_new, buf)) {
-						cout << "Rank " << mpi_rank << ": Error: negative population generated at time t="
-								<< dt*t_idx << " by reaction " << r <<". Aborting..." << endl;
-						if (mpi_rank==0)
-							H5close();
-						MPI::COMM_WORLD.Abort(0);
+					if (reactions[r].tauleap(tau, sv_new, buf)) {
+						cout << "Rank " << mpi_rank << ": Warning: negative population generated at time t="
+								<< dt*t_idx << " by reaction " << r << "." << endl;
 					}
 				}
 
