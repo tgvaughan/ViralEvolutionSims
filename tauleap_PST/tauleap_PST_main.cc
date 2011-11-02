@@ -82,6 +82,12 @@ int main (int argc, char **argv)
         exit(0);
     }
 
+    // Initialize MPI:
+    MPI::Init(argc, argv);
+    int mpi_size = MPI::COMM_WORLD.Get_size();
+    int mpi_rank = MPI::COMM_WORLD.Get_rank();
+    atexit(MPI::Finalize);
+
     // Ensure output filename ends with ".h5" and record basename:
     string ofname = argv[1];
     string ofbasename;
@@ -93,26 +99,23 @@ int main (int argc, char **argv)
 
     // Attempt to create output file:
     // (Better to fail before the calculation begins.)
-    hid_t file_id = H5Fcreate(ofname.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
-    if (file_id<0) {
-    	cout << "Error: Cannot open file '" << ofname << "' for writing."
-    			<< endl;
-    	exit(1);
+    if (mpi_rank==0) {
+    	hid_t file_id = H5Fcreate(ofname.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+        if (file_id<0) {
+    	   	cout << "Error: Cannot open file '" << ofname << "' for writing."
+    	    		<< endl;
+    	   	exit(1);
+        }
+        H5Fclose(file_id);
     }
 
-    // Initialize MPI:
-    MPI::Init(argc, argv);
-    int mpi_size = MPI::COMM_WORLD.Get_size();
-    int mpi_rank = MPI::COMM_WORLD.Get_rank();
-    atexit(MPI::Finalize);
-
     // Simulation parameters:
-	double T = 30.0;
-	int Nt = 50001;
+	double T = 100.0;
+	int Nt = 100001;
 	int Nsamples = 1001;
-	int Npaths = 32;
+	int Npaths = 128;
 
-	double alpha = 100; // Reaction criticality parameter
+	double alpha = 500; // Reaction criticality parameter
 
 	// Derived simulation parameters:
 	int steps_per_sample = (Nt-1)/(Nsamples-1);
@@ -290,6 +293,9 @@ int main (int argc, char **argv)
 
 	cout << "Rank 0: Writing results to disk...";
 	cout.flush();
+
+	// Open database file:
+	hid_t file_id = H5Fcreate(ofname.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
 
 	// Create group with same name as output file
 	hid_t group_id = H5Gcreate(file_id, ("/"+ofbasename).c_str(),
