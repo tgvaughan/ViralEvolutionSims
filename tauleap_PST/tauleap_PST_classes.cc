@@ -12,6 +12,8 @@
 #include <cstdlib>
 #include <cmath>
 
+#include <mpi.h>
+
 #include "poissonian.h"
 #include "tauleap_PST_classes.h"
 
@@ -352,6 +354,40 @@ void MomentScalar::sample(const StateVec & sv, int samp) {
 }
 
 /**
+ * Send sampled data to root node
+ */
+void MomentScalar::mpi_send(int mpi_rank, int & tag) {
+	MPI::COMM_WORLD.Send(&(mean[0]), mean.size(), MPI_DOUBLE, 0, tag++);
+	MPI::COMM_WORLD.Send(&(var[0]), var.size(), MPI_DOUBLE, 0, tag++);
+	MPI::COMM_WORLD.Send(&(sem[0]), sem.size(), MPI_DOUBLE, 0, tag++);
+}
+
+/**
+ * Obtain sampled data from non-root nodes
+ */
+void MomentScalar::mpi_recv(int recv_rank, int & tag) {
+
+	double *recv_mean = new double[mean.size()];
+	double *recv_var = new double[var.size()];
+	double *recv_sem = new double[sem.size()];
+
+	MPI::COMM_WORLD.Recv(recv_mean, Nsamples, MPI_DOUBLE, recv_rank, tag++);
+	MPI::COMM_WORLD.Recv(recv_var, Nsamples, MPI_DOUBLE, recv_rank, tag++);
+	MPI::COMM_WORLD.Recv(recv_sem, Nsamples, MPI_DOUBLE, recv_rank, tag++);
+
+	for (int s=0; s<Nsamples; s++) {
+		mean[s] += recv_mean[s];
+		var[s] += recv_var[s];
+		sem[s] += recv_sem[s];
+	}
+
+	delete [] recv_mean;
+	delete [] recv_var;
+	delete [] recv_sem;
+
+}
+
+/**
  * Perform post-processing of moment data
  */
 void MomentScalar::normalise (int Npaths) {
@@ -393,6 +429,42 @@ void MomentVector::sample(const StateVec & sv, int samp) {
 		mean[idx] += tmp[h];
 		var[idx] += tmp[h]*tmp[h];
 	}
+}
+
+/**
+ * Send sampled data to root node
+ */
+void MomentVector::mpi_send(int mpi_rank, int & tag) {
+
+	MPI::COMM_WORLD.Send(&(mean[0]), mean.size(), MPI_DOUBLE, 0, tag++);
+	MPI::COMM_WORLD.Send(&(var[0]), var.size(), MPI_DOUBLE, 0, tag++);
+	MPI::COMM_WORLD.Send(&(sem[0]), sem.size(), MPI_DOUBLE, 0, tag++);
+
+}
+
+/**
+ * Obtain sampled data from non-root nodes
+ */
+void MomentVector::mpi_recv(int recv_rank, int & tag) {
+
+	double *recv_mean = new double[mean.size()];
+	double *recv_var = new double[var.size()];
+	double *recv_sem = new double[sem.size()];
+
+	MPI::COMM_WORLD.Recv(recv_mean, mean.size(), MPI_DOUBLE, recv_rank, tag++);
+	MPI::COMM_WORLD.Recv(recv_var, var.size(), MPI_DOUBLE, recv_rank, tag++);
+	MPI::COMM_WORLD.Recv(recv_sem, sem.size(), MPI_DOUBLE, recv_rank, tag++);
+
+	for (int s=0; s<Nsamples; s++) {
+		mean[s] += recv_mean[s];
+		var[s] += recv_var[s];
+		sem[s] += recv_sem[s];
+	}
+
+	delete [] recv_mean;
+	delete [] recv_var;
+	delete [] recv_sem;
+
 }
 
 /**

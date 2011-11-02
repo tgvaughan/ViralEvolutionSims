@@ -24,6 +24,8 @@
 #include <hdf5.h>
 #include <hdf5_hl.h>
 
+#include <mpi.h>
+
 #include "poissonian.h"
 #include "tauleap_PST_classes.h"
 
@@ -98,11 +100,17 @@ int main (int argc, char **argv)
     	exit(1);
     }
 
+    // Initialize MPI:
+    MPI::Init(argc, argv);
+    int mpi_size = MPI::COMM_WORLD.Get_size();
+    int mpi_rank = MPI::COMM_WORLD.Get_rank();
+    atexit(MPI::Finalize);
+
     // Simulation parameters:
 	double T = 30.0;
-	int Nt = 10001;
+	int Nt = 50001;
 	int Nsamples = 1001;
-	int Npaths = 10;
+	int Npaths = 32;
 
 	double alpha = 100; // Reaction criticality parameter
 
@@ -172,13 +180,18 @@ int main (int argc, char **argv)
 	vectorMoments[3] = MomentVector (Nsamples, samplefunc_VVh, "VVh", param["sequenceL"]);
 
     // Initialise RNG:
-	unsigned short buf[3] = {42, 53, time(NULL)};
+	unsigned short buf[3] = {42, 53, mpi_rank};
 	
-	// Loop over paths:
-	for (int path=0; path<Npaths; path++) {
+	// Determine number of paths to integrate on this node:
+	int chunk_size = Npaths/mpi_size;
+	if (Npaths%mpi_size>0)
+		chunk_size++;
+	Npaths = chunk_size*mpi_size;
 
-		cout << "Path " << path+1 << " of " << Npaths << "...";
-		cout.flush();
+	// Loop over paths:
+	for (int path=0; path<chunk_size; path++) {
+
+		cout << "Rank " << mpi_rank << ": Integrating path " << path+1 << " of " << chunk_size << "..." << endl;;
 
 		// Initialise state vector:
 		StateVec sv = sv0;
@@ -225,10 +238,11 @@ int main (int argc, char **argv)
 				// Implement reactions:
 				for (int r=0; r<Nreactions; r++) {
 					if (!reactions[r].tauleap(tau, sv_new, buf)) {
-						cout << "Error: negative population generated at time t="
-								<< dt*t_idx << " by reaction " << r <<". Exiting..." << endl;
-						H5close();
-						exit(1);
+						cout << "Rank " << mpi_rank << ": Error: negative population generated at time t="
+								<< dt*t_idx << " by reaction " << r <<". Aborting..." << endl;
+						if (mpi_rank==0)
+							H5close();
+						MPI::COMM_WORLD.Abort(0);
 					}
 				}
 
@@ -239,14 +253,43 @@ int main (int argc, char **argv)
 			sv = sv_new;
 		}
 
-		cout << "done." << endl;
 	}
 
-	// Perform moment post-processing:
+	// Non-root nodes send sampled data to root and exit.
+	if (mpi_rank != 0) {
+
+		cout << "Rank " << mpi_rank << ": Sending data to root node." << endl;
+
+		int tag = 0;
+		for (int i=0; i<NScalarMoments; i++)
+			scalarMoments[i].mpi_send(mpi_rank, tag);
+		for (int i=0; i<NVectorMoments; i++)
+			vectorMoments[i].mpi_send(mpi_rank, tag);
+
+		exit(0);
+	}
+
+	// Collect sampled data from non-root nodes
+	// and perform moment post-processing:
+	for (int recv_rank = 1; recv_rank<mpi_size; recv_rank++) {
+
+		cout << "Rank 0: Receiving data from rank " << recv_rank << "." << endl;
+
+		int tag = 0;
+		for (int i=0; i<NScalarMoments; i++)
+			scalarMoments[i].mpi_recv(recv_rank, tag);
+		for (int i=0; i<NVectorMoments; i++)
+			vectorMoments[i].mpi_recv(recv_rank, tag);
+	}
+
+	// Normalise results:
 	for (int i=0; i<NScalarMoments; i++)
 		scalarMoments[i].normalise(Npaths);
 	for (int i=0; i<NVectorMoments; i++)
 		vectorMoments[i].normalise(Npaths);
+
+	cout << "Rank 0: Writing results to disk...";
+	cout.flush();
 
 	// Create group with same name as output file
 	hid_t group_id = H5Gcreate(file_id, ("/"+ofbasename).c_str(),
@@ -306,6 +349,8 @@ int main (int argc, char **argv)
 
 	// Close HDF file:
 	H5Fclose(file_id);
+
+	cout << "done.";
 
 	// Done!
 	exit(0);
