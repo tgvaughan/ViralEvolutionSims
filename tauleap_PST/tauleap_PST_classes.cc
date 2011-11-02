@@ -20,7 +20,6 @@
 
 StateVec::StateVec (int length) {
 	L = length;
-	neighbourNum = 3*L;
 
 	X = 0.0;
 	Y.resize(L+1,0.0);
@@ -29,7 +28,6 @@ StateVec::StateVec (int length) {
 
 StateVec::StateVec (const StateVec & src) {
 	L = src.L;
-	neighbourNum = src.neighbourNum;
 
 	X = src.X;
 	Y = src.Y;
@@ -39,7 +37,6 @@ StateVec::StateVec (const StateVec & src) {
 StateVec StateVec::operator= (const StateVec & src) {
 
 	L = src.L;
-	neighbourNum = src.neighbourNum;
 
 	X = src.X;
 	Y = src.Y;
@@ -119,18 +116,17 @@ double Reaction::getLeapDistance (double tau, double alpha, const StateVec & sv,
 
 	if (onlyX) {
 
-		critX = false;
-
 		// Check for critical X reaction:
 		double dX = tau*aX*(outX - inX);
-		if (true || ((dX<0) && (sv.X + dX - alpha*sqrt(-dX)< 0))) {	// DEBUG: SSA
+		if ((dX<0) && (sv.X + dX - alpha*sqrt(-dX)< 0)) {
 
 			critX = true;
 
 			double newtaucrit = -log(erand48(buf))/aX;
 			if (newtaucrit<tau)
 				return newtaucrit;
-		}
+		} else
+			critX = false;
 
 		return tau;
 	}
@@ -160,14 +156,14 @@ double Reaction::getLeapDistance (double tau, double alpha, const StateVec & sv,
 
 				int idx = 3*h + hp - h + 1;
 
-				amut[idx] = atmp*mutrate*get_gcond(h,hp,sv.L);
+				amut[idx] = atmp*mutrate/(3.0*sv.L)*get_gcond(h,hp,sv.L);
 				if (hp==h)
-					amut[idx] += atmp*(1.0-3.0*sv.L*mutrate);
+					amut[idx] += atmp*(1.0-mutrate);
 
 				// Check for critical mutation reaction:
 				double dY = -tau*amut[idx]*inY;
 				double dV = -tau*amut[idx]*inV;
-				if (true || (sv.Y[h] + dY - alpha*sqrt(-dY) < 0) // DEBUG: SSA
+				if ((sv.Y[h] + dY - alpha*sqrt(-dY) < 0)
 						|| (sv.V[h] + dV -alpha*sqrt(-dV) < 0)) {
 
 					critmut[idx] = true;
@@ -189,7 +185,7 @@ double Reaction::getLeapDistance (double tau, double alpha, const StateVec & sv,
 			// Check for critical non-mutation reaction:
 			double dY = tau*a[h]*(outY-inY);
 			double dV = tau*a[h]*(outV-inV);
-			if (true || ((dY<0) && (sv.Y[h] + dY - alpha*sqrt(-dY) < 0)) // DEBUG: SSA
+			if (((dY<0) && (sv.Y[h] + dY - alpha*sqrt(-dY) < 0))
 					|| ((dV<0) && (sv.V[h] + dV - alpha*sqrt(-dV) < 0))) {
 
 				crit[h] = true;

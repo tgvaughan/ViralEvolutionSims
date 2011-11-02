@@ -45,6 +45,30 @@ std::vector<double> samplefunc_Y (const StateVec & sv) {
 std::vector<double> samplefunc_V (const StateVec & sv) {
 	return sv.V;
 }
+std::vector<double> samplefunc_V0Vh (const StateVec & sv) {
+
+	std::vector<double> V0Vh(sv.L + 1, 0.0);
+
+	for (int h=0; h<=sv.L; h++)
+		V0Vh[h] = sv.V[0]*sv.V[h];
+
+	return V0Vh;
+}
+std::vector<double> samplefunc_VVh (const StateVec & sv) {
+
+	std::vector<double> res(sv.L+1, 0.0);
+
+	for (int d=0; d<=sv.L; d++) {
+		for (int h=0; h<=sv.L; h++) {
+			int hp=(h+d)%(sv.L+1);
+			res[h] += sv.V[h]*sv.V[hp];
+		}
+		res[d] /= sv.L+1;
+	}
+
+	return res;
+
+}
 
 int main (int argc, char **argv)
 {
@@ -75,12 +99,12 @@ int main (int argc, char **argv)
     }
 
     // Simulation parameters:
-	double T = 1.0;
-	int Nt = 1001;
+	double T = 30.0;
+	int Nt = 10001;
 	int Nsamples = 1001;
-	int Npaths = 200;
+	int Npaths = 10;
 
-	double alpha = 0; // Reaction criticality parameter  // DEBUG: SSA
+	double alpha = 100; // Reaction criticality parameter
 
 	// Derived simulation parameters:
 	int steps_per_sample = (Nt-1)/(Nsamples-1);
@@ -90,23 +114,16 @@ int main (int argc, char **argv)
     // Demographic parameters:
 	map <string, double> param;
 
-	/*param["lambda"] = 2.5e8;
+	param["lambda"] = 2.5e8;
 	param["beta"] = 5e-13;
 	param["k"] = 1e3;
 	param["d"] = 1e-3;
 	param["a"] = 1.0;
-	param["u"] = 3.0;*/
-
-	param["lambda"] = 1e4;
-	param["beta"] = 2e-7;
-	param["k"] = 1e2;
-	param["d"] = 0.1;
-	param["a"] = 0.5;
-	param["u"] = 5.0;
+	param["u"] = 3.0;
 
 	// Genetic parameters:
 	param["sequenceL"] = 35*3; // DNA sequence length corresponding to V3
-	param["mu"] = 2e-3/3.0; // Mutation probability per character given outcome
+	param["mu"] = 2e-5*param["sequenceL"]; // Mutation probability per replication cycle
 
 	// Set up initial condition:
 	StateVec sv0(param["sequenceL"]);
@@ -147,10 +164,12 @@ int main (int argc, char **argv)
 	scalarMoments[0] = MomentScalar (Nsamples, samplefunc_X, "X");
 	scalarMoments[1] = MomentScalar (Nsamples, samplefunc_Vtot, "Vtot");
 
-	int NVectorMoments = 2;
-	MomentVector vectorMoments[2];
+	int NVectorMoments = 4;
+	MomentVector vectorMoments[4];
 	vectorMoments[0] = MomentVector (Nsamples, samplefunc_Y, "Y", param["sequenceL"]);
 	vectorMoments[1] = MomentVector (Nsamples, samplefunc_V, "V", param["sequenceL"]);
+	vectorMoments[2] = MomentVector (Nsamples, samplefunc_V0Vh, "V0Vh", param["sequenceL"]);
+	vectorMoments[3] = MomentVector (Nsamples, samplefunc_VVh, "VVh", param["sequenceL"]);
 
     // Initialise RNG:
 	unsigned short buf[3] = {42, 53, time(NULL)};

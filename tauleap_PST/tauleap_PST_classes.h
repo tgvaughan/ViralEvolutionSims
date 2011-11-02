@@ -14,7 +14,6 @@ class StateVec {
 
         // Sequence length:
         int L;
-		int neighbourNum;
 
         // Target cell population:
         double X;
