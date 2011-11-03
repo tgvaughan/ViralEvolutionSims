@@ -210,6 +210,7 @@ double Reaction::getLeapDistance (double tau, double alpha, bool newcritcond, co
 
 			// If critical, determine reaction time:
 			if (crit[h]) {
+
 				double newtaucrit = -log(erand48(buf))/a[h];
 				if (newtaucrit < taucrit) {
 					taucrit = newtaucrit;
@@ -220,6 +221,52 @@ double Reaction::getLeapDistance (double tau, double alpha, bool newcritcond, co
 	}
 
 	return taucrit;
+}
+
+/**
+ * Implement "next" critical reaction.
+ *
+ * sv_new:		StateVec to update
+ */
+void Reaction::doCritical(StateVec & sv_new) {
+
+	// Implement X component
+	sv_new.X += outX - inX;
+
+	// If X is all there is, we're done:
+	if (onlyX)
+		return;
+
+	if (mutation) {
+
+		// Implement Y and V components for mutation
+
+		int h = critreact/3;
+		int hp = h + (critreact%3) - 1;
+
+		if (mutY) {
+			sv_new.Y[h] -= inY;
+			sv_new.Y[hp] += outY;
+			sv_new.V[h] += outV-inV;
+		}
+		if (mutV) {
+			sv_new.Y[h] += outY-inY;
+			sv_new.V[h] -= inV;
+			sv_new.V[hp] += outV;
+		}
+
+	} else {
+
+		// Implement Y and V components for non-mutation
+
+		int h = critreact;
+		sv_new.Y[h] += outY-inY;
+		sv_new.V[h] += outV-inV;
+
+	}
+
+	return;
+
 }
 
 /**
@@ -325,52 +372,6 @@ bool Reaction::tauleap(double dt, StateVec & sv_new, unsigned short int *buf) {
 
 	return negativePop;
 }
-
-/**
- * Implement "next" critical reaction.
- *
- * sv_new:		StateVec to update
- */
-void Reaction::doCritical(StateVec & sv_new) {
-
-	// Implement X component
-	sv_new.X += outX - inX;
-
-	// If X is all there is, we're done:
-	if (onlyX)
-		return;
-
-	if (mutation) {
-
-		// Implement Y and V components for mutation
-
-		int h = critreact/3;
-		int hp = h + (critreact%3) - 1;
-
-		if (mutY) {
-			sv_new.Y[h] -= inY;
-			sv_new.Y[hp] += outY;
-			sv_new.V[h] += outV-inV;
-		}
-		if (mutV) {
-			sv_new.Y[h] += outY-inY;
-			sv_new.V[h] -= inV;
-			sv_new.V[hp] += outV;
-		}
-
-	} else {
-
-		// Implement Y and V components for non-mutation
-
-		int h = critreact;
-		sv_new.Y[h] += outY-inY;
-		sv_new.V[h] += outV-inV;
-	}
-
-	return;
-
-}
-
 
 // MomentScalar member functions
 
