@@ -77,7 +77,7 @@ int main (int argc, char **argv)
 
     // Parse command line parameters:
     if (argc < 2) {
-    	cout << "Usage: " << argv[0] << "output_file[.h5]" << endl;
+    	cout << "Usage: " << argv[0] << " output_file[.h5]" << endl;
     	exit(0);
     }
     string ofname(argv[1]);
