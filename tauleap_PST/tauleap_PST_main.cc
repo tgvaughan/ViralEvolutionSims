@@ -29,7 +29,6 @@
 #include "poissonian.h"
 #include "tauleap_PST_classes.h"
 
-
 // Functions which calculate the moments to be sampled:
 double samplefunc_X (const StateVec & sv) {
 	return sv.X;
@@ -78,9 +77,10 @@ int main (int argc, char **argv)
 
     // Parse command line parameters:
     if (argc < 2) {
-        cout << "Usage: " << argv[0] << " outfile[.h5]" << endl;
-        exit(0);
+    	cout << "Usage: " << argv[0] << "output_file[.h5]" << endl;
+    	exit(0);
     }
+    string ofname(argv[1]);
 
     // Initialize MPI:
     MPI::Init(argc, argv);
@@ -89,7 +89,6 @@ int main (int argc, char **argv)
     atexit(MPI::Finalize);
 
     // Ensure output filename ends with ".h5" and record basename:
-    string ofname = argv[1];
     string ofbasename;
     if (ofname.length()>3 && (ofname.compare(ofname.length()-4,3,".h5")==0))
     	ofbasename = ofname.substr(0,ofname.length()-3);
@@ -111,11 +110,11 @@ int main (int argc, char **argv)
 
     // Simulation parameters:
 	double T = 100.0;
-	int Nt = 50001;
+	int Nt = 10001;
 	int Nsamples = 1001;
 	int Npaths = 1024;
 
-	double alpha = 1000; // Reaction criticality parameter
+	double alpha = 500; // Reaction criticality parameter
 	bool newcritcond = false; // Use new criticality condition
 
 	// Derived simulation parameters:
