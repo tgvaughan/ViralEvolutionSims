@@ -113,7 +113,7 @@ int main (int argc, char **argv)
 	double T = 100.0;
 	int Nt = 50001;
 	int Nsamples = 1001;
-	int Npaths = 128;
+	int Npaths = 1024;
 
 	double alpha = 1000; // Reaction criticality parameter
 	bool newcritcond = false; // Use new criticality condition
@@ -135,12 +135,12 @@ int main (int argc, char **argv)
 
 	// Genetic parameters:
 	param["sequenceL"] = 35*3; // DNA sequence length corresponding to V3
-	param["mu"] = 2e-5*param["sequenceL"]; // Mutation probability per replication cycle
+	param["mu"] = 2e-5*param["sequenceL"]; // Mutation probability estimate per replication cycle
 
 	// Set up initial condition:
 	StateVec sv0(param["sequenceL"]);
 	sv0.X = param["lambda"]/param["d"];
-	sv0.V[0] = 1000;
+	sv0.V[0] = 100;
 
 	// Set up reactions:
 	int Nreactions = 6;
@@ -184,7 +184,7 @@ int main (int argc, char **argv)
 	vectorMoments[3] = MomentVector (Nsamples, samplefunc_VVh, "VVh", param["sequenceL"]);
 
     // Initialise RNG:
-	unsigned short buf[3] = {42, 53, mpi_rank};
+	unsigned short buf[3] = {53, time(NULL), mpi_rank};
 	
 	// Determine number of paths to integrate on this node:
 	int chunk_size = Npaths/mpi_size;
