@@ -183,7 +183,7 @@ int main (int argc, char **argv)
 	vectorMoments[3] = MomentVector (Nsamples, samplefunc_VVh, "VVh", param["sequenceL"]);
 
     // Initialise RNG:
-	unsigned short buf[3] = {53, 3, mpi_rank+2};
+	unsigned short buf[3] = {53, time(NULL), mpi_rank};
 	
 	// Determine number of paths to integrate on this node:
 	int chunk_size = Npaths/mpi_size;
