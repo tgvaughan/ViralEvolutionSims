@@ -5,6 +5,7 @@
  *      Author: Tim Vaughan
  */
 
+#include <iostream>
 #include <string>
 
 #include <boost/program_options.hpp>
@@ -47,10 +48,17 @@ boost::program_options::variables_map OptionParser::parse(int argc, char **argv)
 			;
 
 	po::positional_options_description posdesc;
-	posdesc.add("config", 1).add("outfile",1);
+	posdesc.add("config", 1);
 
 	po::variables_map vm;
 	po::store(po::command_line_parser(argc, argv).options(desc_io).positional(posdesc).run(), vm);
+	po::notify(vm);
+
+	if (vm.count("config") == 0) {
+		std::cout << "Usage: " << argv[0] << " [options]" << std::endl
+				<< desc_io << std::endl;
+		exit(0);
+	}
 
 	return vm;
 }
