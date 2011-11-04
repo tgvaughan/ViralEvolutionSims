@@ -79,11 +79,7 @@ int main (int argc, char **argv)
     using namespace std;
 
     // Parse command line parameters:
-    if (argc < 2) {
-    	cout << "Usage: " << argv[0] << " output_file[.h5]" << endl;
-    	exit(0);
-    }
-    string ofname(argv[1]);
+    boost::program_options::variables_map vm = OptionParser::parse(argc, argv);
 
     // Initialize MPI:
     MPI::Init(argc, argv);
@@ -92,8 +88,8 @@ int main (int argc, char **argv)
     atexit(MPI::Finalize);
 
     // Ensure output filename ends with ".h5" and record basename:
-    string ofbasename;
-    if (ofname.length()>3 && (ofname.compare(ofname.length()-4,3,".h5")==0))
+    string ofbasename, ofname = vm["outfile"].as<string>();
+    if (ofname.length()>3 && (ofname.compare(ofname.length()-3,3,".h5")==0))
     	ofbasename = ofname.substr(0,ofname.length()-3);
     else
     	ofbasename = ofname;
@@ -112,12 +108,12 @@ int main (int argc, char **argv)
     }
 
     // Simulation parameters:
-	double T = 100.0;
-	int Nt = 10001;
-	int Nsamples = 1001;
-	int Npaths = 1024;
+	double T = vm["simulation.T"].as<double>();
+	int Nt = vm["algorithm.Nt"].as<int>();
+	int Nsamples = vm["algorithm.Nsamples"].as<int>();
+	int Npaths = vm["algorithm.Npaths"].as<int>();
 
-	double alpha = 500; // Reaction criticality parameter
+	int Ncrit = vm["algorithm.Ncrit"].as<int>(); // Reaction criticality parameter
 	bool newcritcond = false; // Use new criticality condition
 
 	// Derived simulation parameters:
@@ -125,24 +121,14 @@ int main (int argc, char **argv)
 	double dt = T/(Nt-1);
 	double sample_dt = T/(Nsamples-1);
 
-    // Demographic parameters:
-	map <string, double> param;
-
-	param["lambda"] = 2.5e8;
-	param["beta"] = 5e-13;
-	param["k"] = 1e3;
-	param["d"] = 1e-3;
-	param["a"] = 1.0;
-	param["u"] = 3.0;
-
-	// Genetic parameters:
-	param["sequenceL"] = 35*3; // DNA sequence length corresponding to V3
-	param["mu"] = 2e-5*param["sequenceL"]; // Mutation probability estimate per replication cycle
+	// Viral genome length
+	int sequenceL = (int)(vm["model.sequenceL"].as<double>());
 
 	// Set up initial condition:
-	StateVec sv0(param["sequenceL"]);
-	sv0.X = param["lambda"]/param["d"];
-	sv0.V[0] = 100;
+	StateVec sv0(sequenceL);
+	sv0.X = vm["simulation.X0"].as<double>();
+	sv0.Y[0] = vm["simulation.Y0"].as<double>();
+	sv0.V[0] = vm["simulation.V0"].as<double>();
 
 	// Set up reactions:
 	int Nreactions = 6;
@@ -150,27 +136,27 @@ int main (int argc, char **argv)
 
 	reactions[0] = Reaction(0,0,0, 1,0,0,
 			false,false,
-			param["lambda"],0.0);
+			vm["model.lambda"].as<double>(),0.0);
 
 	reactions[1] = Reaction(1,0,1, 0,1,0,
 			true,false,
-			param["beta"],param["mu"]);
+			vm["model.beta"].as<double>(),vm["model.mu"].as<double>());
 
 	reactions[2] = Reaction(0,1,0, 0,1,1,
 			false,false,
-			param["k"],0.0);
+			vm["model.k"].as<double>(),0.0);
 
 	reactions[3] = Reaction(1,0,0, 0,0,0,
 			false,false,
-			param["d"],0.0);
+			vm["model.d"].as<double>(),0.0);
 
 	reactions[4] = Reaction(0,1,0, 0,0,0,
 			false,false,
-			param["a"],0.0);
+			vm["model.a"].as<double>(),0.0);
 
 	reactions[5] = Reaction(0,0,1, 0,0,0,
 			false,false,
-			param["u"],0.0);
+			vm["model.u"].as<double>(),0.0);
 
 	// Set up moments:
 	int NScalarMoments = 2;
@@ -180,10 +166,10 @@ int main (int argc, char **argv)
 
 	int NVectorMoments = 4;
 	MomentVector vectorMoments[4];
-	vectorMoments[0] = MomentVector (Nsamples, samplefunc_Y, "Y", param["sequenceL"]);
-	vectorMoments[1] = MomentVector (Nsamples, samplefunc_V, "V", param["sequenceL"]);
-	vectorMoments[2] = MomentVector (Nsamples, samplefunc_V0Vh, "V0Vh", param["sequenceL"]);
-	vectorMoments[3] = MomentVector (Nsamples, samplefunc_VVh, "VVh", param["sequenceL"]);
+	vectorMoments[0] = MomentVector (Nsamples, samplefunc_Y, "Y", sequenceL);
+	vectorMoments[1] = MomentVector (Nsamples, samplefunc_V, "V", sequenceL);
+	vectorMoments[2] = MomentVector (Nsamples, samplefunc_V0Vh, "V0Vh", sequenceL);
+	vectorMoments[3] = MomentVector (Nsamples, samplefunc_VVh, "VVh", sequenceL);
 
     // Initialise RNG:
 	unsigned short buf[3] = {53, time(NULL), mpi_rank};
@@ -229,7 +215,7 @@ int main (int argc, char **argv)
 				double tau = dt-t;
 				int crit_react = -1;
 				for (int r=0; r<Nreactions; r++) {
-					double thistau = reactions[r].getLeapDistance(tau, alpha, newcritcond, sv, buf);
+					double thistau = reactions[r].getLeapDistance(tau, Ncrit, newcritcond, sv, buf);
 					if (thistau<tau) {
 						tau = thistau;
 						crit_react = r;
@@ -292,7 +278,6 @@ int main (int argc, char **argv)
 		vectorMoments[i].normalise(Npaths);
 
 	cout << "Rank 0: Writing results to disk...";
-	cout.flush();
 
 	// Open database file:
 	hid_t file_id = H5Fcreate(ofname.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
@@ -323,7 +308,7 @@ int main (int argc, char **argv)
 
 	// Write vector moments to file:
 	int vector_rank = 2;
-	hsize_t vector_dims[2] = {Nsamples, param["sequenceL"]+1};
+	hsize_t vector_dims[2] = {Nsamples, sequenceL+1};
 
 	for (int m=0; m<NVectorMoments; m++) {
 
@@ -350,13 +335,26 @@ int main (int argc, char **argv)
 			H5T_NATIVE_DOUBLE, &(t_vec[0]));
 
 	// Write simulation parameters to file:
-	for (map<string,double>::iterator it = param.begin(); it != param.end(); it++)
-		H5LTset_attribute_double(file_id, ("/"+ofbasename).c_str(), (it->first).c_str(), &(it->second), 1);
+	boost::program_options::variables_map::iterator it;
+	for (it = vm.begin(); it != vm.end(); it++) {
+
+		if (it->first.find("model.") == 0)
+			H5LTset_attribute_double(file_id, ("/"+ofbasename).c_str(),
+					it->first.c_str(), &(it->second.as<double>()), 1);
+
+		if (it->first.find("simulation.") == 0)
+			H5LTset_attribute_double(file_id, ("/"+ofbasename).c_str(),
+					it->first.c_str(), &(it->second.as<double>()), 1);
+
+		if (it->first.find("algorithm.") == 0)
+			H5LTset_attribute_int(file_id, ("/"+ofbasename).c_str(),
+					it->first.c_str(), &(it->second.as<int>()), 1);
+	}
 
 	// Close HDF file:
 	H5Fclose(file_id);
 
-	cout << "done.";
+	cout << "done." << endl;
 
 	// Done!
 	exit(0);
