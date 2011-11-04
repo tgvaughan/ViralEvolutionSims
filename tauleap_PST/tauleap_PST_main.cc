@@ -20,7 +20,7 @@
 
 #include <boost/program_options.hpp>
 
-// Ensure macro points to correct function:
+// Ensure HDF group creation macro points to correct function:
 #define H5Gcreate_vers 2
 
 #include <hdf5.h>
