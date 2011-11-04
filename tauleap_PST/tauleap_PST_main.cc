@@ -18,6 +18,8 @@
 #include <cstdlib>
 #include <ctime>
 
+#include <boost/program_options.hpp>
+
 // Ensure macro points to correct function:
 #define H5Gcreate_vers 2
 
@@ -28,6 +30,7 @@
 
 #include "poissonian.h"
 #include "tauleap_PST_classes.h"
+#include "tauleap_PST_OptionParser.h"
 
 // Functions which calculate the moments to be sampled:
 double samplefunc_X (const StateVec & sv) {
