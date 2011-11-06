@@ -47,7 +47,7 @@ boost::program_options::variables_map OptionParser::parse(int argc, char **argv)
 
 	po::options_description desc_clhidden;
 	desc_clhidden.add_options()
-			("outfile", po::value<std::string>(), "location of configuration file")
+			("outfile", po::value<std::string>(), "location of output file")
 			;
 
 	po::options_description desc_clvisible;
