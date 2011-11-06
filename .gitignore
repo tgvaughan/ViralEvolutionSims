@@ -12,6 +12,9 @@ tags
 *.txt
 *.h5
 
+# Ignore config files:
+*.cfg
+
 # Ignore lyx backup files:
 *.lyx~
 
