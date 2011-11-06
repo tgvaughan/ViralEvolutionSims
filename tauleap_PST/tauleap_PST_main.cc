@@ -29,8 +29,10 @@
 #include <mpi.h>
 
 #include "poissonian.h"
-#include "tauleap_PST_classes.h"
 #include "tauleap_PST_OptionParser.h"
+#include "tauleap_PST_StateVec.h"
+#include "tauleap_PST_Reaction.h"
+#include "tauleap_PST_Moment.h"
 
 // Functions which calculate the moments to be sampled:
 double samplefunc_X (const StateVec & sv) {
