@@ -14,6 +14,10 @@
 #include "tauleap_PST_StateVec.h"
 #include "tauleap_PST_Reaction.h"
 
+/**
+ * Define reaction in terms of number of reactants and products
+ * together with the reaction rate and probability of mutation.
+ */
 Reaction::Reaction(int p_inX, int p_inY, int p_inV,
 		int p_outX, int p_outY, int p_outV,
 		bool p_mutY, bool p_mutV,
