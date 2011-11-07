@@ -12,6 +12,14 @@
 #include <boost/program_options.hpp>
 #include "tauleap_PST_OptionParser.h"
 
+/**
+ * Obtains simulation parameters from command line and/or config file.
+ *
+ * argc: argument count
+ * argv: argument value array
+ *
+ * returns: variable_map populated with parameters to use
+ */
 boost::program_options::variables_map OptionParser::parse(int argc, char **argv)
 {
 	namespace po = boost::program_options;
@@ -63,16 +71,19 @@ boost::program_options::variables_map OptionParser::parse(int argc, char **argv)
 	po::options_description desc_commandline;
 	desc_commandline.add(desc_clvisible).add(desc_clhidden);
 
+	// Process command line options:
 	po::variables_map vm;
 	po::store(po::command_line_parser(argc, argv).options(desc_commandline).positional(posdesc).run(), vm);
 	po::notify(vm);
 
+	// Print usage info if outfile was not provided:
 	if (vm.count("help") || vm.count("outfile")==0) {
 		std::cout << "Usage: " << argv[0] << " [options] outfile[.h5]" << std::endl
 				<< desc_clvisible << std::endl;
 		exit(0);
 	}
 
+	// Process configuration file if filename provided:
 	if (vm.count("config")) {
 		std::ifstream cfile;
 		cfile.open(vm["config"].as<std::string>().c_str());
