@@ -10,6 +10,7 @@
 
 class SemiImplicit {
 public:
+	static double unif2poisson(double lambda, double u);
 	static bool step(StateVec & sv, Reaction *reactions, int Nreactions, double tau, unsigned short *buf);
 };
 

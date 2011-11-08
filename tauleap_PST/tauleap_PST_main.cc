@@ -19,6 +19,7 @@
 #include <ctime>
 
 #include <boost/program_options.hpp>
+#include <boost/math/distributions.hpp>
 
 // Ensure HDF group creation macro points to correct function:
 #define H5Gcreate_vers 2
@@ -33,6 +34,7 @@
 #include "tauleap_PST_StateVec.h"
 #include "tauleap_PST_Reaction.h"
 #include "tauleap_PST_Moment.h"
+#include "tauleap_PST_SemiImplicit.h"
 
 // Functions which calculate the moments to be sampled:
 double samplefunc_X (const StateVec & sv) {
