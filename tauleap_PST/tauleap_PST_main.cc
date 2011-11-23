@@ -241,7 +241,6 @@ int main (int argc, char **argv)
 			scalarMoments[i].sample(sv, 0);
 		for (int i=0; i<NVectorMoments; i++)
 			vectorMoments[i].sample(sv, 0);
-		
 
 		// Simulation loop:
 		for (int t_idx=1; t_idx < Nt; t_idx++) {

@@ -93,7 +93,7 @@ double Reaction::getLeapDistance (double tau, double alpha, bool newcritcond, co
 		critX = false;
 		if (newcritcond) {
 			double dX = tau*aX*(outX - inX);
-			if ((dX<0) && (sv.X + dX - alpha*sqrt(-dX)< 0))
+			if ((dX<0) && (sv.X + dX - alpha*sqrt(-dX) < 0))
 				critX = true;
 		} else {
 			if (sv.X + alpha*(outX - inX) < 0)
@@ -153,7 +153,7 @@ double Reaction::getLeapDistance (double tau, double alpha, bool newcritcond, co
 						critmut[idx] = true;
 				} else {
 					if ((sv.Y[h] - alpha*inY < 0)
-							|| (sv.YL[h] - alpha*inYL)
+							|| (sv.YL[h] - alpha*inYL < 0)
 							|| (sv.V[h] - alpha*inV < 0))
 						critmut[idx] = true;
 				}
@@ -184,7 +184,7 @@ double Reaction::getLeapDistance (double tau, double alpha, bool newcritcond, co
 					crit[h] = true;
 			} else {
 				if ((sv.Y[h] + alpha*(outY-inY) < 0)
-						|| (sv.YL[h] + alpha*(outYL-inYL))
+						|| (sv.YL[h] + alpha*(outYL-inYL) < 0)
 						|| (sv.V[h] + alpha*(outV-inV) < 0))
 					crit[h] = true;
 			}
