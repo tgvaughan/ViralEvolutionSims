@@ -18,30 +18,33 @@
  * Define reaction in terms of number of reactants and products
  * together with the reaction rate and probability of mutation.
  */
-Reaction::Reaction(int p_inX, int p_inY, int p_inV,
-		int p_outX, int p_outY, int p_outV,
-		bool p_mutY, bool p_mutV,
+Reaction::Reaction(int p_inX, int p_inY, int p_inYL, int p_inV,
+		int p_outX, int p_outY, int p_outYL, int p_outV,
+		bool p_mutY, bool p_mutYL, bool p_mutV,
 		double p_rate, double p_mutrate) {
 
 	inX = p_inX;
 	inY = p_inY;
+	inYL = p_inYL;
 	inV = p_inV;
 	outX = p_outX;
 	outY = p_outY;
+	outYL = p_outYL;
 	outV = p_outV;
 
 	mutY = p_mutY;
+	mutYL = p_mutYL;
 	mutV = p_mutV;
 
 	rate = p_rate;
 	mutrate = p_mutrate;
 
-	if (mutY || mutV)
+	if (mutY || mutYL || mutV)
 		mutation = true;
 	else
 		mutation = false;
 
-	if ((inY == 0) && (inV == 0) && (outY == 0) && (outV == 0))
+	if ((inY == 0) && (inYL == 0) && (inV == 0) && (outY == 0) && (outYL == 0) && (outV == 0))
 		onlyX = true;
 	else
 		onlyX = false;
@@ -123,6 +126,8 @@ double Reaction::getLeapDistance (double tau, double alpha, bool newcritcond, co
 		double atmp = aX;
 		for (int m=0; m<inY; m++)
 			atmp *= sv.Y[h]-m;
+		for (int m=0; m<inYL; m++)
+			atmp *= sv.YL[h]-m;
 		for (int m=0; m<inV; m++)
 			atmp *= sv.V[h]-m;
 
@@ -140,12 +145,16 @@ double Reaction::getLeapDistance (double tau, double alpha, bool newcritcond, co
 				critmut[idx] = false;
 				if (newcritcond) {
 					double dY = -tau*amut[idx]*inY;
+					double dYL = -tau*amut[idx]*inYL;
 					double dV = -tau*amut[idx]*inV;
 					if ((sv.Y[h] + dY - alpha*sqrt(-dY) < 0)
+							|| (sv.YL[h] + dYL - alpha*sqrt(-dYL) < 0)
 							|| (sv.V[h] + dV -alpha*sqrt(-dV) < 0))
 						critmut[idx] = true;
 				} else {
-					if ((sv.Y[h] - alpha*inY < 0) || (sv.V[h] - alpha*inV < 0))
+					if ((sv.Y[h] - alpha*inY < 0)
+							|| (sv.YL[h] - alpha*inYL)
+							|| (sv.V[h] - alpha*inV < 0))
 						critmut[idx] = true;
 				}
 
@@ -167,12 +176,16 @@ double Reaction::getLeapDistance (double tau, double alpha, bool newcritcond, co
 			crit[h] = false;
 			if (newcritcond) {
 				double dY = tau*a[h]*(outY-inY);
+				double dYL = tau*a[h]*(outYL-inYL);
 				double dV = tau*a[h]*(outV-inV);
 				if (((dY<0) && (sv.Y[h] + dY - alpha*sqrt(-dY) < 0))
+						|| ((dYL<0) && (sv.YL[h] + dYL - alpha*sqrt(-dYL) < 0))
 						|| ((dV<0) && (sv.V[h] + dV - alpha*sqrt(-dV) < 0)))
 					crit[h] = true;
 			} else {
-				if ((sv.Y[h] + alpha*(outY-inY) < 0) || (sv.V[h] + alpha*(outV-inV) < 0))
+				if ((sv.Y[h] + alpha*(outY-inY) < 0)
+						|| (sv.YL[h] + alpha*(outYL-inYL))
+						|| (sv.V[h] + alpha*(outV-inV) < 0))
 					crit[h] = true;
 			}
 
@@ -215,10 +228,18 @@ void Reaction::doCritical(StateVec & sv_new) {
 		if (mutY) {
 			sv_new.Y[h] -= inY;
 			sv_new.Y[hp] += outY;
+			sv_new.YL[h] += outYL-inYL;
+			sv_new.V[h] += outV-inV;
+		}
+		if (mutYL) {
+			sv_new.Y[h] += outY-inY;
+			sv_new.YL[h] -= inYL;
+			sv_new.YL[hp] += outYL;
 			sv_new.V[h] += outV-inV;
 		}
 		if (mutV) {
 			sv_new.Y[h] += outY-inY;
+			sv_new.YL[h] += outYL-inYL;
 			sv_new.V[h] -= inV;
 			sv_new.V[hp] += outV;
 		}
@@ -229,6 +250,7 @@ void Reaction::doCritical(StateVec & sv_new) {
 
 		int h = critreact;
 		sv_new.Y[h] += outY-inY;
+		sv_new.YL[h] += outYL-inYL;
 		sv_new.V[h] += outV-inV;
 
 	}
@@ -286,10 +308,18 @@ bool Reaction::tauleap(double dt, StateVec & sv_new, unsigned short int *buf) {
 				if (mutY) {
 					sv_new.Y[h] -= q*inY;
 					sv_new.Y[hp] += q*outY;
+					sv_new.YL[h] += q*(outYL - inYL);
+					sv_new.V[h] += q*(outV - inV);
+				}
+				if (mutYL) {
+					sv_new.Y[h] += q*(outY - inY);
+					sv_new.YL[h] -= q*inYL;
+					sv_new.YL[hp] += q*outYL;
 					sv_new.V[h] += q*(outV - inV);
 				}
 				if (mutV) {
 					sv_new.Y[h] += q*(outY - inY);
+					sv_new.YL[h] += q*(outYL - inYL);
 					sv_new.V[h] -= q*inV;
 					sv_new.V[hp] += q*outV;
 				}
@@ -301,6 +331,10 @@ bool Reaction::tauleap(double dt, StateVec & sv_new, unsigned short int *buf) {
 				}
 				if (sv_new.Y[h] < 0) {
 					sv_new.Y[h] = 0;
+					negativePop = true;
+				}
+				if (sv_new.YL[h] < 0) {
+					sv_new.YL[h] = 0;
 					negativePop = true;
 				}
 				if (sv_new.V[h] < 0) {
@@ -319,6 +353,7 @@ bool Reaction::tauleap(double dt, StateVec & sv_new, unsigned short int *buf) {
 			double q = poissonian(dt*a[h], buf);
 			sv_new.X += q*(outX - inX);
 			sv_new.Y[h] += q*(outY - inY);
+			sv_new.YL[h] += q*(outYL - inYL);
 			sv_new.V[h] += q*(outV - inV);
 
 			// Check for negative populations:
@@ -328,6 +363,10 @@ bool Reaction::tauleap(double dt, StateVec & sv_new, unsigned short int *buf) {
 			}
 			if (sv_new.Y[h] < 0) {
 				sv_new.Y[h] = 0;
+				negativePop = true;
+			}
+			if (sv_new.YL[h] < 0) {
+				sv_new.YL[h] = 0;
 				negativePop = true;
 			}
 			if (sv_new.V[h] < 0) {

@@ -18,7 +18,7 @@ public:
 	double X;
 
 	// Infected cell and virion populations:
-	std::vector<double> Y, V;
+	std::vector<double> Y, YL, V;
 
 	StateVec(int length);
 	StateVec(const StateVec & sv);

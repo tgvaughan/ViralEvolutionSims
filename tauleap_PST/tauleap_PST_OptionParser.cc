@@ -33,6 +33,10 @@ boost::program_options::variables_map OptionParser::parse(int argc, char **argv)
 			("model.a", po::value<double>()->default_value(1.0), "infected cell death rate")
 			("model.u", po::value<double>()->default_value(3.0), "virion clearance rate")
 
+			("model.lat_p", po::value<double>()->default_value(0.0), "probability of producing latently infected cell")
+			("model.lat_d", po::value<double>()->default_value(0.0), "latently infected cellular death rate")
+			("model.lat_a", po::value<double>()->default_value(0.0), "activation rate of latently infected cell")
+
 			("model.sequenceL", po::value<double>()->default_value(105), "virus genome length")
 			("model.mu", po::value<double>()->default_value(105*2e-5), "mutation probability per replication")
 			;
@@ -42,6 +46,7 @@ boost::program_options::variables_map OptionParser::parse(int argc, char **argv)
 			("simulation.T", po::value<double>()->default_value(100), "length of simulation (days)")
 			("simulation.X0", po::value<double>()->default_value(2.5e11), "initial number of uninfected cells")
 			("simulation.Y0", po::value<double>()->default_value(0), "initial number of infected cells")
+			("simulation.YL0", po::value<double>()->default_value(0), "initial number of latently infected cells")
 			("simulation.V0", po::value<double>()->default_value(100), "initial number of virions")
 			;
 

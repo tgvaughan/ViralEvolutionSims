@@ -12,11 +12,11 @@ class Reaction {
 public:
 
 	// Variables describing reaction stoichiometry:
-	int inX, inY, inV;
-	int outX, outY, outV;
+	int inX, inY, inYL, inV;
+	int outX, outY, outYL, outV;
 
 	// Whether or not new virions or infected cells have mutated genome:
-	bool mutY, mutV;
+	bool mutY, mutYL, mutV;
 
 	// Set to true for reactions which involve mutation:
 	bool mutation;
@@ -38,8 +38,9 @@ public:
 	// Critical reaction identifier
 	int critreact;
 
-	Reaction(int inX, int inY, int inV, int outX, int outY, int outV, bool mutY,
-			bool mutV, double rate, double mutrate);
+	Reaction(int inX, int inY, int inYL, int inV,
+			int outX, int outY, int outYL, int outV,
+			bool mutY, bool mutYL, bool mutV, double rate, double mutrate);
 	Reaction();
 
 	const double get_gcond(int h2, int h1, int sequenceL);

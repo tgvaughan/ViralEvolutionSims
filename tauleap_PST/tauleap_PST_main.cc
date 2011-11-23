@@ -40,6 +40,23 @@
 double samplefunc_X (const StateVec & sv) {
 	return sv.X;
 }
+
+double samplefunc_Ytot (const StateVec & sv) {
+	double res = 0;
+	for (int h=0; h<=sv.L; h++)
+		res += sv.Y[h];
+
+	return res;
+}
+
+double samplefunc_YLtot (const StateVec & sv) {
+	double res = 0;
+	for (int h=0; h<=sv.L; h++)
+		res += sv.YL[h];
+
+	return res;
+}
+
 double samplefunc_Vtot (const StateVec & sv) {
 	double res = 0;
 	for (int h=0; h<=sv.L; h++)
@@ -47,12 +64,19 @@ double samplefunc_Vtot (const StateVec & sv) {
 
 	return res;
 }
+
 std::vector<double> samplefunc_Y (const StateVec & sv) {
 	return sv.Y;
 }
+
+std::vector<double> samplefunc_YL (const StateVec & sv) {
+	return sv.YL;
+}
+
 std::vector<double> samplefunc_V (const StateVec & sv) {
 	return sv.V;
 }
+
 std::vector<double> samplefunc_V0Vh (const StateVec & sv) {
 
 	std::vector<double> V0Vh(sv.L + 1, 0.0);
@@ -62,6 +86,7 @@ std::vector<double> samplefunc_V0Vh (const StateVec & sv) {
 
 	return V0Vh;
 }
+
 std::vector<double> samplefunc_VVh (const StateVec & sv) {
 
 	std::vector<double> res(sv.L+1, 0.0);
@@ -132,52 +157,70 @@ int main (int argc, char **argv)
 	StateVec sv0(sequenceL);
 	sv0.X = vm["simulation.X0"].as<double>();
 	sv0.Y[0] = vm["simulation.Y0"].as<double>();
+	sv0.YL[0] = vm["simulation.YL0"].as<double>();
 	sv0.V[0] = vm["simulation.V0"].as<double>();
 
 	// Set up reactions:
-	int Nreactions = 6;
-	Reaction reactions[6];
+	int Nreactions = 7;
+	Reaction reactions[9];
 
-	reactions[0] = Reaction(0,0,0, 1,0,0,
-			false,false,
+	reactions[0] = Reaction(0,0,0,0, 1,0,0,0,
+			false,false,false,
 			vm["model.lambda"].as<double>(),0.0);
 
-	reactions[1] = Reaction(1,0,1, 0,1,0,
-			true,false,
-			vm["model.beta"].as<double>(),vm["model.mu"].as<double>());
+	reactions[1] = Reaction(1,0,0,1, 0,1,0,0,
+			true,false,false,
+			vm["model.beta"].as<double>()*(1.0-vm["model.lat_p"].as<double>()),
+			vm["model.mu"].as<double>());
 
-	reactions[2] = Reaction(0,1,0, 0,1,1,
-			false,false,
+	reactions[2] = Reaction(1,0,0,1, 0,0,1,0,
+			true,false,false,
+			vm["model.beta"].as<double>()*vm["model.lat_p"].as<double>(),
+			vm["model.mu"].as<double>());
+
+	reactions[3] = Reaction(0,0,1,0, 0,1,0,0,
+			false,false,false,
+			vm["model.lat_a"].as<double>(),0.0);
+
+	reactions[4] = Reaction(0,1,0,0, 0,1,0,1,
+			false,false,false,
 			vm["model.k"].as<double>(),0.0);
 
-	reactions[3] = Reaction(1,0,0, 0,0,0,
-			false,false,
+	reactions[5] = Reaction(1,0,0,0, 0,0,0,0,
+			false,false,false,
 			vm["model.d"].as<double>(),0.0);
 
-	reactions[4] = Reaction(0,1,0, 0,0,0,
-			false,false,
+	reactions[6] = Reaction(0,1,0,0, 0,0,0,0,
+			false,false,false,
 			vm["model.a"].as<double>(),0.0);
 
-	reactions[5] = Reaction(0,0,1, 0,0,0,
-			false,false,
+	reactions[7] = Reaction(0,0,1,0, 0,0,0,0,
+			false,false,false,
+			vm["model.lat_d"].as<double>(),0.0);
+
+	reactions[8] = Reaction(0,0,0,1, 0,0,0,0,
+			false,false,false,
 			vm["model.u"].as<double>(),0.0);
 
 	// Set up moments:
-	int NScalarMoments = 2;
-	MomentScalar scalarMoments[2];
+	int NScalarMoments = 4;
+	MomentScalar scalarMoments[4];
 	scalarMoments[0] = MomentScalar (Nsamples, samplefunc_X, "X");
-	scalarMoments[1] = MomentScalar (Nsamples, samplefunc_Vtot, "Vtot");
+	scalarMoments[1] = MomentScalar (Nsamples, samplefunc_Ytot, "Ytot");
+	scalarMoments[2] = MomentScalar (Nsamples, samplefunc_YLtot, "YLtot");
+	scalarMoments[3] = MomentScalar (Nsamples, samplefunc_Vtot, "Vtot");
 
-	int NVectorMoments = 4;
-	MomentVector vectorMoments[4];
+	int NVectorMoments = 5;
+	MomentVector vectorMoments[5];
 	vectorMoments[0] = MomentVector (Nsamples, samplefunc_Y, "Y", sequenceL);
-	vectorMoments[1] = MomentVector (Nsamples, samplefunc_V, "V", sequenceL);
-	vectorMoments[2] = MomentVector (Nsamples, samplefunc_V0Vh, "V0Vh", sequenceL);
-	vectorMoments[3] = MomentVector (Nsamples, samplefunc_VVh, "VVh", sequenceL);
+	vectorMoments[1] = MomentVector (Nsamples, samplefunc_YL, "YL", sequenceL);
+	vectorMoments[2] = MomentVector (Nsamples, samplefunc_V, "V", sequenceL);
+	vectorMoments[3] = MomentVector (Nsamples, samplefunc_V0Vh, "V0Vh", sequenceL);
+	vectorMoments[4] = MomentVector (Nsamples, samplefunc_VVh, "VVh", sequenceL);
 
     // Initialise RNG:
 	unsigned short buf[3] = {53, time(NULL), mpi_rank};
-	
+
 	// Determine number of paths to integrate on this node:
 	int chunk_size = Npaths/mpi_size;
 	if (Npaths%mpi_size>0)
