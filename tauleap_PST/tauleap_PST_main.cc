@@ -161,7 +161,7 @@ int main (int argc, char **argv)
 	sv0.V[0] = vm["simulation.V0"].as<double>();
 
 	// Set up reactions:
-	int Nreactions = 7;
+	int Nreactions = 9;
 	Reaction reactions[9];
 
 	reactions[0] = Reaction(0,0,0,0, 1,0,0,0,
