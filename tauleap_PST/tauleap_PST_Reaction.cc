@@ -274,7 +274,7 @@ bool Reaction::tauleap(double dt, StateVec & sv_new, unsigned short int *buf) {
 
 		// Skip if reaction critical:
 		if (critX)
-			return true;
+			return false;
 
 		// Implement reaction:
 		double q = poissonian(dt*aX, buf);
