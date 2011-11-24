@@ -196,76 +196,52 @@ int main (int argc, char **argv)
 	// Parse command line arguments:
 	if (argc < 2) {
 		std::cout << "Usage: " << argv[0] << " outfile" << std::endl;
-		return 0;
+		exit(0);
 	}
 	char *ofilename = argv[1];
 
 	// Simulation parameters:
 
-	unsigned int Nsamples = 101;
-	unsigned int Ntraj = 768;
-	//unsigned int Ntraj = 12800; // DEBUG
+	unsigned int Nsamples = 1001;
+	unsigned int Ntraj = 1024;
 
 	// Model parameters:
-
-	unsigned int genome_L = 35;
+	unsigned int genome_L = 5;
 	unsigned int genome_base = 4;
 	double T = 30.0;
 
-	unsigned int Nmoments = 5 + 4*(1+genome_L);
-	unsigned int Nprobs = 1 + 2*(1+genome_L); // Probabilistic moments
-
-	double r_xprod = 1e5;
-	double r_inf = 2e-7;
-	double r_vprod = 100.0;
-	double r_xdeath = 0.1;
-	double r_ydeath = 0.5;
-	double r_vdeath = 5.0;
-	double mutprob_rt = 2e-5*(double)genome_L;
-	double mutprob_rnap = 0.0;
-	//double mutprob_rt = 0.0;
-	//double mutprob_rnap = 2e-5*(double)genome_L;
-
-	// Define initial state:
-	std::vector<int> seq0(genome_L, 0);
-	StateVec n0;
-	n0.X = 1000000;
-	n0.V[seq0] = 100;
-
-	/*
-	// DEBUGING PARAMETERS:
 	double r_xprod = 1e2;
 	double r_inf = 0.01;
 	double r_vprod = 2.0;
 	double r_xdeath = 0.1;
 	double r_ydeath = 0.5;
 	double r_vdeath = 5.0;
-	//double mutprob_rt = 0.2;
-	double mutprob_rt = 0.0;
-	//double mutprob_rnap = 0.0;
-	double mutprob_rnap = 0.18;
+	double mutprob_rt = 0.2;
+	double mutprob_rnap = 0.0;
+
 	std::vector<int> seq0(genome_L, 0);
 	StateVec n0;
 	n0.X = 1000;
 	n0.V[seq0] = 10;
-	*/
 
 	// Derived simulation parameters:
 	double samp_dt = T/((double)(Nsamples-1));
 
 	// Define sampling vectors:
 
+	unsigned int Nmoments = 5 + 4*(1+genome_L);
+	unsigned int Nprobs = 1 + 2*(1+genome_L); // Probabilistic moments
+
 	std::vector<std::vector<double> > momentvec;
 	momentvec.resize(Nmoments);
 	for (unsigned int i=0; i<Nmoments; i++)
 		momentvec[i].assign(Nsamples, 0.0);
 
-
 	// Fire up MPI:
 	MPI::Init(argc, argv);
 	int mpi_size = MPI::COMM_WORLD.Get_size();
 	int mpi_rank = MPI::COMM_WORLD.Get_rank();
-
+	atexit(MPI::Finalize);
 
 	// Determine chunk size:
 	unsigned int chunk = Ntraj/mpi_size;
@@ -273,13 +249,11 @@ int main (int argc, char **argv)
 		chunk++;
 	Ntraj = mpi_size*chunk;
 
-
 	// Initialise PRNG:
 	unsigned short *seedbuff = new unsigned short [3];
 	seedbuff[0] = 42;
 	seedbuff[1] = 53;
 	seedbuff[2] = mpi_rank;
-
 
 	// Define variable to track number of trajectories used
 	// in joint probability calculations:
@@ -502,10 +476,6 @@ int main (int argc, char **argv)
 	}
 
 
-	// Shut down MPI:
-	MPI::Finalize();
-
-
 	// Success in Unix-ese:
-	return 0;
+	exit(0);
 }
