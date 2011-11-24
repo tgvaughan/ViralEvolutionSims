@@ -20,9 +20,9 @@ MomentScalar::MomentScalar(int p_Nsamples, double (*p_samplefunc)(const StateVec
 	samplefunc = p_samplefunc;
 	name = p_name;
 
-	mean.resize(Nsamples);
-	var.resize(Nsamples);
-	sem.resize(Nsamples);
+	mean.resize(Nsamples,0);
+	var.resize(Nsamples,0);
+	sem.resize(Nsamples,0);
 }
 MomentScalar::MomentScalar() { };
 
@@ -91,9 +91,9 @@ MomentVector::MomentVector(int p_Nsamples, std::vector<double> (*p_samplefunc)(c
 	name = p_name;
 	sequenceL = p_sequenceL;
 
-	mean.resize(Nsamples*(sequenceL+1));
-	var.resize(Nsamples*(sequenceL+1));
-	sem.resize(Nsamples*(sequenceL+1));
+	mean.resize(Nsamples*(sequenceL+1),0);
+	var.resize(Nsamples*(sequenceL+1),0);
+	sem.resize(Nsamples*(sequenceL+1),0);
 }
 
 MomentVector::MomentVector() { };
@@ -129,24 +129,19 @@ void MomentVector::mpi_send(int mpi_rank, int & tag) {
  */
 void MomentVector::mpi_recv(int recv_rank, int & tag) {
 
-	double *recv_mean = new double[mean.size()];
-	double *recv_var = new double[var.size()];
-	double *recv_sem = new double[sem.size()];
+	std::vector<double> recv_mean(mean.size());
+	std::vector<double> recv_var(var.size());
+	std::vector<double> recv_sem(sem.size());
 
-	MPI::COMM_WORLD.Recv(recv_mean, mean.size(), MPI_DOUBLE, recv_rank, tag++);
-	MPI::COMM_WORLD.Recv(recv_var, var.size(), MPI_DOUBLE, recv_rank, tag++);
-	MPI::COMM_WORLD.Recv(recv_sem, sem.size(), MPI_DOUBLE, recv_rank, tag++);
+	MPI::COMM_WORLD.Recv(&(recv_mean[0]), mean.size(), MPI_DOUBLE, recv_rank, tag++);
+	MPI::COMM_WORLD.Recv(&(recv_var[0]), var.size(), MPI_DOUBLE, recv_rank, tag++);
+	MPI::COMM_WORLD.Recv(&(recv_sem[0]), sem.size(), MPI_DOUBLE, recv_rank, tag++);
 
-	for (int s=0; s<Nsamples; s++) {
-		mean[s] += recv_mean[s];
-		var[s] += recv_var[s];
-		sem[s] += recv_sem[s];
+	for (unsigned int i=0; i<mean.size(); i++) {
+		mean[i] += recv_mean[i];
+		var[i] += recv_var[i];
+		sem[i] += recv_sem[i];
 	}
-
-	delete [] recv_mean;
-	delete [] recv_var;
-	delete [] recv_sem;
-
 }
 
 /**
@@ -154,14 +149,9 @@ void MomentVector::mpi_recv(int recv_rank, int & tag) {
  */
 void MomentVector::normalise (int Npaths) {
 
-	for (int samp=0; samp<Nsamples; samp++) {
-		for (int h=0; h<=sequenceL; h++) {
-			int idx = (sequenceL+1)*samp + h;
-
-			mean[idx] /= Npaths;
-			var[idx] = var[idx]/Npaths - mean[idx]*mean[idx];
-			sem[idx] = sqrt(var[idx]/Npaths);
-		}
+	for (unsigned int i=0; i<mean.size(); i++) {
+		mean[i] /= Npaths;
+		var[i] = var[i]/Npaths - mean[i]*mean[i];
+		sem[i] = sqrt(var[i]/Npaths);
 	}
-
 }
