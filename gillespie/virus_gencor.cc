@@ -27,19 +27,19 @@ void sample(unsigned int genome_L,
 	std::vector<int> seq0(genome_L, 0);
 	int m = 0; // moment vector index
 
-	// mean_NX
+	// SCALAR: mean_NX
 	momentvec[m++][samp] += (double)sv.X;
 
-	// mean_NY
+	// SCALAR: mean_NY
 	momentvec[m++][samp] += (double)sv.NY;
 
-	// mean_NV
+	// SCALAR: mean_NV
 	momentvec[m++][samp] += (double)sv.NV;
 
-	// mean_NVsq
+	// SCALAR: mean_NVsq
 	momentvec[m++][samp] += (double)sv.NV*(double)sv.NV;
 
-	// averages of HD-unique virus subpopulations
+	// VECTOR: averages of HD-unique virus subpopulations
 	for (std::map<std::vector<int>,int>::iterator it=sv.V.begin();
 			it != sv.V.end(); ++it)
 	{
@@ -52,7 +52,23 @@ void sample(unsigned int genome_L,
 	}
 	m += genome_L+1;
 
-	// cross-correlations between virus subpopulations
+	// VECTOR: averages of products between HD-unique virus subpopulations
+	std::vector<double> thisV(genome_L+1, 0);
+	for (std::map<std::vector<int>,int>::iterator it=sv.V.begin();
+			it != sv.V.end(); ++it)
+	{
+		int HD = 0;
+		for (unsigned int i=0; i<genome_L; i++)
+			if ((it->first)[i] != seq0[i])
+				HD++;
+
+		thisV[HD] += it->second;
+	}
+	for (unsigned int HD=0; HD<=genome_L; HD++)
+		momentvec[m+HD][samp] += thisV[0]*thisV[HD];
+	m += genome_L+1;
+
+	// VECTOR: cross-correlations between virus subpopulations
 	for (std::map<std::vector<int>,int>::iterator it=sv.V.begin();
 			it != sv.V.end(); ++it)
 	{
@@ -74,7 +90,7 @@ void sample(unsigned int genome_L,
 	///// Probabilistic quantities:
 	int p = 0; // probability sub-vector index
 
-	// Sequence drawing probabilities of HD-unique virus subpopulations
+	// VECTOR: Sequence drawing probabilities of HD-unique virus subpopulations
 	if (sv.NV>=1) {
 		for (std::map<std::vector<int>,int>::iterator it=sv.V.begin();
 				it != sv.V.end(); ++it)
@@ -92,7 +108,7 @@ void sample(unsigned int genome_L,
 	m += genome_L+1;
 	p += genome_L+1;
 
-	// Sequence drawing probabilities of virus sequence pair separations
+	// VECTOR: Sequence drawing probabilities of virus sequence pair separations
 	if (sv.NV>=1) {
 		for (std::map<std::vector<int>,int>::iterator it=sv.V.begin();
 				it != sv.V.end(); ++it)
@@ -116,7 +132,7 @@ void sample(unsigned int genome_L,
 	m += genome_L+1;
 	p += genome_L+1;
 
-	// diversity_V
+	// SCALAR: diversity_V
 	if (sv.NV>=1) {
 		double thisdiv = 0.0;
 		
@@ -163,6 +179,8 @@ void dump_results(unsigned int Ntraj, double samp_dt, unsigned int genome_L,
 		<< "t NX NY NV NVsq";
 	for (unsigned int i=0; i<=genome_L; i++)
 		of << " V" << i;
+	for (unsigned int i=0; i<=genome_L; i++)
+		of << " V0V" << i;
 	for (unsigned int i=0; i<=genome_L; i++)
 		of << " VV" << i;
 	for (unsigned int i=0; i<=genome_L; i++)
@@ -229,7 +247,7 @@ int main (int argc, char **argv)
 
 	// Define sampling vectors:
 
-	unsigned int Nmoments = 5 + 4*(1+genome_L);
+	unsigned int Nmoments = 5 + 5*(1+genome_L);
 	unsigned int Nprobs = 1 + 2*(1+genome_L); // Probabilistic moments
 
 	std::vector<std::vector<double> > momentvec;
