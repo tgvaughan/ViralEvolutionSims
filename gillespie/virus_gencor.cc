@@ -221,7 +221,7 @@ int main (int argc, char **argv)
 	// Simulation parameters:
 
 	unsigned int Nsamples = 1001;
-	unsigned int Ntraj = 1024;
+	unsigned int Ntraj = 10240;
 
 	// Model parameters:
 	unsigned int genome_L = 5;
