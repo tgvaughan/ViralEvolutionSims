@@ -143,7 +143,12 @@ int main (int argc, char **argv)
 	int Npaths = vm["algorithm.Npaths"].as<int>();
 
 	int Ncrit = vm["algorithm.Ncrit"].as<int>(); // Reaction criticality parameter
-	bool newcritcond = false; // Use new criticality condition
+
+	// Select criticality condition to use in hybrid scheme:
+	// 0: none, tau-leaping only
+	// 1: standard
+	// 2: modified (variance-dependent)
+	int critcond = 1;
 
 	// Derived simulation parameters:
 	int steps_per_sample = (Nt-1)/(Nsamples-1);
@@ -169,12 +174,12 @@ int main (int argc, char **argv)
 			vm["model.lambda"].as<double>(),0.0);
 
 	reactions[1] = Reaction(1,0,0,1, 0,1,0,0,
-			true,false,false,
+			false,false,false,
 			vm["model.beta"].as<double>()*(1.0-vm["model.lat_p"].as<double>()),
 			vm["model.mu"].as<double>());
 
 	reactions[2] = Reaction(1,0,0,1, 0,0,1,0,
-			true,false,false,
+			false,false,false,
 			vm["model.beta"].as<double>()*vm["model.lat_p"].as<double>(),
 			vm["model.mu"].as<double>());
 
@@ -183,8 +188,8 @@ int main (int argc, char **argv)
 			vm["model.lat_a"].as<double>(),0.0);
 
 	reactions[4] = Reaction(0,1,0,0, 0,1,0,1,
-			false,false,false,
-			vm["model.k"].as<double>(),0.0);
+			false,false,true,
+			vm["model.k"].as<double>(),vm["model.mu_RNAP"].as<double>());
 
 	reactions[5] = Reaction(1,0,0,0, 0,0,0,0,
 			false,false,false,
@@ -261,7 +266,7 @@ int main (int argc, char **argv)
 				double tau = dt-t;
 				int crit_react = -1;
 				for (int r=0; r<Nreactions; r++) {
-					double thistau = reactions[r].getLeapDistance(tau, Ncrit, newcritcond, sv, buf);
+					double thistau = reactions[r].getLeapDistance(tau, Ncrit, critcond, sv, buf);
 					if (thistau<tau) {
 						tau = thistau;
 						crit_react = r;

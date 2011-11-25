@@ -39,9 +39,14 @@ Reaction::Reaction(int p_inX, int p_inY, int p_inYL, int p_inV,
 	rate = p_rate;
 	mutrate = p_mutrate;
 
-	if (mutY || mutYL || mutV)
+	dX = outX-inX;
+	dY = (mutY ? -inY : outY-inY);
+	dYL = (mutYL ? -inYL : outYL-inYL);
+	dV = (mutV ? -inV : outV-inV);
+
+	if (mutY || mutYL || mutV) {
 		mutation = true;
-	else
+	} else
 		mutation = false;
 
 	if ((inY == 0) && (inYL == 0) && (inV == 0) && (outY == 0) && (outYL == 0) && (outV == 0))
@@ -80,7 +85,7 @@ const double Reaction::get_gcond(int h1, int h2, int L)
  *
  * returns:	safe leap distance
  */
-double Reaction::getLeapDistance (double tau, double alpha, bool newcritcond, const StateVec & sv, unsigned short *buf) {
+double Reaction::getLeapDistance (double tau, double Ncrit, int critcond, const StateVec & sv, unsigned short *buf) {
 
 	// Calculate X portion of propensity:
 	aX = rate;
@@ -91,13 +96,21 @@ double Reaction::getLeapDistance (double tau, double alpha, bool newcritcond, co
 
 		// Check for critical X reaction:
 		critX = false;
-		if (newcritcond) {
-			double dX = tau*aX*(outX - inX);
-			if ((dX<0) && (sv.X + dX - alpha*sqrt(-dX) < 0))
+
+		switch(critcond) {
+		case 0:
+			break;
+
+		case 1:
+			if (sv.X + Ncrit*dX < 0)
 				critX = true;
-		} else {
-			if (sv.X + alpha*(outX - inX) < 0)
+			break;
+
+		case 2:
+			double deltaX = tau*aX*dX;
+			if ((deltaX<0) && (sv.X + deltaX - Ncrit*sqrt(-deltaX) < 0))
 				critX = true;
+			break;
 		}
 
 		// If critical, determine reaction time:
@@ -143,19 +156,27 @@ double Reaction::getLeapDistance (double tau, double alpha, bool newcritcond, co
 
 				// Check for critical mutation reaction:
 				critmut[idx] = false;
-				if (newcritcond) {
-					double dY = -tau*amut[idx]*inY;
-					double dYL = -tau*amut[idx]*inYL;
-					double dV = -tau*amut[idx]*inV;
-					if ((sv.Y[h] + dY - alpha*sqrt(-dY) < 0)
-							|| (sv.YL[h] + dYL - alpha*sqrt(-dYL) < 0)
-							|| (sv.V[h] + dV -alpha*sqrt(-dV) < 0))
+
+				switch(critcond) {
+				case 0:
+					break;
+
+				case 1:
+					if ((sv.Y[h] + Ncrit*dY < 0)
+							|| (sv.YL[h] + Ncrit*dYL < 0)
+							|| (sv.V[h] + Ncrit*dV < 0))
 						critmut[idx] = true;
-				} else {
-					if ((sv.Y[h] - alpha*inY < 0)
-							|| (sv.YL[h] - alpha*inYL < 0)
-							|| (sv.V[h] - alpha*inV < 0))
+					break;
+
+				case 2:
+					double deltaY = tau*amut[idx]*dY;
+					double deltaYL = tau*amut[idx]*dYL;
+					double deltaV = tau*amut[idx]*dV;
+					if (((deltaY <0) && (sv.Y[h] + deltaY - Ncrit*sqrt(-deltaY) < 0))
+							|| ((deltaYL<0) && (sv.YL[h] + deltaYL - Ncrit*sqrt(-deltaYL) < 0))
+							|| ((deltaV<0) && (sv.V[h] + deltaV - Ncrit*sqrt(-deltaV) < 0)))
 						critmut[idx] = true;
+					break;
 				}
 
 				// If critical, determine reaction time:
@@ -174,19 +195,25 @@ double Reaction::getLeapDistance (double tau, double alpha, bool newcritcond, co
 
 			// Check for critical non-mutation reaction:
 			crit[h] = false;
-			if (newcritcond) {
-				double dY = tau*a[h]*(outY-inY);
-				double dYL = tau*a[h]*(outYL-inYL);
-				double dV = tau*a[h]*(outV-inV);
-				if (((dY<0) && (sv.Y[h] + dY - alpha*sqrt(-dY) < 0))
-						|| ((dYL<0) && (sv.YL[h] + dYL - alpha*sqrt(-dYL) < 0))
-						|| ((dV<0) && (sv.V[h] + dV - alpha*sqrt(-dV) < 0)))
+			switch(critcond) {
+			case 0:
+				break;
+			case 1:
+				if ((sv.Y[h] + Ncrit*dY < 0)
+						|| (sv.YL[h] + Ncrit*dYL < 0)
+						|| (sv.V[h] + Ncrit*dV < 0))
 					crit[h] = true;
-			} else {
-				if ((sv.Y[h] + alpha*(outY-inY) < 0)
-						|| (sv.YL[h] + alpha*(outYL-inYL) < 0)
-						|| (sv.V[h] + alpha*(outV-inV) < 0))
+				break;
+
+			case 2:
+				double deltaY = tau*a[h]*dY;
+				double deltaYL = tau*a[h]*dYL;
+				double deltaV = tau*a[h]*dV;
+				if (((deltaY<0) && (sv.Y[h] + deltaY - Ncrit*sqrt(-deltaY) < 0))
+						|| ((deltaYL<0) && (sv.YL[h] + deltaYL - Ncrit*sqrt(-deltaYL) < 0))
+						|| ((deltaV<0) && (sv.V[h] + deltaV - Ncrit*sqrt(-deltaV) < 0)))
 					crit[h] = true;
+				break;
 			}
 
 			// If critical, determine reaction time:
@@ -226,21 +253,21 @@ void Reaction::doCritical(StateVec & sv_new) {
 		int hp = h + (critreact%3) - 1;
 
 		if (mutY) {
-			sv_new.Y[h] -= inY;
+			sv_new.Y[h] += dY;
 			sv_new.Y[hp] += outY;
-			sv_new.YL[h] += outYL-inYL;
-			sv_new.V[h] += outV-inV;
+			sv_new.YL[h] += dYL;
+			sv_new.V[h] += dV;
 		}
 		if (mutYL) {
-			sv_new.Y[h] += outY-inY;
-			sv_new.YL[h] -= inYL;
+			sv_new.Y[h] += dY;
+			sv_new.YL[h] += dYL;
 			sv_new.YL[hp] += outYL;
-			sv_new.V[h] += outV-inV;
+			sv_new.V[h] += dV;
 		}
 		if (mutV) {
-			sv_new.Y[h] += outY-inY;
-			sv_new.YL[h] += outYL-inYL;
-			sv_new.V[h] -= inV;
+			sv_new.Y[h] += dY;
+			sv_new.YL[h] += dYL;
+			sv_new.V[h] += dV;
 			sv_new.V[hp] += outV;
 		}
 
@@ -249,9 +276,9 @@ void Reaction::doCritical(StateVec & sv_new) {
 		// Implement Y and V components for non-mutation
 
 		int h = critreact;
-		sv_new.Y[h] += outY-inY;
-		sv_new.YL[h] += outYL-inYL;
-		sv_new.V[h] += outV-inV;
+		sv_new.Y[h] += dY;
+		sv_new.YL[h] += dYL;
+		sv_new.V[h] += dV;
 
 	}
 
@@ -304,25 +331,18 @@ bool Reaction::tauleap(double dt, StateVec & sv_new, unsigned short int *buf) {
 
 				// Implement reaction:
 				double q = poissonian(dt*amut[idx], buf);
-				sv_new.X += q*(outX - inX);
-				if (mutY) {
-					sv_new.Y[h] -= q*inY;
+
+				sv_new.X += q*dX;
+				sv_new.Y[h] += q*dY;
+				sv_new.YL[h] += q*dYL;
+				sv_new.V[h] += q*dV;
+
+				if (mutY)
 					sv_new.Y[hp] += q*outY;
-					sv_new.YL[h] += q*(outYL - inYL);
-					sv_new.V[h] += q*(outV - inV);
-				}
-				if (mutYL) {
-					sv_new.Y[h] += q*(outY - inY);
-					sv_new.YL[h] -= q*inYL;
+				if (mutYL)
 					sv_new.YL[hp] += q*outYL;
-					sv_new.V[h] += q*(outV - inV);
-				}
-				if (mutV) {
-					sv_new.Y[h] += q*(outY - inY);
-					sv_new.YL[h] += q*(outYL - inYL);
-					sv_new.V[h] -= q*inV;
+				if (mutV)
 					sv_new.V[hp] += q*outV;
-				}
 
 				// Check for negative populations:
 				if (sv_new.X < 0) {
@@ -351,10 +371,11 @@ bool Reaction::tauleap(double dt, StateVec & sv_new, unsigned short int *buf) {
 
 			// Implement reaction:
 			double q = poissonian(dt*a[h], buf);
-			sv_new.X += q*(outX - inX);
-			sv_new.Y[h] += q*(outY - inY);
-			sv_new.YL[h] += q*(outYL - inYL);
-			sv_new.V[h] += q*(outV - inV);
+
+			sv_new.X += q*dX;
+			sv_new.Y[h] += q*dY;
+			sv_new.YL[h] += q*dYL;
+			sv_new.V[h] += q*dV;
 
 			// Check for negative populations:
 			if (sv_new.X < 0) {

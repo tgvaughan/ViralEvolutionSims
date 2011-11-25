@@ -18,6 +18,9 @@ public:
 	// Whether or not new virions or infected cells have mutated genome:
 	bool mutY, mutYL, mutV;
 
+	// Reactant changes taking into account mutation:
+	int dX, dY, dYL, dV;
+
 	// Set to true for reactions which involve mutation:
 	bool mutation;
 
@@ -44,7 +47,7 @@ public:
 	Reaction();
 
 	const double get_gcond(int h2, int h1, int sequenceL);
-	double getLeapDistance(double tau, double alpha, bool newcritcond,
+	double getLeapDistance(double tau, double alpha, int critcond,
 			const StateVec & sv, unsigned short *buf);
 	void doCritical(StateVec & sv_new);
 	bool tauleap(double dt, StateVec & sv_new, unsigned short *buf);
