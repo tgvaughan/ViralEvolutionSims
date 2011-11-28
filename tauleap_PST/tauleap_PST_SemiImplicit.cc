@@ -40,7 +40,7 @@ double SemiImplicit::unif2poisson(double lambda, double u)
  *
  * returns: true if negative populations were generated, false otherwise.
  */
-bool SemiImplicit::step(StateVec & sv, Reaction *reactions, int Nreactions, double tau, unsigned short  *buf)
+bool SemiImplicit::step(StateVec & sv, std::vector<Reaction> & reactions, double tau, unsigned short  *buf)
 {
 	bool negativePop = false;
 

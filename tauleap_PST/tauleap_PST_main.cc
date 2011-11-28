@@ -33,7 +33,8 @@
 #include "tauleap_PST_OptionParser.h"
 #include "tauleap_PST_StateVec.h"
 #include "tauleap_PST_Reaction.h"
-#include "tauleap_PST_Moment.h"
+#include "tauleap_PST_MomentScalar.h"
+#include "tauleap_PST_MomentVector.h"
 #include "tauleap_PST_SemiImplicit.h"
 
 // Functions which calculate the moments to be sampled:
@@ -65,42 +66,60 @@ double samplefunc_Vtot (const StateVec & sv) {
 	return res;
 }
 
-std::vector<double> samplefunc_Y (const StateVec & sv) {
-	return sv.Y;
-}
+double samplefunc_Vdiv (const StateVec & sv) {
 
-std::vector<double> samplefunc_YL (const StateVec & sv) {
-	return sv.YL;
-}
+	double N2 = 0.0;
+	double N = 0.0;
 
-std::vector<double> samplefunc_V (const StateVec & sv) {
-	return sv.V;
-}
-
-std::vector<double> samplefunc_V0Vh (const StateVec & sv) {
-
-	std::vector<double> V0Vh(sv.L + 1, 0.0);
-
-	for (int h=0; h<=sv.L; h++)
-		V0Vh[h] = sv.V[0]*sv.V[h];
-
-	return V0Vh;
-}
-
-std::vector<double> samplefunc_VVh (const StateVec & sv) {
-
-	std::vector<double> res(sv.L+1, 0.0);
-
-	for (int d=0; d<=sv.L; d++) {
-		for (int h=0; h<=sv.L; h++) {
-			int hp=(h+d)%(sv.L+1);
-			res[h] += sv.V[h]*sv.V[hp];
-		}
-		res[d] /= sv.L+1;
+	for (int h=0; h<=sv.L; h++) {
+		N2 += sv.V[h]*sv.V[h];
+		N += sv.V[h];
 	}
 
-	return res;
+	if (N>0)
+		return exp(2*log(N)-log(N2));
+	else
+		return 1;
+}
 
+double samplefunc_Vext (const StateVec & sv) {
+
+	int h;
+	for (h=sv.L; h>=0; h--) {
+		if (sv.V[h]>0)
+			break;
+	}
+
+	if (h>=0)
+		return h;
+	else
+		return 0;
+}
+
+void samplefunc_Y (const StateVec & sv, std::vector<double> & res) {
+	res = sv.Y;
+}
+
+void samplefunc_YL (const StateVec & sv, std::vector<double> & res) {
+	res = sv.YL;
+}
+
+void samplefunc_V (const StateVec & sv, std::vector<double> & res) {
+	res = sv.V;
+}
+
+void samplefunc_V0Vh (const StateVec & sv, std::vector<double> & res) {
+
+	for (int h=0; h<=sv.L; h++)
+		res[h] = sv.V[0]*sv.V[h];
+}
+
+void samplefunc_VhVhp (const StateVec & sv, std::vector<double> & res) {
+
+	for (int h1=0; h1<=sv.L; h1++) {
+		for (int h2=0; h2<=sv.L; h2++)
+			res[h1*(sv.L+1)+h2] = sv.V[h1]*sv.V[h2];
+	}
 }
 
 int main (int argc, char **argv)
@@ -166,64 +185,64 @@ int main (int argc, char **argv)
 	sv0.V[0] = vm["simulation.V0"].as<double>();
 
 	// Set up reactions:
-	int Nreactions = 9;
-	Reaction reactions[9];
+	std::vector<Reaction> reactions;
 
-	reactions[0] = Reaction(0,0,0,0, 1,0,0,0,
+	reactions.push_back(Reaction(0,0,0,0, 1,0,0,0,
 			false,false,false,
-			vm["model.lambda"].as<double>(),0.0);
+			vm["model.lambda"].as<double>(),0.0));
 
-	reactions[1] = Reaction(1,0,0,1, 0,1,0,0,
-			false,false,false,
+	reactions.push_back(Reaction(1,0,0,1, 0,1,0,0,
+			true,false,false,
 			vm["model.beta"].as<double>()*(1.0-vm["model.lat_p"].as<double>()),
-			vm["model.mu"].as<double>());
+			vm["model.mu"].as<double>()));
 
-	reactions[2] = Reaction(1,0,0,1, 0,0,1,0,
-			false,false,false,
+	reactions.push_back(Reaction(1,0,0,1, 0,0,1,0,
+			false,true,false,
 			vm["model.beta"].as<double>()*vm["model.lat_p"].as<double>(),
-			vm["model.mu"].as<double>());
+			vm["model.mu"].as<double>()));
 
-	reactions[3] = Reaction(0,0,1,0, 0,1,0,0,
+	reactions.push_back(Reaction(0,0,1,0, 0,1,0,0,
 			false,false,false,
-			vm["model.lat_a"].as<double>(),0.0);
+			vm["model.lat_a"].as<double>(), 0.0));
 
-	reactions[4] = Reaction(0,1,0,0, 0,1,0,1,
+	reactions.push_back(Reaction(0,1,0,0, 0,1,0,1,
 			false,false,true,
-			vm["model.k"].as<double>(),vm["model.mu_RNAP"].as<double>());
+			vm["model.k"].as<double>(),vm["model.mu_RNAP"].as<double>()));
 
-	reactions[5] = Reaction(1,0,0,0, 0,0,0,0,
+	reactions.push_back(Reaction(1,0,0,0, 0,0,0,0,
 			false,false,false,
-			vm["model.d"].as<double>(),0.0);
+			vm["model.d"].as<double>(),0.0));
 
-	reactions[6] = Reaction(0,1,0,0, 0,0,0,0,
+	reactions.push_back(Reaction(0,1,0,0, 0,0,0,0,
 			false,false,false,
-			vm["model.a"].as<double>(),0.0);
+			vm["model.a"].as<double>(),0.0));
 
-	reactions[7] = Reaction(0,0,1,0, 0,0,0,0,
+	reactions.push_back(Reaction(0,0,1,0, 0,0,0,0,
 			false,false,false,
-			vm["model.lat_d"].as<double>(),0.0);
+			vm["model.lat_d"].as<double>(),0.0));
 
-	reactions[8] = Reaction(0,0,0,1, 0,0,0,0,
+	reactions.push_back(Reaction(0,0,0,1, 0,0,0,0,
 			false,false,false,
-			vm["model.u"].as<double>(),0.0);
+			vm["model.u"].as<double>(),0.0));
 
 	// Set up moments:
-	int NScalarMoments = 4;
-	MomentScalar scalarMoments[4];
-	scalarMoments[0] = MomentScalar (Nsamples, samplefunc_X, "X");
-	scalarMoments[1] = MomentScalar (Nsamples, samplefunc_Ytot, "Ytot");
-	scalarMoments[2] = MomentScalar (Nsamples, samplefunc_YLtot, "YLtot");
-	scalarMoments[3] = MomentScalar (Nsamples, samplefunc_Vtot, "Vtot");
+	std::vector<MomentScalar> scalarMoments;
+	scalarMoments.push_back(MomentScalar (Nsamples, samplefunc_X, "X"));
+	scalarMoments.push_back(MomentScalar (Nsamples, samplefunc_Ytot, "Ytot"));
+	scalarMoments.push_back(MomentScalar (Nsamples, samplefunc_YLtot, "YLtot"));
+	scalarMoments.push_back(MomentScalar (Nsamples, samplefunc_Vtot, "Vtot"));
+	scalarMoments.push_back(MomentScalar (Nsamples, samplefunc_Vdiv, "Vdiv"));
+	scalarMoments.push_back(MomentScalar (Nsamples, samplefunc_Vext, "Vext"));
 
-	int NVectorMoments = 5;
-	MomentVector vectorMoments[5];
-	vectorMoments[0] = MomentVector (Nsamples, samplefunc_Y, "Y", sequenceL);
-	vectorMoments[1] = MomentVector (Nsamples, samplefunc_YL, "YL", sequenceL);
-	vectorMoments[2] = MomentVector (Nsamples, samplefunc_V, "V", sequenceL);
-	vectorMoments[3] = MomentVector (Nsamples, samplefunc_V0Vh, "V0Vh", sequenceL);
-	vectorMoments[4] = MomentVector (Nsamples, samplefunc_VVh, "VVh", sequenceL);
+	std::vector<MomentVector> vectorMoments;
+	vectorMoments.push_back(MomentVector (Nsamples, samplefunc_Y, "Y", sequenceL+1));
+	vectorMoments.push_back(MomentVector (Nsamples, samplefunc_YL, "YL", sequenceL+1));
+	vectorMoments.push_back(MomentVector (Nsamples, samplefunc_V, "V", sequenceL+1));
+	vectorMoments.push_back(MomentVector (Nsamples, samplefunc_V0Vh, "V0Vh", sequenceL+1));
+	//vectorMoments.push_back(MomentVector (Nsamples, samplefunc_VhVhp, "VhVhp", (sequenceL+1)*(sequenceL+1)));
 
     // Initialise RNG:
+	//unsigned short buf[3] = {53, time(NULL), mpi_rank};
 	unsigned short buf[3] = {53, time(NULL), mpi_rank};
 
 	// Determine number of paths to integrate on this node:
@@ -242,9 +261,9 @@ int main (int argc, char **argv)
 		StateVec sv_new = sv0;
 
 		// Perform initial sample:
-		for (int i=0; i<NScalarMoments; i++)
+		for (unsigned int i=0; i<scalarMoments.size(); i++)
 			scalarMoments[i].sample(sv, 0);
-		for (int i=0; i<NVectorMoments; i++)
+		for (unsigned int i=0; i<vectorMoments.size(); i++)
 			vectorMoments[i].sample(sv, 0);
 
 		// Simulation loop:
@@ -252,9 +271,9 @@ int main (int argc, char **argv)
 
 			// Sample if necessary:
 			if (t_idx % steps_per_sample == 0) {
-				for (int i=0; i<NScalarMoments; i++)
+				for (unsigned int i=0; i<scalarMoments.size(); i++)
 					scalarMoments[i].sample(sv, t_idx/steps_per_sample);
-				for (int i=0; i<NVectorMoments; i++)
+				for (unsigned int i=0; i<vectorMoments.size(); i++)
 					vectorMoments[i].sample(sv, t_idx/steps_per_sample);
 			}
 
@@ -265,7 +284,7 @@ int main (int argc, char **argv)
 				// Determine leap time to use
 				double tau = dt-t;
 				int crit_react = -1;
-				for (int r=0; r<Nreactions; r++) {
+				for (unsigned int r=0; r<reactions.size(); r++) {
 					double thistau = reactions[r].getLeapDistance(tau, Ncrit, critcond, sv, buf);
 					if (thistau<tau) {
 						tau = thistau;
@@ -279,7 +298,7 @@ int main (int argc, char **argv)
 				}
 
 				// Implement reactions:
-				for (int r=0; r<Nreactions; r++) {
+				for (unsigned int r=0; r<reactions.size(); r++) {
 					if (reactions[r].tauleap(tau, sv_new, buf)) {
 						cout << "Rank " << mpi_rank << ": Warning: negative population generated at time t="
 								<< dt*t_idx << " by reaction " << r << "." << endl;
@@ -301,9 +320,9 @@ int main (int argc, char **argv)
 		cout << "Rank " << mpi_rank << ": Sending data to root node." << endl;
 
 		int tag = 0;
-		for (int i=0; i<NScalarMoments; i++)
+		for (unsigned int i=0; i<scalarMoments.size(); i++)
 			scalarMoments[i].mpi_send(mpi_rank, tag);
-		for (int i=0; i<NVectorMoments; i++)
+		for (unsigned int i=0; i<vectorMoments.size(); i++)
 			vectorMoments[i].mpi_send(mpi_rank, tag);
 
 		exit(0);
@@ -316,16 +335,16 @@ int main (int argc, char **argv)
 		cout << "Rank 0: Receiving data from rank " << recv_rank << "." << endl;
 
 		int tag = 0;
-		for (int i=0; i<NScalarMoments; i++)
+		for (unsigned int i=0; i<scalarMoments.size(); i++)
 			scalarMoments[i].mpi_recv(recv_rank, tag);
-		for (int i=0; i<NVectorMoments; i++)
+		for (unsigned int i=0; i<vectorMoments.size(); i++)
 			vectorMoments[i].mpi_recv(recv_rank, tag);
 	}
 
 	// Normalise results:
-	for (int i=0; i<NScalarMoments; i++)
+	for (unsigned int i=0; i<scalarMoments.size(); i++)
 		scalarMoments[i].normalise(Npaths);
-	for (int i=0; i<NVectorMoments; i++)
+	for (unsigned int i=0; i<vectorMoments.size(); i++)
 		vectorMoments[i].normalise(Npaths);
 
 	cout << "Rank 0: Writing results to disk...";
@@ -341,7 +360,7 @@ int main (int argc, char **argv)
 	int scalar_rank = 1;
 	hsize_t scalar_dims[1] = {Nsamples};
 
-	for (int m=0; m<NScalarMoments; m++) {
+	for (unsigned int m=0; m<scalarMoments.size(); m++) {
 
 		H5LTmake_dataset(group_id, (scalarMoments[m].name + "_mean").c_str(),
 				scalar_rank, scalar_dims,
@@ -361,7 +380,7 @@ int main (int argc, char **argv)
 	int vector_rank = 2;
 	hsize_t vector_dims[2] = {Nsamples, sequenceL+1};
 
-	for (int m=0; m<NVectorMoments; m++) {
+	for (unsigned int m=0; m<vectorMoments.size(); m++) {
 
 		H5LTmake_dataset(group_id, (vectorMoments[m].name + "_mean").c_str(),
 				vector_rank, vector_dims,

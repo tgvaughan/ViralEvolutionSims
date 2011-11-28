@@ -11,7 +11,7 @@
 class SemiImplicit {
 public:
 	static double unif2poisson(double lambda, double u);
-	static bool step(StateVec & sv, Reaction *reactions, int Nreactions, double tau, unsigned short *buf);
+	static bool step(StateVec & sv, std::vector<Reaction> & reactions, double tau, unsigned short *buf);
 };
 
 #endif /* TAULEAP_PST_SEMIIMPLICIT_H_ */
