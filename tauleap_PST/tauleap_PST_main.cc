@@ -239,7 +239,7 @@ int main (int argc, char **argv)
 	vectorMoments.push_back(MomentVector (Nsamples, samplefunc_YL, "YL", sequenceL+1));
 	vectorMoments.push_back(MomentVector (Nsamples, samplefunc_V, "V", sequenceL+1));
 	vectorMoments.push_back(MomentVector (Nsamples, samplefunc_V0Vh, "V0Vh", sequenceL+1));
-	//vectorMoments.push_back(MomentVector (Nsamples, samplefunc_VhVhp, "VhVhp", (sequenceL+1)*(sequenceL+1)));
+	vectorMoments.push_back(MomentVector (Nsamples, samplefunc_VhVhp, "VhVhp", (sequenceL+1)*(sequenceL+1)));
 
     // Initialise RNG:
 	//unsigned short buf[3] = {53, time(NULL), mpi_rank};
@@ -378,9 +378,12 @@ int main (int argc, char **argv)
 
 	// Write vector moments to file:
 	int vector_rank = 2;
-	hsize_t vector_dims[2] = {Nsamples, sequenceL+1};
+	hsize_t vector_dims[2];
+	vector_dims[0] = Nsamples;
 
 	for (unsigned int m=0; m<vectorMoments.size(); m++) {
+
+		vector_dims[1] = vectorMoments[m].length;
 
 		H5LTmake_dataset(group_id, (vectorMoments[m].name + "_mean").c_str(),
 				vector_rank, vector_dims,
@@ -393,8 +396,8 @@ int main (int argc, char **argv)
 		H5LTmake_dataset(group_id, (vectorMoments[m].name + "_sem").c_str(),
 				vector_rank, vector_dims,
 				H5T_NATIVE_DOUBLE, &(vectorMoments[m].sem[0]));
-
 	}
+
 
 	// Write sample times to file:
 	vector<double> t_vec;

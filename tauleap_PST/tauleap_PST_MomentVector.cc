@@ -39,11 +39,11 @@ void MomentVector::sample(const StateVec & sv, int samp) {
 	// Collect sample in res:
 	(*samplefunc)(sv, res);
 
-	for (int h=0; h<length; h++) {
-		int idx = length*samp + h;
+	for (int i=0; i<length; i++) {
+		int idx = length*samp + i;
 
-		mean[idx] += res[h];
-		var[idx] += res[h]*res[h];
+		mean[idx] += res[i];
+		var[idx] += res[i]*res[i];
 	}
 }
 
