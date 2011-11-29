@@ -1,14 +1,14 @@
 /*
- * tauleap_PST_MomentVector.h
+ * tauleap_PST_Moment.h
  *
  *  Created on: 28/11/2011
  *      Author: Tim Vaughan
  */
 
-#ifndef TAULEAP_PST_MOMENTVECTOR_H_
-#define TAULEAP_PST_MOMENTVECTOR_H_
+#ifndef TAULEAP_PST_MOMENT_H_
+#define TAULEAP_PST_MOMENT_H_
 
-class MomentVector {
+class Moment {
 public:
 
 	int Nsamples;
@@ -21,12 +21,13 @@ public:
 	std::vector<double> var;
 	std::vector<double> sem;
 
+	std::vector<int> dim;
 	int length;
 
-	MomentVector(int p_Nsamples,
+	Moment(int p_Nsamples,
 			void (*p_samplefunc)(const StateVec &, std::vector<double> &),
-			std::string p_name, int p_length);
-	MomentVector();
+			std::string p_name, std::vector<int> & p_dim);
+	Moment();
 
 	void sample(const StateVec & sv, int samp);
 
@@ -37,4 +38,4 @@ public:
 
 };
 
-#endif /* TAULEAP_PST_MOMENTVECTOR_H_ */
+#endif /* TAULEAP_PST_MOMENT_H_ */

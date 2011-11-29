@@ -33,40 +33,33 @@
 #include "tauleap_PST_OptionParser.h"
 #include "tauleap_PST_StateVec.h"
 #include "tauleap_PST_Reaction.h"
-#include "tauleap_PST_MomentScalar.h"
-#include "tauleap_PST_MomentVector.h"
+#include "tauleap_PST_Moment.h"
 #include "tauleap_PST_SemiImplicit.h"
 
 // Functions which calculate the moments to be sampled:
-double samplefunc_X (const StateVec & sv) {
-	return sv.X;
+void samplefunc_X (const StateVec & sv, std::vector<double> & res) {
+	res[0] = sv.X;
 }
 
-double samplefunc_Ytot (const StateVec & sv) {
-	double res = 0;
+void samplefunc_Ytot (const StateVec & sv, std::vector<double> & res) {
+	res[0] = 0;
 	for (int h=0; h<=sv.L; h++)
-		res += sv.Y[h];
-
-	return res;
+		res[0] += sv.Y[h];
 }
 
-double samplefunc_YLtot (const StateVec & sv) {
-	double res = 0;
+void samplefunc_YLtot (const StateVec & sv, std::vector<double> & res) {
+	res[0] = 0;
 	for (int h=0; h<=sv.L; h++)
-		res += sv.YL[h];
-
-	return res;
+		res[0] += sv.YL[h];
 }
 
-double samplefunc_Vtot (const StateVec & sv) {
-	double res = 0;
+void samplefunc_Vtot (const StateVec & sv, std::vector<double> & res) {
+	res[0] = 0;
 	for (int h=0; h<=sv.L; h++)
-		res += sv.V[h];
-
-	return res;
+		res[0] += sv.V[h];
 }
 
-double samplefunc_Vdiv (const StateVec & sv) {
+void samplefunc_Vdiv (const StateVec & sv, std::vector<double> & res) {
 
 	double N2 = 0.0;
 	double N = 0.0;
@@ -77,12 +70,12 @@ double samplefunc_Vdiv (const StateVec & sv) {
 	}
 
 	if (N>0)
-		return exp(2*log(N)-log(N2));
+		res[0] = exp(2*log(N)-log(N2));
 	else
-		return 1;
+		res[0] = 1;
 }
 
-double samplefunc_Vext (const StateVec & sv) {
+void samplefunc_Vext (const StateVec & sv, std::vector<double> & res) {
 
 	int h;
 	for (h=sv.L; h>=0; h--) {
@@ -91,9 +84,9 @@ double samplefunc_Vext (const StateVec & sv) {
 	}
 
 	if (h>=0)
-		return h;
+		res[0] = h;
 	else
-		return 0;
+		res[0] = 0;
 }
 
 void samplefunc_Y (const StateVec & sv, std::vector<double> & res) {
@@ -108,10 +101,12 @@ void samplefunc_V (const StateVec & sv, std::vector<double> & res) {
 	res = sv.V;
 }
 
-void samplefunc_V0Vh (const StateVec & sv, std::vector<double> & res) {
+void samplefunc_YhYhp (const StateVec & sv, std::vector<double> & res) {
 
-	for (int h=0; h<=sv.L; h++)
-		res[h] = sv.V[0]*sv.V[h];
+	for (int h1=0; h1<=sv.L; h1++) {
+		for (int h2=0; h2<=sv.L; h2++)
+			res[h1*(sv.L+1)+h2] = sv.Y[h1]*sv.Y[h2];
+	}
 }
 
 void samplefunc_VhVhp (const StateVec & sv, std::vector<double> & res) {
@@ -225,21 +220,24 @@ int main (int argc, char **argv)
 			false,false,false,
 			vm["model.u"].as<double>(),0.0));
 
-	// Set up moments:
-	std::vector<MomentScalar> scalarMoments;
-	scalarMoments.push_back(MomentScalar (Nsamples, samplefunc_X, "X"));
-	scalarMoments.push_back(MomentScalar (Nsamples, samplefunc_Ytot, "Ytot"));
-	scalarMoments.push_back(MomentScalar (Nsamples, samplefunc_YLtot, "YLtot"));
-	scalarMoments.push_back(MomentScalar (Nsamples, samplefunc_Vtot, "Vtot"));
-	scalarMoments.push_back(MomentScalar (Nsamples, samplefunc_Vdiv, "Vdiv"));
-	scalarMoments.push_back(MomentScalar (Nsamples, samplefunc_Vext, "Vext"));
+	std::vector<Moment> moments;
+	std::vector<int> dim;
 
-	std::vector<MomentVector> vectorMoments;
-	vectorMoments.push_back(MomentVector (Nsamples, samplefunc_Y, "Y", sequenceL+1));
-	vectorMoments.push_back(MomentVector (Nsamples, samplefunc_YL, "YL", sequenceL+1));
-	vectorMoments.push_back(MomentVector (Nsamples, samplefunc_V, "V", sequenceL+1));
-	vectorMoments.push_back(MomentVector (Nsamples, samplefunc_V0Vh, "V0Vh", sequenceL+1));
-	vectorMoments.push_back(MomentVector (Nsamples, samplefunc_VhVhp, "VhVhp", (sequenceL+1)*(sequenceL+1)));
+	moments.push_back(Moment (Nsamples, samplefunc_X, "X", dim));
+	moments.push_back(Moment (Nsamples, samplefunc_Ytot, "Ytot", dim));
+	moments.push_back(Moment (Nsamples, samplefunc_YLtot, "YLtot", dim));
+	moments.push_back(Moment (Nsamples, samplefunc_Vtot, "Vtot", dim));
+	moments.push_back(Moment (Nsamples, samplefunc_Vdiv, "Vdiv", dim));
+	moments.push_back(Moment (Nsamples, samplefunc_Vext, "Vext", dim));
+
+	dim.push_back(sequenceL+1);
+	moments.push_back(Moment (Nsamples, samplefunc_Y, "Y", dim));
+	moments.push_back(Moment (Nsamples, samplefunc_YL, "YL", dim));
+	moments.push_back(Moment (Nsamples, samplefunc_V, "V", dim));
+
+	dim.push_back(sequenceL+1);
+	moments.push_back(Moment (Nsamples, samplefunc_VhVhp, "VhVhp", dim));
+	moments.push_back(Moment (Nsamples, samplefunc_YhYhp, "YhYhp", dim));
 
     // Initialise RNG:
 	//unsigned short buf[3] = {53, time(NULL), mpi_rank};
@@ -261,20 +259,16 @@ int main (int argc, char **argv)
 		StateVec sv_new = sv0;
 
 		// Perform initial sample:
-		for (unsigned int i=0; i<scalarMoments.size(); i++)
-			scalarMoments[i].sample(sv, 0);
-		for (unsigned int i=0; i<vectorMoments.size(); i++)
-			vectorMoments[i].sample(sv, 0);
+		for (unsigned int i=0; i<moments.size(); i++)
+			moments[i].sample(sv, 0);
 
 		// Simulation loop:
 		for (int t_idx=1; t_idx < Nt; t_idx++) {
 
 			// Sample if necessary:
 			if (t_idx % steps_per_sample == 0) {
-				for (unsigned int i=0; i<scalarMoments.size(); i++)
-					scalarMoments[i].sample(sv, t_idx/steps_per_sample);
-				for (unsigned int i=0; i<vectorMoments.size(); i++)
-					vectorMoments[i].sample(sv, t_idx/steps_per_sample);
+				for (unsigned int i=0; i<moments.size(); i++)
+					moments[i].sample(sv, t_idx/steps_per_sample);
 			}
 
 			// Loop to get us through a single interval of length dt
@@ -320,10 +314,8 @@ int main (int argc, char **argv)
 		cout << "Rank " << mpi_rank << ": Sending data to root node." << endl;
 
 		int tag = 0;
-		for (unsigned int i=0; i<scalarMoments.size(); i++)
-			scalarMoments[i].mpi_send(mpi_rank, tag);
-		for (unsigned int i=0; i<vectorMoments.size(); i++)
-			vectorMoments[i].mpi_send(mpi_rank, tag);
+		for (unsigned int i=0; i<moments.size(); i++)
+			moments[i].mpi_send(mpi_rank, tag);
 
 		exit(0);
 	}
@@ -335,17 +327,13 @@ int main (int argc, char **argv)
 		cout << "Rank 0: Receiving data from rank " << recv_rank << "." << endl;
 
 		int tag = 0;
-		for (unsigned int i=0; i<scalarMoments.size(); i++)
-			scalarMoments[i].mpi_recv(recv_rank, tag);
-		for (unsigned int i=0; i<vectorMoments.size(); i++)
-			vectorMoments[i].mpi_recv(recv_rank, tag);
+		for (unsigned int i=0; i<moments.size(); i++)
+			moments[i].mpi_recv(recv_rank, tag);
 	}
 
 	// Normalise results:
-	for (unsigned int i=0; i<scalarMoments.size(); i++)
-		scalarMoments[i].normalise(Npaths);
-	for (unsigned int i=0; i<vectorMoments.size(); i++)
-		vectorMoments[i].normalise(Npaths);
+	for (unsigned int i=0; i<moments.size(); i++)
+		moments[i].normalise(Npaths);
 
 	cout << "Rank 0: Writing results to disk...";
 
@@ -356,55 +344,34 @@ int main (int argc, char **argv)
 	hid_t group_id = H5Gcreate(file_id, ("/"+ofbasename).c_str(),
 			H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
 
-	// Write scalar moments to file:
-	int scalar_rank = 1;
-	hsize_t scalar_dims[1] = {Nsamples};
+	// Write moments moments to file:
+	for (unsigned int m=0; m<moments.size(); m++) {
 
-	for (unsigned int m=0; m<scalarMoments.size(); m++) {
+		std::vector<hsize_t> dims(moments[m].dim.size()+1);
+		dims[0] = Nsamples;
+		for (unsigned int i=0; i<moments[m].dim.size(); i++)
+			dims[i+1] = (hsize_t)moments[m].dim[i];
 
-		H5LTmake_dataset(group_id, (scalarMoments[m].name + "_mean").c_str(),
-				scalar_rank, scalar_dims,
-				H5T_NATIVE_DOUBLE, &(scalarMoments[m].mean[0]));
+		H5LTmake_dataset(group_id, (moments[m].name + "_mean").c_str(),
+				dims.size(), &(dims[0]),
+				H5T_NATIVE_DOUBLE, &(moments[m].mean[0]));
 
-		H5LTmake_dataset(group_id, (scalarMoments[m].name + "_var").c_str(),
-				scalar_rank, scalar_dims,
-				H5T_NATIVE_DOUBLE, &(scalarMoments[m].var[0]));
+		H5LTmake_dataset(group_id, (moments[m].name + "_var").c_str(),
+				dims.size(), &(dims[0]),
+				H5T_NATIVE_DOUBLE, &(moments[m].var[0]));
 
-		H5LTmake_dataset(group_id, (scalarMoments[m].name + "_sem").c_str(),
-				scalar_rank, scalar_dims,
-				H5T_NATIVE_DOUBLE, &(scalarMoments[m].sem[0]));
-
+		H5LTmake_dataset(group_id, (moments[m].name + "_sem").c_str(),
+				dims.size(), &(dims[0]),
+				H5T_NATIVE_DOUBLE, &(moments[m].sem[0]));
 	}
-
-	// Write vector moments to file:
-	int vector_rank = 2;
-	hsize_t vector_dims[2];
-	vector_dims[0] = Nsamples;
-
-	for (unsigned int m=0; m<vectorMoments.size(); m++) {
-
-		vector_dims[1] = vectorMoments[m].length;
-
-		H5LTmake_dataset(group_id, (vectorMoments[m].name + "_mean").c_str(),
-				vector_rank, vector_dims,
-				H5T_NATIVE_DOUBLE, &(vectorMoments[m].mean[0]));
-
-		H5LTmake_dataset(group_id, (vectorMoments[m].name + "_var").c_str(),
-				vector_rank, vector_dims,
-				H5T_NATIVE_DOUBLE, &(vectorMoments[m].var[0]));
-
-		H5LTmake_dataset(group_id, (vectorMoments[m].name + "_sem").c_str(),
-				vector_rank, vector_dims,
-				H5T_NATIVE_DOUBLE, &(vectorMoments[m].sem[0]));
-	}
-
 
 	// Write sample times to file:
 	vector<double> t_vec;
 	t_vec.resize(Nsamples);
 	for (int s=0; s<Nsamples; s++)
 		t_vec[s] = sample_dt*s;
-	H5LTmake_dataset(group_id, "t", scalar_rank, scalar_dims,
+	vector<hsize_t> t_dims(1,Nsamples);
+	H5LTmake_dataset(group_id, "t", Nsamples, &(t_dims[0]),
 			H5T_NATIVE_DOUBLE, &(t_vec[0]));
 
 	// Write simulation parameters to file:

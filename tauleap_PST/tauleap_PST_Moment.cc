@@ -11,16 +11,20 @@
 #include <mpi.h>
 
 #include "tauleap_PST_StateVec.h"
-#include "tauleap_PST_MomentVector.h"
+#include "tauleap_PST_Moment.h"
 
-MomentVector::MomentVector(int p_Nsamples,
+Moment::Moment(int p_Nsamples,
 		void (*p_samplefunc)(const StateVec &, std::vector<double> &),
-		std::string p_name, int p_length) {
+		std::string p_name, std::vector<int> & p_dim) {
 
 	Nsamples = p_Nsamples;
 	samplefunc = p_samplefunc;
 	name = p_name;
-	length = p_length;
+	dim = p_dim;
+
+	length = 1;
+	for (unsigned int i=0; i<dim.size(); i++)
+		length *= dim[i];
 
 	res.resize(length);
 
@@ -29,12 +33,12 @@ MomentVector::MomentVector(int p_Nsamples,
 	sem.resize(Nsamples*length,0);
 }
 
-MomentVector::MomentVector() { };
+Moment::Moment() { };
 
 /**
  * Sample moment
  */
-void MomentVector::sample(const StateVec & sv, int samp) {
+void Moment::sample(const StateVec & sv, int samp) {
 
 	// Collect sample in res:
 	(*samplefunc)(sv, res);
@@ -50,7 +54,7 @@ void MomentVector::sample(const StateVec & sv, int samp) {
 /**
  * Send sampled data to root node
  */
-void MomentVector::mpi_send(int mpi_rank, int & tag) {
+void Moment::mpi_send(int mpi_rank, int & tag) {
 
 	MPI::COMM_WORLD.Send(&(mean[0]), mean.size(), MPI_DOUBLE, 0, tag++);
 	MPI::COMM_WORLD.Send(&(var[0]), var.size(), MPI_DOUBLE, 0, tag++);
@@ -61,7 +65,7 @@ void MomentVector::mpi_send(int mpi_rank, int & tag) {
 /**
  * Obtain sampled data from non-root nodes
  */
-void MomentVector::mpi_recv(int recv_rank, int & tag) {
+void Moment::mpi_recv(int recv_rank, int & tag) {
 
 	std::vector<double> recv_mean(mean.size());
 	std::vector<double> recv_var(var.size());
@@ -81,7 +85,7 @@ void MomentVector::mpi_recv(int recv_rank, int & tag) {
 /**
  * Perform post-processing of moment data
  */
-void MomentVector::normalise (int Npaths) {
+void Moment::normalise (int Npaths) {
 
 	for (unsigned int i=0; i<mean.size(); i++) {
 		mean[i] /= Npaths;
