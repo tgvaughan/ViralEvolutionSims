@@ -371,7 +371,7 @@ int main (int argc, char **argv)
 	for (int s=0; s<Nsamples; s++)
 		t_vec[s] = sample_dt*s;
 	vector<hsize_t> t_dims(1,Nsamples);
-	H5LTmake_dataset(group_id, "t", Nsamples, &(t_dims[0]),
+	H5LTmake_dataset(group_id, "t", t_dims.size(), &(t_dims[0]),
 			H5T_NATIVE_DOUBLE, &(t_vec[0]));
 
 	// Write simulation parameters to file:
