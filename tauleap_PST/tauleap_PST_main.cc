@@ -189,12 +189,12 @@ int main (int argc, char **argv)
 	reactions.push_back(Reaction(1,0,0,1, 0,1,0,0,
 			true,false,false,
 			vm["model.beta"].as<double>()*(1.0-vm["model.lat_p"].as<double>()),
-			vm["model.mu"].as<double>()));
+			vm["model.mu_RT"].as<double>()));
 
 	reactions.push_back(Reaction(1,0,0,1, 0,0,1,0,
 			false,true,false,
 			vm["model.beta"].as<double>()*vm["model.lat_p"].as<double>(),
-			vm["model.mu"].as<double>()));
+			vm["model.mu_RT"].as<double>()));
 
 	reactions.push_back(Reaction(0,0,1,0, 0,1,0,0,
 			false,false,false,
@@ -202,7 +202,8 @@ int main (int argc, char **argv)
 
 	reactions.push_back(Reaction(0,1,0,0, 0,1,0,1,
 			false,false,true,
-			vm["model.k"].as<double>(),vm["model.mu_RNAP"].as<double>()));
+			vm["model.k"].as<double>(),
+			vm["model.mu_RNAP"].as<double>()));
 
 	reactions.push_back(Reaction(1,0,0,0, 0,0,0,0,
 			false,false,false,
