@@ -241,7 +241,6 @@ int main (int argc, char **argv)
 	moments.push_back(Moment (Nsamples, samplefunc_YhYhp, "YhYhp", dim));
 
     // Initialise RNG:
-	//unsigned short buf[3] = {53, time(NULL), mpi_rank};
 	unsigned short buf[3] = {53, time(NULL), mpi_rank};
 
 	// Determine number of paths to integrate on this node:
