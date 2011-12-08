@@ -90,30 +90,41 @@ void samplefunc_Vext (const StateVec & sv, std::vector<double> & res) {
 }
 
 void samplefunc_Y (const StateVec & sv, std::vector<double> & res) {
-	res = sv.Y;
+	for (int h=0; h<=20; h++)
+		res[h] = sv.Y[h];
 }
 
 void samplefunc_YL (const StateVec & sv, std::vector<double> & res) {
-	res = sv.YL;
+	for (int h=0; h<=20; h++)
+		res[h] = sv.YL[h];
 }
 
 void samplefunc_V (const StateVec & sv, std::vector<double> & res) {
-	res = sv.V;
+	for (int h=0; h<=20; h++)
+		res[h] = sv.V[h];
 }
 
 void samplefunc_YhYhp (const StateVec & sv, std::vector<double> & res) {
 
-	for (int h1=0; h1<=sv.L; h1++) {
-		for (int h2=0; h2<=sv.L; h2++)
-			res[h1*(sv.L+1)+h2] = sv.Y[h1]*sv.Y[h2];
+	for (int h1=0; h1<20; h1++) {
+		for (int h2=0; h2<=20; h2++)
+			res[h1*21+h2] = sv.Y[h1]*sv.Y[h2];
+	}
+}
+
+void samplefunc_YLhYLhp (const StateVec & sv, std::vector<double> & res) {
+
+	for (int h1=0; h1<20; h1++) {
+		for (int h2=0; h2<=20; h2++)
+			res[h1*21+h2] = sv.Y[h1]*sv.Y[h2];
 	}
 }
 
 void samplefunc_VhVhp (const StateVec & sv, std::vector<double> & res) {
 
-	for (int h1=0; h1<=sv.L; h1++) {
-		for (int h2=0; h2<=sv.L; h2++)
-			res[h1*(sv.L+1)+h2] = sv.V[h1]*sv.V[h2];
+	for (int h1=0; h1<20; h1++) {
+		for (int h2=0; h2<=20; h2++)
+			res[h1*21+h2] = sv.V[h1]*sv.V[h2];
 	}
 }
 
@@ -231,14 +242,17 @@ int main (int argc, char **argv)
 	moments.push_back(Moment (Nsamples, samplefunc_Vdiv, "Vdiv", dim));
 	moments.push_back(Moment (Nsamples, samplefunc_Vext, "Vext", dim));
 
-	dim.push_back(sequenceL+1);
+	//dim.push_back(sequenceL+1);
+	dim.push_back(21);
 	moments.push_back(Moment (Nsamples, samplefunc_Y, "Y", dim));
 	moments.push_back(Moment (Nsamples, samplefunc_YL, "YL", dim));
 	moments.push_back(Moment (Nsamples, samplefunc_V, "V", dim));
 
-	dim.push_back(sequenceL+1);
-	moments.push_back(Moment (Nsamples, samplefunc_VhVhp, "VhVhp", dim));
+	//dim.push_back(sequenceL+1);
+	dim.push_back(21);
 	moments.push_back(Moment (Nsamples, samplefunc_YhYhp, "YhYhp", dim));
+	moments.push_back(Moment (Nsamples, samplefunc_YhYhp, "YLhYLhp", dim));
+	moments.push_back(Moment (Nsamples, samplefunc_VhVhp, "VhVhp", dim));
 
     // Initialise RNG:
 	unsigned short buf[3] = {53, time(NULL), mpi_rank};
