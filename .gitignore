@@ -27,3 +27,6 @@ tags
 .cproject
 Release
 Debug
+
+# Ignore subversion cruft:
+.svn
