@@ -135,7 +135,7 @@ int main (int argc, char **argv)
     // Parse command line parameters:
     boost::program_options::variables_map vm = OptionParser::parse(argc, argv);
 
-    // Initialize MPI:
+    // Initialise MPI:
     MPI::Init(argc, argv);
     int mpi_size = MPI::COMM_WORLD.Get_size();
     int mpi_rank = MPI::COMM_WORLD.Get_rank();

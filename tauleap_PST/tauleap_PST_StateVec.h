@@ -14,6 +14,10 @@ public:
 	// Sequence length:
 	int L;
 
+	// State vector length:
+	// (in general may be not equal to L+1)
+	int vecL;
+
 	// Target cell population:
 	double X;
 
@@ -21,6 +25,7 @@ public:
 	std::vector<double> Y, YL, V;
 
 	StateVec(int length);
+	StateVec(int length, int truncLength);
 	StateVec(const StateVec & sv);
 	StateVec operator=(const StateVec & sv);
 

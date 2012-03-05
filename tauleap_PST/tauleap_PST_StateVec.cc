@@ -11,15 +11,27 @@
 
 StateVec::StateVec (int length) {
 	L = length;
+	vecL = length+1;
 
 	X = 0.0;
-	Y.resize(L+1,0.0);
-	YL.resize(L+1,0.0);
-	V.resize(L+1,0.0);
+	Y.resize(vecL,0.0);
+	YL.resize(vecL,0.0);
+	V.resize(vecL,0.0);
+}
+
+StateVec::StateVec(int length, int vecLength) {
+	L = length;
+	vecL = vecLength;
+
+	X = 0.0;
+	Y.resize(vecL);
+	YL.resize(vecL);
+	V.resize(vecL);
 }
 
 StateVec::StateVec (const StateVec & src) {
 	L = src.L;
+	vecL = src.vecL;
 
 	X = src.X;
 	Y = src.Y;
@@ -30,6 +42,7 @@ StateVec::StateVec (const StateVec & src) {
 StateVec StateVec::operator= (const StateVec & src) {
 
 	L = src.L;
+	vecL = src.vecL;
 
 	X = src.X;
 	Y = src.Y;
