@@ -14,9 +14,9 @@ public:
 	// Sequence length:
 	int L;
 
-	// State vector length:
+	// Max HD to consider:
 	// (in general may be not equal to L+1)
-	int vecL;
+	int maxHD;
 
 	// Target cell population:
 	double X;

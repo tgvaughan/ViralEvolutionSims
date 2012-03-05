@@ -182,9 +182,10 @@ int main (int argc, char **argv)
 
 	// Viral genome length
 	int sequenceL = (int)(vm["model.sequenceL"].as<double>());
+	int maxHD = (int)(vm["model.maxHD"].as<double>());
 
 	// Set up initial condition:
-	StateVec sv0(sequenceL);
+	StateVec sv0(sequenceL, maxHD);
 	sv0.X = vm["simulation.X0"].as<double>();
 	sv0.Y[0] = vm["simulation.Y0"].as<double>();
 	sv0.YL[0] = vm["simulation.YL0"].as<double>();

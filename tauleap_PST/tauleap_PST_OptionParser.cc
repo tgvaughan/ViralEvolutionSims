@@ -38,6 +38,7 @@ boost::program_options::variables_map OptionParser::parse(int argc, char **argv)
 			("model.lat_a", po::value<double>()->default_value(0.0), "activation rate of latently infected cell")
 
 			("model.sequenceL", po::value<double>()->default_value(105), "virus genome length")
+			("model.maxHD", po::value<double>()->default_value(0), "max HD to simulate")
 			("model.mu_RT", po::value<double>()->default_value(105*2e-5), "mutation probability per replication")
 			("model.mu_RNAP", po::value<double>()->default_value(0), "mutation probability per replication (RNAP)")
 			;

@@ -127,14 +127,14 @@ double Reaction::getLeapDistance (double tau, double Ncrit, int critcond, const 
 
 	// Ensure propensity vectors are allocated:
 	if (mutation) {
-		amut.resize(3*(sv.L+1), 0.0);
-		critmut.resize(3*(sv.L+1), false);
+		amut.resize(3*(sv.maxHD+1), 0.0);
+		critmut.resize(3*(sv.maxHD+1), false);
 	} else {
-		a.resize(sv.L+1, 0.0);
-		crit.resize(sv.L+1, false);
+		a.resize(sv.maxHD+1, 0.0);
+		crit.resize(sv.maxHD+1, false);
 	}
 
-	for (int h=0; h<=sv.L; h++) {
+	for (int h=0; h<=sv.maxHD; h++) {
 
 		double atmp = aX;
 		for (int m=0; m<inY; m++)
@@ -146,7 +146,7 @@ double Reaction::getLeapDistance (double tau, double Ncrit, int critcond, const 
 
 		if (mutation) {
 
-			for (int hp=(h>0 ? h-1 : 0); hp<=(h<sv.L ? h+1 : sv.L); hp++) {
+			for (int hp=(h>0 ? h-1 : 0); hp<=(h<sv.maxHD ? h+1 : sv.maxHD); hp++) {
 
 				int idx = 3*h + hp - h + 1;
 
@@ -318,11 +318,11 @@ bool Reaction::tauleap(double dt, StateVec & sv_new, unsigned short int *buf) {
 
 	bool negativePop = false;
 
-	for (int h=0; h<=sv_new.L; h++) {
+	for (int h=0; h<=sv_new.maxHD; h++) {
 
 		if (mutation) {
 
-			for (int hp=(h>0 ? h-1 : 0); hp<=(h<sv_new.L ? h+1 : sv_new.L); hp++) {
+			for (int hp=(h>0 ? h-1 : 0); hp<=(h<sv_new.maxHD ? h+1 : sv_new.maxHD); hp++) {
 				int idx = 3*h + hp - h + 1;
 
 				// Skip if reaction critical:

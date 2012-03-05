@@ -11,27 +11,30 @@
 
 StateVec::StateVec (int length) {
 	L = length;
-	vecL = length+1;
+	maxHD = length;
 
 	X = 0.0;
-	Y.resize(vecL,0.0);
-	YL.resize(vecL,0.0);
-	V.resize(vecL,0.0);
+	Y.resize(maxHD+1,0.0);
+	YL.resize(maxHD+1,0.0);
+	V.resize(maxHD+1,0.0);
 }
 
-StateVec::StateVec(int length, int vecLength) {
+StateVec::StateVec(int length, int maxHammingDistance) {
 	L = length;
-	vecL = vecLength;
+	if (maxHammingDistance>0)
+		maxHD = maxHammingDistance;
+	else
+		maxHD = length;
 
 	X = 0.0;
-	Y.resize(vecL);
-	YL.resize(vecL);
-	V.resize(vecL);
+	Y.resize(maxHD+1);
+	YL.resize(maxHD+1);
+	V.resize(maxHD+1);
 }
 
 StateVec::StateVec (const StateVec & src) {
 	L = src.L;
-	vecL = src.vecL;
+	maxHD = src.maxHD;
 
 	X = src.X;
 	Y = src.Y;
@@ -42,7 +45,7 @@ StateVec::StateVec (const StateVec & src) {
 StateVec StateVec::operator= (const StateVec & src) {
 
 	L = src.L;
-	vecL = src.vecL;
+	maxHD = src.maxHD;
 
 	X = src.X;
 	Y = src.Y;
